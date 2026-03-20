@@ -107,9 +107,12 @@ async function handleRequest(request) {
   }
 
   // Retourner le formToken au front
+  // publicKey : configurer PAYZEN_PUBLIC_TEST_KEY et PAYZEN_PUBLIC_PROD_KEY
+  // dans Cloudflare Workers → Settings → Variables and Secrets (onglet "Variables")
+  // Ces clés se trouvent dans le back-office OSB → "Clés d'API REST" → clés publiques
   return new Response(JSON.stringify({
     formToken: lyraData.answer.formToken,
-    publicKey: `${PAYZEN_SHOP_ID}:${mode === 'PRODUCTION' ? 'PROD' : 'TEST'}`,
+    publicKey: mode === 'PRODUCTION' ? PAYZEN_PUBLIC_PROD_KEY : PAYZEN_PUBLIC_TEST_KEY,
   }), {
     status: 200,
     headers: { 'Content-Type': 'application/json', ...corsHeaders }
