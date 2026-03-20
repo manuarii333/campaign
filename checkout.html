@@ -137,9 +137,17 @@
   #confirmation { display: none; }
   #confirmation.show { display: block; }
   .confirm-hero { text-align: center; padding: 32px 0 16px; }
-  .confirm-hero .checkmark { font-size: 4rem; margin-bottom: 16px; display: block; }
-  .confirm-hero h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+  .confirm-hero h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; color: #43e97b; }
   .confirm-hero p { color: var(--muted); }
+  @keyframes popIn { 0%{transform:scale(0);opacity:0} 70%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+  @keyframes checkDraw { to { stroke-dashoffset: 0; } }
+  @keyframes glowPulse { 0%,100%{box-shadow:0 0 0 0 rgba(67,233,123,0.4)} 50%{box-shadow:0 0 0 16px rgba(67,233,123,0)} }
+  .success-svg { animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards; display: block; margin: 0 auto 20px; }
+  .success-svg circle { stroke: #43e97b; }
+  .success-svg path { stroke: #43e97b; animation: checkDraw 0.4s 0.4s ease forwards; }
+  .order-id-copy { cursor: pointer; transition: opacity 0.2s; }
+  .order-id-copy:hover { opacity: 0.7; }
+  .order-id-copy::after { content: ' 📋'; font-size: 0.8em; }
   .order-id-box { background: var(--surface2); border: 1px dashed var(--accent); border-radius: 12px; padding: 16px; text-align: center; margin: 16px 0; }
   .order-id-box .order-id { font-size: 1.4rem; font-weight: 800; color: var(--accent); letter-spacing: 1px; }
   .track-btn {
@@ -270,27 +278,34 @@
   <div id="confirmation">
     <div class="card">
       <div class="confirm-hero">
-        <span class="checkmark">✅</span>
-        <h2>Paiement confirmé !</h2>
-        <p>Merci pour votre commande. Voici votre numéro de suivi :</p>
+        <svg class="success-svg" width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="40" fill="rgba(67,233,123,0.1)" stroke="#43e97b" stroke-width="3"/>
+          <path d="M26 45 L38 57 L64 31" fill="none" stroke-width="4"
+                stroke-linecap="round" stroke-linejoin="round"
+                stroke-dasharray="55" stroke-dashoffset="55"/>
+        </svg>
+        <h2>🎉 Paiement accepté !</h2>
+        <p>Merci pour votre commande. Conservez votre numéro de suivi :</p>
       </div>
       <div class="order-id-box">
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">Numéro de commande</div>
-        <div class="order-id" id="conf-order-id">—</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px;">Numéro de commande</div>
+        <div class="order-id order-id-copy" id="conf-order-id" onclick="copyOrderId()" title="Cliquer pour copier">—</div>
+        <div id="copy-msg" style="font-size:0.72rem;color:#43e97b;margin-top:4px;display:none">✓ Copié !</div>
       </div>
       <div class="summary-row" style="margin-top:16px;">
         <span class="label">Produit</span>
         <span class="value" id="conf-product">—</span>
       </div>
       <div class="summary-row">
-        <span class="label">Montant</span>
-        <span class="value" id="conf-amount">—</span>
+        <span class="label">Montant payé</span>
+        <span class="value" style="color:#43e97b;font-weight:800" id="conf-amount">—</span>
       </div>
       <div class="summary-row">
         <span class="label">Date estimée</span>
         <span class="value" id="conf-date">—</span>
       </div>
-      <a id="conf-track-link" href="#" class="track-btn">🔍 Suivre ma commande</a>
+      <a id="conf-track-link" href="#" class="track-btn" style="background:linear-gradient(135deg,#6c63ff,#ff6584);color:white;border:none;margin-top:20px;padding:16px;font-size:1rem">📋 Suivre ma commande</a>
+      <a href="andromeda-campaign.html" class="track-btn" style="margin-top:10px;text-align:center">🏠 Retour à la boutique</a>
     </div>
   </div>
 
@@ -464,6 +479,15 @@ async function handlePaymentSuccess(paymentData) {
     weekday:'long', day:'numeric', month:'long', year:'numeric'
   });
   document.getElementById('conf-track-link').href = `${TRACK_BASE}?id=${currentOrderId}`;
+}
+
+function copyOrderId() {
+  const id = document.getElementById('conf-order-id').textContent;
+  navigator.clipboard.writeText(id).then(() => {
+    const msg = document.getElementById('copy-msg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 2000);
+  });
 }
 </script>
 </body>

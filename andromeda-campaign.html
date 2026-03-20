@@ -901,6 +901,10 @@ function exportLP(id) {
   const ctaTag = url
     ? `<a href="${url}" target="_blank" rel="noopener" class="cta-btn">${cta}</a>`
     : `<a href="#produits" class="cta-btn">${cta}</a>`;
+  // Prix premier produit (chiffres seulement)
+  const firstPrice = (c.products[0]?.p || '2500').replace(/[^\d]/g,'') || '2500';
+  const checkoutUrl = `https://manuarii333.github.io/campaign/checkout.html?product=${encodeURIComponent(c.products[0]?.n||c.name)}&price=${firstPrice}&campaign=${encodeURIComponent(c.name)}&mode=TEST`;
+  const orderBtnTag = `<a href="${checkoutUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:14px;padding:16px 40px;background:linear-gradient(135deg,#6c63ff,#ff6584);color:white;border-radius:30px;font-weight:800;font-size:1rem;text-decoration:none;box-shadow:0 8px 30px rgba(108,99,255,0.4)">🛒 Commander maintenant</a>`;
 
   // Image de fond (canvas ou dégradé original)
   const cv = g('cv-'+id);
@@ -970,6 +974,7 @@ footer{text-align:center;padding:28px;color:rgba(255,255,255,0.4);font-size:0.82
     <h1>${headline}</h1>
     <p class="sub">${subline}</p>
     ${ctaTag}
+    ${orderBtnTag}
   </div>
 </div>
 <div class="section" id="produits">
@@ -1162,6 +1167,7 @@ footer{background:#0f0f1a;text-align:center;padding:28px;color:rgba(255,255,255,
     <h1>${headline}</h1>
     <p class="sub">${subline}</p>
     ${ctaTag}
+    ${orderBtnTag}
   </div>
 </div>
 <div class="section" id="produits">
