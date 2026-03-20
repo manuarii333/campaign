@@ -1,0 +1,10 @@
+name = "payzen-hcs"
+main = "payzen-worker.js"
+compatibility_date = "2024-01-01"
+account_id = "a0e8d87b81c2e42d170ee09f26ed42f9"
+
+[vars]
+PAYZEN_SHOP_ID = "41545085"
+WORKER_SECRET = "hcs-payzen-2026"
+PAYZEN_PUBLIC_TEST_KEY = "41545085:testpublickey_HJw0fXMbbvOAzJuN1BXImXIu5U16qkSHv2eQVjSu0YftA"
+PAYZEN_PUBLIC_PROD_KEY = "41545085:publickey_IzNDzp5XcAadriFpCh08meZmg8Ri6WbyYIG6TIQ9mpu2NA"
