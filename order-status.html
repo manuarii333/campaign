@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Suivi commande — HCS Tahiti</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --surface: rgba(255,255,255,0.05);
+    --surface2: rgba(255,255,255,0.08);
+    --border: rgba(255,255,255,0.1);
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --text: #e8e8f0;
+    --muted: #888899;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse at 20% 20%, rgba(108,99,255,0.15) 0%, transparent 50%),
+                      radial-gradient(ellipse at 80% 80%, rgba(255,101,132,0.1) 0%, transparent 50%);
+    padding: 24px 16px 60px;
+  }
+  .container { max-width: 600px; margin: 0 auto; }
+
+  .logo { text-align: center; margin-bottom: 32px; }
+  .logo h1 { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .logo p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(12px);
+  }
+  .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* Search */
+  .search-row { display: flex; gap: 10px; }
+  .search-row input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px; color: var(--text); font-size: 0.95rem;
+    outline: none; font-family: inherit; transition: border-color 0.2s;
+  }
+  .search-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,0.15); }
+  .search-btn {
+    padding: 12px 20px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer;
+    font-size: 0.95rem; white-space: nowrap; transition: opacity 0.2s;
+  }
+  .search-btn:hover { opacity: 0.9; }
+
+  /* Timeline */
+  #result-section { display: none; }
+  #result-section.show { display: block; }
+
+  .timeline { padding: 8px 0; }
+  .timeline-step {
+    display: flex; align-items: flex-start; gap: 16px; position: relative; padding-bottom: 28px;
+  }
+  .timeline-step:last-child { padding-bottom: 0; }
+  .timeline-step::before {
+    content: ''; position: absolute; left: 19px; top: 40px;
+    width: 2px; height: calc(100% - 12px);
+    background: var(--border);
+  }
+  .timeline-step:last-child::before { display: none; }
+  .timeline-step.active::before { background: var(--accent); }
+  .timeline-step.done::before { background: linear-gradient(to bottom, var(--accent), var(--border)); }
+
+  .step-icon {
+    width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    flex-shrink: 0; background: var(--bg); position: relative; z-index: 1;
+    transition: all 0.3s;
+  }
+  .timeline-step.done .step-icon {
+    border-color: var(--accent);
+    background: rgba(108,99,255,0.2);
+  }
+  .timeline-step.active .step-icon {
+    border-color: var(--accent2);
+    background: rgba(255,101,132,0.2);
+    box-shadow: 0 0 16px rgba(255,101,132,0.4);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 16px rgba(255,101,132,0.4); }
+    50% { box-shadow: 0 0 24px rgba(255,101,132,0.7); }
+  }
+
+  .step-content { padding-top: 8px; }
+  .step-content .step-title { font-weight: 700; font-size: 0.95rem; }
+  .step-content .step-desc { color: var(--muted); font-size: 0.82rem; margin-top: 3px; }
+  .timeline-step.pending .step-title { color: var(--muted); }
+  .timeline-step.active .step-title { color: var(--accent2); }
+  .timeline-step.done .step-title { color: var(--text); }
+
+  /* Order info */
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .label { color: var(--muted); font-size: 0.88rem; }
+  .info-row .value { font-weight: 600; font-size: 0.9rem; text-align: right; max-width: 60%; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+  .badge-paid       { background: rgba(59,130,246,0.2); color: #93c5fd; }
+  .badge-processing { background: rgba(249,115,22,0.2); color: #fdba74; }
+  .badge-ready      { background: rgba(168,85,247,0.2); color: #d8b4fe; }
+  .badge-shipped    { background: rgba(6,182,212,0.2);  color: #67e8f9; }
+  .badge-delivered  { background: rgba(34,197,94,0.2);  color: #86efac; }
+  .badge-cancelled  { background: rgba(239,68,68,0.2);  color: #fca5a5; }
+
+  /* Loading / Error */
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-msg { color: #ff4757; font-size: 0.9rem; text-align: center; padding: 20px 0; }
+  .loading-msg { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px 0; }
+
+  .search-hint { color: var(--muted); font-size: 0.82rem; margin-top: 10px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="logo">
+    <h1>☕ HCS Tahiti</h1>
+    <p>Suivi de commande</p>
+  </div>
+
+  <!-- Search card -->
+  <div class="card">
+    <h2>🔍 Rechercher ma commande</h2>
+    <div class="search-row">
+      <input type="text" id="order-input" placeholder="Ex: HCS-1748000000000"
+        onkeydown="if(event.key==='Enter')search()">
+      <button class="search-btn" onclick="search()">Chercher</button>
+    </div>
+    <p class="search-hint">Votre numéro de commande commence par <strong>HCS-</strong></p>
+  </div>
+
+  <!-- Loading indicator -->
+  <div id="loading-section" style="display:none;" class="card">
+    <div class="loading-msg"><span class="spinner"></span>Recherche en cours...</div>
+  </div>
+
+  <!-- Error section -->
+  <div id="error-section" style="display:none;" class="card">
+    <div class="error-msg" id="error-msg">Commande introuvable.</div>
+  </div>
+
+  <!-- Result section -->
+  <div id="result-section">
+
+    <!-- Timeline -->
+    <div class="card">
+      <h2>📍 Statut de votre commande</h2>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <!-- Order details -->
+    <div class="card">
+      <h2>📄 Détails de la commande</h2>
+      <div id="order-details"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const WORKER_URL = 'https://payzen-hcs.highcoffeeshirt.workers.dev';
+
+const STEPS = [
+  { key: 'paid',       icon: '💳', title: 'Paiement reçu',     desc: 'Votre paiement a été confirmé.' },
+  { key: 'processing', icon: '⚙️', title: 'En traitement',     desc: 'Votre commande est en cours de préparation.' },
+  { key: 'ready',      icon: '✅', title: 'Prête',              desc: 'Votre commande est prête à être récupérée ou expédiée.' },
+  { key: 'shipped',    icon: '🚚', title: 'Expédiée',           desc: 'Votre commande est en route.' },
+  { key: 'delivered',  icon: '🏠', title: 'Livrée',             desc: 'Commande remise. Merci pour votre confiance !' },
+];
+
+const STATUS_ORDER = ['paid','processing','ready','shipped','delivered'];
+
+// Auto-search from URL param
+window.addEventListener('DOMContentLoaded', () => {
+  const id = new URLSearchParams(location.search).get('id');
+  if (id) {
+    document.getElementById('order-input').value = id;
+    search(id);
+  }
+});
+
+async function search(forceId) {
+  const id = forceId || document.getElementById('order-input').value.trim();
+  if (!id) return;
+
+  // Update URL without reload
+  const url = new URL(location.href);
+  url.searchParams.set('id', id);
+  history.replaceState(null, '', url.toString());
+
+  document.getElementById('loading-section').style.display = 'block';
+  document.getElementById('error-section').style.display = 'none';
+  document.getElementById('result-section').classList.remove('show');
+
+  try {
+    const res = await fetch(`${WORKER_URL}/order/status?id=${encodeURIComponent(id)}`);
+    document.getElementById('loading-section').style.display = 'none';
+
+    if (res.status === 404) {
+      showError('❌ Commande introuvable. Vérifiez votre numéro de commande.');
+      return;
+    }
+    if (!res.ok) {
+      showError('❌ Erreur serveur. Réessayez dans quelques instants.');
+      return;
+    }
+
+    const order = await res.json();
+    renderTimeline(order.status);
+    renderDetails(order);
+    document.getElementById('result-section').classList.add('show');
+
+  } catch(e) {
+    document.getElementById('loading-section').style.display = 'none';
+    showError(`❌ Erreur réseau: ${e.message}`);
+  }
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = msg;
+  document.getElementById('error-section').style.display = 'block';
+}
+
+function renderTimeline(currentStatus) {
+  const currentIdx = STATUS_ORDER.indexOf(currentStatus);
+  const isCancelled = currentStatus === 'cancelled';
+
+  if (isCancelled) {
+    document.getElementById('timeline').innerHTML = `
+      <div style="text-align:center;padding:20px 0;color:#fca5a5;">
+        <div style="font-size:2rem;margin-bottom:8px;">❌</div>
+        <div style="font-weight:700;">Commande annulée</div>
+      </div>`;
+    return;
+  }
+
+  const html = STEPS.map((step, i) => {
+    let cls = 'pending';
+    if (i < currentIdx) cls = 'done';
+    else if (i === currentIdx) cls = 'active';
+
+    return `
+      <div class="timeline-step ${cls}">
+        <div class="step-icon">${step.icon}</div>
+        <div class="step-content">
+          <div class="step-title">${step.title}</div>
+          <div class="step-desc">${cls !== 'pending' ? step.desc : ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('timeline').innerHTML = html;
+}
+
+function renderDetails(order) {
+  const estimatedDate = computeEstimatedDate(order);
+  const deliveryLabel = order.delivery?.type === 'pickup' ? '🏪 Retrait boutique' : '🚚 Livraison';
+
+  document.getElementById('order-details').innerHTML = `
+    <div class="info-row">
+      <span class="label">N° commande</span>
+      <span class="value" style="color:var(--accent);font-family:monospace">${esc(order.orderId)}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Statut</span>
+      <span class="value"><span class="badge badge-${order.status}">${statusLabel(order.status)}</span></span>
+    </div>
+    <div class="info-row">
+      <span class="label">Produit</span>
+      <span class="value">${esc(order.product||'—')}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Campagne</span>
+      <span class="value">${esc(order.campaignName||'—')}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Montant</span>
+      <span class="value">${(order.amount||0).toLocaleString('fr-FR')} XPF</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Date de commande</span>
+      <span class="value">${formatDate(order.createdAt)}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Mode</span>
+      <span class="value">${deliveryLabel}</span>
+    </div>
+    ${order.delivery?.type === 'pickup' && order.delivery?.pickupDate ? `
+    <div class="info-row">
+      <span class="label">Date de retrait prévue</span>
+      <span class="value">${formatDateShort(order.delivery.pickupDate)}</span>
+    </div>` : ''}
+    <div class="info-row">
+      <span class="label">Date estimée</span>
+      <span class="value" style="color:var(--accent2)">${estimatedDate}</span>
+    </div>
+  `;
+}
+
+function computeEstimatedDate(order) {
+  if (order.status === 'delivered') return '✅ Livrée';
+  if (order.status === 'cancelled') return '—';
+
+  // Use pickupDate if set and pickup mode
+  if (order.delivery?.type === 'pickup' && order.delivery?.pickupDate) {
+    const d = new Date(order.delivery.pickupDate);
+    return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+
+  const delay = order.delivery?.deliveryDelay || 3;
+  const base  = new Date(order.createdAt);
+  base.setDate(base.getDate() + delay + 2); // +2 processing
+  return base.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function formatDateShort(str) {
+  if (!str) return '—';
+  const d = new Date(str);
+  return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+}
+function statusLabel(s) {
+  const map = { paid:'Payé', processing:'En traitement', ready:'Prêt', shipped:'Expédié', delivered:'Livré', cancelled:'Annulé' };
+  return map[s] || s;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin — HCS Tahiti</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --surface: rgba(255,255,255,0.05);
+    --surface2: rgba(255,255,255,0.08);
+    --surface3: rgba(255,255,255,0.12);
+    --border: rgba(255,255,255,0.1);
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --text: #e8e8f0;
+    --muted: #888899;
+    --radius: 14px;
+    --paid: #3b82f6;
+    --processing: #f97316;
+    --ready: #a855f7;
+    --shipped: #06b6d4;
+    --delivered: #22c55e;
+    --cancelled: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse at 10% 10%, rgba(108,99,255,0.12) 0%, transparent 50%);
+  }
+
+  /* Login screen */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 16px;
+  }
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 32px;
+    width: 100%; max-width: 400px;
+    backdrop-filter: blur(12px);
+    text-align: center;
+  }
+  .login-box h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; background: linear-gradient(135deg, #6c63ff, #ff6584); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .login-box p { color: var(--muted); margin-bottom: 28px; font-size: 0.9rem; }
+  .login-box input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; color: var(--text); font-size: 1rem;
+    outline: none; margin-bottom: 16px; font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  .login-box input:focus { border-color: var(--accent); }
+  .login-btn {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; color: white; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .login-btn:hover { opacity: 0.9; }
+  .login-error { color: #ff4757; font-size: 0.85rem; margin-top: 10px; display: none; }
+
+  /* App */
+  #app { display: none; }
+  .header {
+    background: rgba(15,15,26,0.9);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: sticky; top: 0; z-index: 100;
+  }
+  .header h1 { font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #6c63ff, #ff6584); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .logout-btn {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    color: var(--muted); padding: 6px 14px; cursor: pointer; font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .logout-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; padding: 16px 24px 0; border-bottom: 1px solid var(--border); background: var(--bg); }
+  .tab-btn {
+    padding: 10px 20px; border-radius: 10px 10px 0 0; border: 1px solid var(--border);
+    border-bottom: none; background: var(--surface); color: var(--muted); cursor: pointer;
+    font-size: 0.9rem; font-weight: 600; transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+
+  /* Tab content */
+  .tab-content { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .tab-content.show { display: block; }
+
+  /* Orders table */
+  .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .table-header h2 { font-size: 1rem; font-weight: 700; }
+  .refresh-btn {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 8px 16px; cursor: pointer; font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { border-color: var(--accent); }
+
+  .table-wrapper { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  thead { background: var(--surface2); }
+  th { padding: 12px 16px; text-align: left; font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 12px 16px; font-size: 0.88rem; border-top: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Status badges */
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-paid       { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
+  .badge-processing { background: rgba(249,115,22,0.2); color: #fdba74; border: 1px solid rgba(249,115,22,0.4); }
+  .badge-ready      { background: rgba(168,85,247,0.2); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
+  .badge-shipped    { background: rgba(6,182,212,0.2);  color: #67e8f9; border: 1px solid rgba(6,182,212,0.4); }
+  .badge-delivered  { background: rgba(34,197,94,0.2);  color: #86efac; border: 1px solid rgba(34,197,94,0.4); }
+  .badge-cancelled  { background: rgba(239,68,68,0.2);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+
+  /* Action cell */
+  .action-cell { display: flex; flex-direction: column; gap: 8px; min-width: 200px; }
+  .action-cell select, .action-cell input, .action-cell textarea {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; color: var(--text); font-size: 0.82rem; outline: none; font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  .action-cell select:focus, .action-cell input:focus, .action-cell textarea:focus { border-color: var(--accent); }
+  .action-cell select option { background: #1a1a2e; }
+  .save-row-btn {
+    padding: 6px 14px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 8px; color: white; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .save-row-btn:hover { opacity: 0.85; }
+  .save-row-btn:disabled { opacity: 0.5; }
+
+  /* Settings */
+  .settings-grid { display: grid; gap: 12px; }
+  .campaign-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .campaign-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: var(--accent); }
+  .settings-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; align-items: end; }
+  @media(max-width:768px) { .settings-row { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:480px) { .settings-row { grid-template-columns: 1fr; } }
+  .form-group label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
+  .form-group input[type="text"], .form-group input[type="number"] {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; color: var(--text); font-size: 0.88rem; outline: none; font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--accent); }
+  .checkbox-group { display: flex; align-items: center; gap: 8px; padding-top: 20px; }
+  .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .checkbox-group label { font-size: 0.85rem; cursor: pointer; margin: 0; }
+  .save-settings-btn {
+    margin-top: 20px; padding: 12px 28px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; color: white; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .save-settings-btn:hover { opacity: 0.9; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+  .stat-card .count { font-size: 2rem; font-weight: 800; margin-bottom: 4px; }
+  .stat-card .label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+  .stat-ca { background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(255,101,132,0.2)); border-color: rgba(108,99,255,0.4); }
+  .stat-ca .count { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .recent-orders h2 { font-size: 1rem; font-weight: 700; margin-bottom: 14px; }
+  .recent-list { display: flex; flex-direction: column; gap: 8px; }
+  .recent-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .recent-item .rid { font-weight: 700; font-size: 0.9rem; color: var(--accent); }
+  .recent-item .rclient { font-size: 0.85rem; color: var(--muted); }
+  .recent-item .ramt { font-weight: 700; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
+  .alert { padding: 10px 16px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 14px; display: none; }
+  .alert.show { display: block; }
+  .alert-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #86efac; }
+  .alert-error   { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4);  color: #fca5a5; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>☕ HCS Admin</h1>
+    <p>Panneau d'administration</p>
+    <input type="password" id="secret-input" placeholder="Mot de passe admin" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">🔑 Connexion</button>
+    <div class="login-error" id="login-error">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <h1>☕ HCS Admin Panel</h1>
+    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('orders')">📦 Commandes</button>
+    <button class="tab-btn" onclick="switchTab('settings')">⚙️ Livraisons</button>
+    <button class="tab-btn" onclick="switchTab('stats')">📊 Stats</button>
+  </div>
+
+  <!-- TAB: ORDERS -->
+  <div class="tab-content show" id="tab-orders">
+    <div class="alert alert-success" id="orders-alert"></div>
+    <div class="table-header">
+      <h2>Toutes les commandes</h2>
+      <button class="refresh-btn" onclick="loadOrders()">🔄 Rafraîchir</button>
+    </div>
+    <div id="orders-container">
+      <div class="loading"><span class="spinner"></span> Chargement...</div>
+    </div>
+  </div>
+
+  <!-- TAB: SETTINGS -->
+  <div class="tab-content" id="tab-settings">
+    <div class="alert alert-success" id="settings-alert"></div>
+    <div id="settings-container">
+      <div class="loading"><span class="spinner"></span> Chargement...</div>
+    </div>
+  </div>
+
+  <!-- TAB: STATS -->
+  <div class="tab-content" id="tab-stats">
+    <div id="stats-container">
+      <div class="loading"><span class="spinner"></span> Chargement...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = 'https://payzen-hcs.highcoffeeshirt.workers.dev';
+let ADMIN_SECRET = '';
+let allOrders = [];
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+function login() {
+  const val = document.getElementById('secret-input').value.trim();
+  if (!val) return;
+  ADMIN_SECRET = val;
+  sessionStorage.setItem('hcs_admin_secret', val);
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadOrders();
+  loadSettings();
+}
+
+function logout() {
+  sessionStorage.removeItem('hcs_admin_secret');
+  ADMIN_SECRET = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('secret-input').value = '';
+}
+
+// Auto-login from sessionStorage
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('hcs_admin_secret');
+  if (saved) {
+    ADMIN_SECRET = saved;
+    document.getElementById('secret-input').value = saved;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadOrders();
+    loadSettings();
+  }
+});
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    const tabs = ['orders','settings','stats'];
+    b.classList.toggle('active', tabs[i]===name);
+  });
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('show'));
+  document.getElementById(`tab-${name}`).classList.add('show');
+  if (name === 'stats') renderStats();
+}
+
+// ─── Load orders ─────────────────────────────────────────────────────────────
+async function loadOrders() {
+  document.getElementById('orders-container').innerHTML = '<div class="loading"><span class="spinner"></span> Chargement...</div>';
+  try {
+    const res = await fetch(`${WORKER_URL}/admin/orders`, {
+      headers: { 'X-Admin-Secret': ADMIN_SECRET }
+    });
+    if (res.status === 401) { showLoginError(); return; }
+    const data = await res.json();
+    allOrders = data.orders || [];
+    renderOrders(allOrders);
+  } catch(e) {
+    document.getElementById('orders-container').innerHTML = `<div class="empty">❌ Erreur: ${e.message}</div>`;
+  }
+}
+
+function renderOrders(orders) {
+  if (!orders.length) {
+    document.getElementById('orders-container').innerHTML = '<div class="empty">📭 Aucune commande pour l\'instant</div>';
+    return;
+  }
+
+  const rows = orders.map(o => `
+    <tr>
+      <td><code style="font-size:0.8rem;color:var(--accent)">${o.orderId}</code></td>
+      <td>
+        <div style="font-weight:600">${esc(o.client?.name||'—')}</div>
+        <div style="font-size:0.78rem;color:var(--muted)">${esc(o.client?.email||'')}</div>
+        <div style="font-size:0.78rem;color:var(--muted)">${esc(o.client?.phone||'')}</div>
+      </td>
+      <td>
+        <div>${esc(o.product||'—')}</div>
+        <div style="font-size:0.78rem;color:var(--muted)">${esc(o.campaignName||'')}</div>
+      </td>
+      <td><strong>${(o.amount||0).toLocaleString('fr-FR')} XPF</strong></td>
+      <td style="font-size:0.82rem;white-space:nowrap">${formatDate(o.createdAt)}</td>
+      <td><span class="badge badge-${o.status||'paid'}">${statusLabel(o.status)}</span></td>
+      <td>
+        <div class="action-cell">
+          <select id="status-${o.orderId}">
+            ${statusOptions(o.status)}
+          </select>
+          <input type="date" id="date-${o.orderId}" value="${o.delivery?.pickupDate||''}" placeholder="Date livraison">
+          <textarea id="note-${o.orderId}" rows="2" placeholder="Note...">${esc(o.note||'')}</textarea>
+          <button class="save-row-btn" onclick="saveOrder('${o.orderId}')">💾 Sauvegarder</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('orders-container').innerHTML = `
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Client</th><th>Produit</th><th>Montant</th><th>Date</th><th>Statut</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function saveOrder(orderId) {
+  const status    = document.getElementById(`status-${orderId}`).value;
+  const note      = document.getElementById(`note-${orderId}`).value;
+  const pickupDate = document.getElementById(`date-${orderId}`).value;
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = '...';
+
+  try {
+    const res = await fetch(`${WORKER_URL}/admin/order`, {
+      method: 'PATCH',
+      headers: { 'Content-Type':'application/json', 'X-Admin-Secret': ADMIN_SECRET },
+      body: JSON.stringify({ orderId, status, note, pickupDate }),
+    });
+    if (!res.ok) throw new Error('Erreur serveur');
+    showAlert('orders-alert', '✅ Commande mise à jour');
+    await loadOrders();
+  } catch(e) {
+    showAlert('orders-alert', `❌ ${e.message}`, true);
+    btn.disabled = false; btn.textContent = '💾 Sauvegarder';
+  }
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+let currentSettings = null;
+
+async function loadSettings() {
+  try {
+    const res = await fetch(`${WORKER_URL}/admin/settings`, {
+      headers: { 'X-Admin-Secret': ADMIN_SECRET }
+    });
+    if (res.status === 401) { showLoginError(); return; }
+    const data = await res.json();
+    currentSettings = data.settings;
+    renderSettings(currentSettings);
+  } catch(e) {
+    document.getElementById('settings-container').innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+  }
+}
+
+function renderSettings(settings) {
+  const cards = (settings.campaigns||[]).map((c, i) => `
+    <div class="campaign-card">
+      <h3>📦 ${esc(c.name)}</h3>
+      <div class="settings-row">
+        <div class="form-group">
+          <label>Délai traitement (jours)</label>
+          <input type="number" min="0" id="proc-${i}" value="${c.processingDelayDays||2}">
+        </div>
+        <div class="form-group">
+          <label>Délai livraison (jours)</label>
+          <input type="number" min="0" id="deliv-${i}" value="${c.deliveryDelayDays||3}">
+        </div>
+        <div class="form-group">
+          <label>Horaires retrait</label>
+          <input type="text" id="hours-${i}" value="${esc(c.pickupHours||'08h00 – 17h00')}">
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="pickup-${i}" ${c.pickupAvailable?'checked':''}>
+          <label for="pickup-${i}">Retrait dispo</label>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('settings-container').innerHTML = `
+    <div class="settings-grid">
+      ${cards}
+      <button class="save-settings-btn" onclick="saveSettings()">💾 Sauvegarder tous les réglages</button>
+    </div>
+  `;
+}
+
+async function saveSettings() {
+  const campaigns = (currentSettings.campaigns||[]).map((c,i) => ({
+    ...c,
+    processingDelayDays: parseInt(document.getElementById(`proc-${i}`).value)||2,
+    deliveryDelayDays:   parseInt(document.getElementById(`deliv-${i}`).value)||3,
+    pickupHours:         document.getElementById(`hours-${i}`).value,
+    pickupAvailable:     document.getElementById(`pickup-${i}`).checked,
+  }));
+
+  try {
+    const res = await fetch(`${WORKER_URL}/admin/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-Admin-Secret': ADMIN_SECRET },
+      body: JSON.stringify({ campaigns }),
+    });
+    if (!res.ok) throw new Error('Erreur serveur');
+    showAlert('settings-alert', '✅ Réglages sauvegardés');
+    currentSettings.campaigns = campaigns;
+  } catch(e) {
+    showAlert('settings-alert', `❌ ${e.message}`, true);
+  }
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function renderStats() {
+  const orders = allOrders;
+  if (!orders.length) {
+    document.getElementById('stats-container').innerHTML = '<div class="empty">📭 Aucune donnée</div>';
+    return;
+  }
+
+  const counts = {};
+  let totalCA = 0;
+  orders.forEach(o => {
+    counts[o.status] = (counts[o.status]||0) + 1;
+    totalCA += o.amount || 0;
+  });
+
+  const statuses = ['paid','processing','ready','shipped','delivered','cancelled'];
+  const statCards = statuses.map(s => `
+    <div class="stat-card">
+      <div class="count" style="color:var(--${s})">${counts[s]||0}</div>
+      <div class="label">${statusLabel(s)}</div>
+    </div>
+  `).join('');
+
+  const recent = orders.slice(0,5).map(o => `
+    <div class="recent-item">
+      <div>
+        <div class="rid">${o.orderId}</div>
+        <div class="rclient">${esc(o.client?.name||'—')} · ${esc(o.campaignName||'')}</div>
+      </div>
+      <div>
+        <span class="badge badge-${o.status}">${statusLabel(o.status)}</span>
+      </div>
+      <div class="ramt">${(o.amount||0).toLocaleString('fr-FR')} XPF</div>
+    </div>
+  `).join('');
+
+  document.getElementById('stats-container').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card stat-ca">
+        <div class="count">${totalCA.toLocaleString('fr-FR')}</div>
+        <div class="label">CA Total (XPF)</div>
+      </div>
+      <div class="stat-card">
+        <div class="count" style="color:var(--text)">${orders.length}</div>
+        <div class="label">Total commandes</div>
+      </div>
+      ${statCards}
+    </div>
+    <div class="recent-orders">
+      <h2>🕐 5 dernières commandes</h2>
+      <div class="recent-list">${recent}</div>
+    </div>
+  `;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function statusLabel(s) {
+  const map = { paid:'Payé', processing:'En traitement', ready:'Prêt', shipped:'Expédié', delivered:'Livré', cancelled:'Annulé' };
+  return map[s] || s;
+}
+function statusOptions(current) {
+  return ['paid','processing','ready','shipped','delivered','cancelled']
+    .map(s => `<option value="${s}" ${s===current?'selected':''}>${statusLabel(s)}</option>`).join('');
+}
+function showAlert(id, msg, isError=false) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `alert ${isError?'alert-error':'alert-success'} show`;
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+function showLoginError() {
+  logout();
+  document.getElementById('login-error').style.display = 'block';
+}
+</script>
+</body>
+</html>

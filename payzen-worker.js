@@ -1,80 +1,109 @@
 /**
- * Cloudflare Worker — PayZen/Lyra Token Generator
- * À déployer sur Cloudflare Workers
+ * Cloudflare Worker — PayZen/Lyra Token Generator + Orders KV
  *
- * Variables à définir dans Cloudflare → Settings → Variables and Secrets :
- *   PAYZEN_SHOP_ID  = 41545085
- *   PAYZEN_TEST_KEY = testpassword_xxxx...   (ne pas écrire ici — mettre dans Cloudflare)
- *   PAYZEN_PROD_KEY = prodpassword_xxxx...  (ne pas écrire ici — mettre dans Cloudflare)
- *   WORKER_SECRET   = hcs-payzen-2026
+ * Variables Cloudflare → Settings → Variables and Secrets :
+ *   PAYZEN_SHOP_ID       = 41545085
+ *   PAYZEN_TEST_KEY      = testpassword_xxxx...
+ *   PAYZEN_PROD_KEY      = prodpassword_xxxx...
+ *   WORKER_SECRET        = hcs-payzen-2026
+ *   ADMIN_SECRET         = hcs-admin-2026
+ *   PAYZEN_PUBLIC_TEST_KEY
+ *   PAYZEN_PUBLIC_PROD_KEY
  *
- * ⚠️  Les clés V1/V2 (wFJgK... et kMOBs...) ne fonctionnent PAS ici.
- *     Il faut les clés REST depuis l'onglet "Clés d'API REST".
+ * KV Namespace: HCS_ORDERS (binding)
  */
 
-// URL API REST OSB Polynésie (source : back office onglet "Clés d'API REST")
 const PAYZEN_API_URL = 'https://api.secure.osb.pf/api-payment/V4/Charge/CreatePayment';
 
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Worker-Secret, X-Admin-Secret',
+};
 
-async function handleRequest(request) {
-  // CORS — autoriser vos domaines
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Worker-Secret',
-  };
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
+}
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+function err(msg, status = 400) {
+  return json({ error: msg }, status);
+}
 
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
-  }
+export default {
+  async fetch(request, env) {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-  // Vérification du secret partagé
+    const url = new URL(request.url);
+    const { pathname } = url;
+    const method = request.method;
+
+    // ─── POST / or POST /payzen-token → create form token ───────────────────
+    if (method === 'POST' && (pathname === '/' || pathname === '/payzen-token')) {
+      return handleCreateToken(request, env);
+    }
+
+    // ─── POST /order/save ────────────────────────────────────────────────────
+    if (method === 'POST' && pathname === '/order/save') {
+      return handleOrderSave(request, env);
+    }
+
+    // ─── GET /order/status?id=HCS-xxx ────────────────────────────────────────
+    if (method === 'GET' && pathname === '/order/status') {
+      return handleOrderStatus(url, env);
+    }
+
+    // ─── GET /admin/orders ───────────────────────────────────────────────────
+    if (method === 'GET' && pathname === '/admin/orders') {
+      return handleAdminListOrders(request, env);
+    }
+
+    // ─── PATCH /admin/order ──────────────────────────────────────────────────
+    if (method === 'PATCH' && pathname === '/admin/order') {
+      return handleAdminUpdateOrder(request, env);
+    }
+
+    // ─── GET /admin/settings ─────────────────────────────────────────────────
+    if (method === 'GET' && pathname === '/admin/settings') {
+      return handleAdminGetSettings(request, env);
+    }
+
+    // ─── POST /admin/settings ────────────────────────────────────────────────
+    if (method === 'POST' && pathname === '/admin/settings') {
+      return handleAdminSaveSettings(request, env);
+    }
+
+    return err('Not found', 404);
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Create PayZen formToken
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleCreateToken(request, env) {
   const secret = request.headers.get('X-Worker-Secret');
-  if (secret !== WORKER_SECRET) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  if (secret !== env.WORKER_SECRET) return err('Unauthorized', 401);
 
   let body;
-  try {
-    body = await request.json();
-  } catch {
-    return new Response('Invalid JSON', { status: 400 });
-  }
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
 
-  // Paramètres du paiement
   const { amount, currency = 'XPF', orderId, customerEmail, mode = 'TEST' } = body;
+  if (!amount || amount <= 0) return err('Montant invalide');
 
-  if (!amount || amount <= 0) {
-    return new Response(JSON.stringify({ error: 'Montant invalide' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
-  }
-
-  // Choix clé selon mode TEST/PRODUCTION
-  const apiKey = mode === 'PRODUCTION' ? PAYZEN_PROD_KEY : PAYZEN_TEST_KEY;
-
-  // Appel API Lyra pour créer le formToken
+  const apiKey = mode === 'PRODUCTION' ? env.PAYZEN_PROD_KEY : env.PAYZEN_TEST_KEY;
   const payload = {
-    amount: Math.round(amount),          // En centimes — XPF = devise entière
-    currency: currency,                   // XPF = 953
+    amount: Math.round(amount),
+    currency,
     orderId: orderId || `HCS-${Date.now()}`,
-    customer: {
-      email: customerEmail || null,
-    },
-    // Redirection après paiement
-    ipnTargetUrl: 'https://votre-site.com/payzen-webhook',
+    customer: { email: customerEmail || null },
+    ipnTargetUrl: 'https://payzen-hcs.highcoffeeshirt.workers.dev/order/save',
   };
 
-  // Encodage Basic Auth : shopId:apiKey en base64
-  const credentials = btoa(`${PAYZEN_SHOP_ID}:${apiKey}`);
+  const credentials = btoa(`${env.PAYZEN_SHOP_ID}:${apiKey}`);
 
   let lyraResponse;
   try {
@@ -86,35 +115,185 @@ async function handleRequest(request) {
       },
       body: JSON.stringify(payload),
     });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: 'Erreur réseau Lyra', detail: err.message }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
+  } catch (e) {
+    return err(`Erreur réseau Lyra: ${e.message}`, 502);
   }
 
   const lyraData = await lyraResponse.json();
 
   if (lyraData.status !== 'SUCCESS') {
-    return new Response(JSON.stringify({
-      error: 'Erreur PayZen',
-      detail: lyraData.answer?.errorMessage || 'Inconnue',
-      code: lyraData.answer?.errorCode
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
+    return err(
+      `Erreur PayZen: ${lyraData.answer?.errorMessage || 'Inconnue'} (${lyraData.answer?.errorCode})`,
+      400
+    );
   }
 
-  // Retourner le formToken au front
-  // publicKey : configurer PAYZEN_PUBLIC_TEST_KEY et PAYZEN_PUBLIC_PROD_KEY
-  // dans Cloudflare Workers → Settings → Variables and Secrets (onglet "Variables")
-  // Ces clés se trouvent dans le back-office OSB → "Clés d'API REST" → clés publiques
-  return new Response(JSON.stringify({
+  return json({
     formToken: lyraData.answer.formToken,
-    publicKey: mode === 'PRODUCTION' ? PAYZEN_PUBLIC_PROD_KEY : PAYZEN_PUBLIC_TEST_KEY,
-  }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    publicKey: mode === 'PRODUCTION' ? env.PAYZEN_PUBLIC_PROD_KEY : env.PAYZEN_PUBLIC_TEST_KEY,
   });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Save order to KV
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleOrderSave(request, env) {
+  const secret = request.headers.get('X-Worker-Secret');
+  if (secret !== env.WORKER_SECRET) return err('Unauthorized', 401);
+
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const orderId = body.orderId || `HCS-${Date.now()}`;
+
+  const order = {
+    orderId,
+    createdAt: body.createdAt || new Date().toISOString(),
+    status: body.status || 'paid',
+    amount: body.amount || 0,
+    currency: body.currency || 'XPF',
+    campaignName: body.campaignName || '',
+    product: body.product || '',
+    client: {
+      name: body.client?.name || '',
+      email: body.client?.email || '',
+      phone: body.client?.phone || '',
+    },
+    delivery: {
+      type: body.delivery?.type || 'pickup',
+      address: body.delivery?.address || '',
+      pickupDate: body.delivery?.pickupDate || '',
+      deliveryDelay: body.delivery?.deliveryDelay || 3,
+    },
+    note: body.note || '',
+  };
+
+  await env.HCS_ORDERS.put(orderId, JSON.stringify(order));
+
+  return json({ success: true, orderId });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Get public order status
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleOrderStatus(url, env) {
+  const id = url.searchParams.get('id');
+  if (!id) return err('Missing id parameter');
+
+  const raw = await env.HCS_ORDERS.get(id);
+  if (!raw) return err('Order not found', 404);
+
+  const order = JSON.parse(raw);
+
+  // Return only public fields
+  return json({
+    orderId: order.orderId,
+    status: order.status,
+    createdAt: order.createdAt,
+    amount: order.amount,
+    currency: order.currency,
+    product: order.product,
+    campaignName: order.campaignName,
+    delivery: order.delivery,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin: list all orders
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleAdminListOrders(request, env) {
+  if (request.headers.get('X-Admin-Secret') !== env.ADMIN_SECRET) {
+    return err('Unauthorized', 401);
+  }
+
+  const list = await env.HCS_ORDERS.list();
+  const orders = [];
+
+  for (const key of list.keys) {
+    if (key.name === '__settings__') continue;
+    const raw = await env.HCS_ORDERS.get(key.name);
+    if (raw) orders.push(JSON.parse(raw));
+  }
+
+  // Sort by createdAt desc
+  orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  return json({ orders });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin: update order (status, note, pickupDate)
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleAdminUpdateOrder(request, env) {
+  if (request.headers.get('X-Admin-Secret') !== env.ADMIN_SECRET) {
+    return err('Unauthorized', 401);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const { orderId, status, note, pickupDate } = body;
+  if (!orderId) return err('Missing orderId');
+
+  const raw = await env.HCS_ORDERS.get(orderId);
+  if (!raw) return err('Order not found', 404);
+
+  const order = JSON.parse(raw);
+
+  if (status !== undefined) order.status = status;
+  if (note !== undefined) order.note = note;
+  if (pickupDate !== undefined) order.delivery.pickupDate = pickupDate;
+  order.updatedAt = new Date().toISOString();
+
+  await env.HCS_ORDERS.put(orderId, JSON.stringify(order));
+
+  return json({ success: true, order });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin: get settings
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleAdminGetSettings(request, env) {
+  if (request.headers.get('X-Admin-Secret') !== env.ADMIN_SECRET) {
+    return err('Unauthorized', 401);
+  }
+
+  const raw = await env.HCS_ORDERS.get('__settings__');
+  const settings = raw ? JSON.parse(raw) : getDefaultSettings();
+
+  return json({ settings });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin: save settings
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleAdminSaveSettings(request, env) {
+  if (request.headers.get('X-Admin-Secret') !== env.ADMIN_SECRET) {
+    return err('Unauthorized', 401);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  await env.HCS_ORDERS.put('__settings__', JSON.stringify(body));
+
+  return json({ success: true });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Default settings structure (8 campaigns)
+// ─────────────────────────────────────────────────────────────────────────────
+function getDefaultSettings() {
+  const campaigns = [
+    'Andromeda', 'Orion', 'Lyra', 'Vega', 'Sirius', 'Atlas', 'Nova', 'Zenith'
+  ];
+  return {
+    campaigns: campaigns.map(name => ({
+      name,
+      processingDelayDays: 2,
+      deliveryDelayDays: 3,
+      pickupAvailable: true,
+      pickupHours: '08h00 – 17h00',
+    })),
+  };
 }
