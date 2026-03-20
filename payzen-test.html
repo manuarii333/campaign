@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-eval' 'unsafe-inline' https: data: blob:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https: data: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https: blob:; connect-src 'self' https:; font-src 'self' https: data:;">
+  <title>PayZen TEST — HCS Tahiti</title>
+  
+  <!-- PayZen OSB CSS -->
+  <link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css">
+  <link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css">
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e8e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #6c63ff, #ff6584);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .subtitle {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 28px;
+    }
+    
+    .field-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    input, select {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus, select:focus {
+      border-color: #6c63ff;
+    }
+    
+    input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #6c63ff, #ff6584);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .status {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    
+    .status.loading {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      display: block;
+    }
+    
+    .status.error {
+      background: rgba(233,69,96,0.15);
+      color: #ff6584;
+      border: 1px solid rgba(233,69,96,0.3);
+      display: block;
+    }
+    
+    .status.success {
+      background: rgba(39,174,96,0.15);
+      color: #43e97b;
+      border: 1px solid rgba(39,174,96,0.3);
+      display: block;
+    }
+    
+    #payzen-form-container {
+      display: none;
+      margin-top: 20px;
+    }
+    
+    .kr-embedded .kr-payment-button {
+      background: #6c63ff !important;
+      border-radius: 30px !important;
+      font-weight: 700 !important;
+    }
+    
+    .test-cards {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .test-cards h3 {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .card {
+      background: rgba(108,99,255,0.1);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .card:hover {
+      background: rgba(108,99,255,0.2);
+      border-color: rgba(108,99,255,0.5);
+    }
+    
+    .card-num {
+      font-weight: 700;
+      color: #6c63ff;
+      font-family: monospace;
+      margin-bottom: 4px;
+    }
+    
+    .card-meta {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+    }
+    
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔒 PayZen TEST</h1>
+  <div class="subtitle">Formulaire de test — Mode TEST uniquement</div>
+  
+  <div class="field-group">
+    <label>Montant (XPF)</label>
+    <input type="number" id="amount" value="2500" min="100" max="100000" placeholder="2500">
+  </div>
+  
+  <div class="field-group">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="test@exemple.com" value="test@exemple.com">
+  </div>
+  
+  <div class="field-group">
+    <label>Mode</label>
+    <select id="mode">
+      <option value="TEST">TEST</option>
+      <option value="PRODUCTION">PRODUCTION</option>
+    </select>
+  </div>
+  
+  <button class="btn" id="btn-init" onclick="initPayment()">
+    💳 Initialiser le paiement
+  </button>
+  
+  <div class="status" id="status"></div>
+  
+  <div id="payzen-form-container">
+    <div id="myPaymentForm">
+      <div class="kr-smart-form" kr-card-form></div>
+    </div>
+  </div>
+  
+  <div class="test-cards">
+    <h3>💳 Cartes de test</h3>
+    <div class="card" onclick="setCard('4970100000000055')">
+      <div class="card-num">4970 1000 0000 0055</div>
+      <div class="card-meta">✅ Paiement accepté</div>
+    </div>
+    <div class="card" onclick="setCard('4970100000000014')">
+      <div class="card-num">4970 1000 0000 0014</div>
+      <div class="card-meta">❌ Paiement refusé</div>
+    </div>
+    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 8px;">
+      Expiry: 12/26 | CVV: 123 | Nom: Test
+    </div>
+  </div>
+</div>
+
+<script>
+  const CONFIG = {
+    workerUrl: 'https://payzen-hcs.highcoffeeshirt.workers.dev',
+    workerSecret: 'hcs-payzen-2026',
+    sdkUrl: 'https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js',
+  };
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('status');
+    el.className = 'status ' + type;
+    el.textContent = msg;
+  }
+
+  function setCard(num) {
+    // Pré-remplir si possible (dépend du SDK)
+    console.log('Carte sélectionnée:', num);
+    showStatus('Carte ' + num.slice(-4) + ' sélectionnée. Cliquez sur Payer.', 'loading');
+  }
+
+  async function initPayment() {
+    const amount = parseInt(document.getElementById('amount').value);
+    const email = document.getElementById('email').value.trim();
+    const mode = document.getElementById('mode').value;
+
+    if (!amount || amount <= 0) {
+      showStatus('Montant invalide', 'error');
+      return;
+    }
+    if (!email || !email.includes('@')) {
+      showStatus('Email invalide', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-init');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Chargement...';
+    showStatus('Connexion au serveur...', 'loading');
+
+    try {
+      const res = await fetch(CONFIG.workerUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Worker-Secret': CONFIG.workerSecret,
+        },
+        body: JSON.stringify({
+          amount: amount,
+          currency: 'XPF',
+          orderId: 'TEST-' + Date.now(),
+          customerEmail: email,
+          mode: mode,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Erreur Worker: ' + res.status);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error + (data.detail ? ' — ' + data.detail : ''));
+
+      await loadPayzenSDK(data.formToken, data.publicKey);
+
+    } catch (err) {
+      showStatus('Erreur: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '💳 Initialiser le paiement';
+    }
+  }
+
+  function loadPayzenSDK(formToken, publicKey) {
+    return new Promise((resolve, reject) => {
+      const old = document.getElementById('payzen-sdk');
+      if (old) old.remove();
+
+      const script = document.createElement('script');
+      script.id = 'payzen-sdk';
+      script.src = CONFIG.sdkUrl;
+      script.setAttribute('kr-public-key', publicKey);
+      script.setAttribute('kr-language', 'fr-FR');
+
+      script.onload = () => {
+        KR.setFormToken(formToken).then(() => {
+          document.getElementById('payzen-form-container').style.display = 'block';
+          document.getElementById('btn-init').style.display = 'none';
+          showStatus('Formulaire chargé. Sélectionnez une carte ci-dessous et cliquez sur Payer.', 'loading');
+
+          KR.onSubmit(resp => {
+            if (resp.clientAnswer.orderStatus === 'PAID') {
+              showStatus('✅ Paiement accepté! Merci pour votre commande.', 'success');
+              document.getElementById('payzen-form-container').style.display = 'none';
+            } else {
+              showStatus('❌ Paiement échoué: ' + resp.clientAnswer.orderStatus, 'error');
+            }
+            return false;
+          });
+
+          resolve();
+        });
+      };
+
+      script.onerror = () => reject(new Error('Impossible de charger le SDK PayZen'));
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+</body>
+</html>
