@@ -1015,9 +1015,11 @@ function exportAd(id) {
   const pzSecret = g('pz-secret-'+id)?.value?.trim() || '';
   const pzMode   = g('pz-mode-'+id)?.value || 'TEST';
   const pzBlock  = pzAmount > 0 && pzWorker ? `
-<!-- SDK PayZen Lyra -->
-<link rel="stylesheet" href="https://static.lyra.com/static/js/krypton-client/V4.0/stable/kr-payment-form.min.css">
-<script src="https://static.lyra.com/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js" kr-public-key="PLACEHOLDER" kr-language="fr-FR"><\/script>
+<!-- CSP : autoriser eval() requis par le SDK PayZen/OSB -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-eval' 'unsafe-inline' https: data: blob:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https: data: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https: blob:; connect-src 'self' https:; font-src 'self' https: data:;">
+<!-- SDK PayZen OSB Polynésie -->
+<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css">
+<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css">
 <style>
 .payment-section{max-width:500px;margin:40px auto;padding:32px 24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:16px}
 .payment-title{font-size:1.1rem;font-weight:700;color:white;margin-bottom:6px;text-align:center}
@@ -1044,9 +1046,19 @@ function exportAd(id) {
     const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Worker-Secret':WORKER_SECRET},body:JSON.stringify({amount:MONTANT,currency:'XPF',orderId:'HCS-'+Date.now(),mode:MODE})});
     if(!res.ok){const e=await res.json();throw new Error(e.error||'Erreur serveur');}
     const{formToken,publicKey}=await res.json();
-    KR.setFormConfig({formToken,\u0027kr-public-key\u0027:publicKey,\u0027kr-language\u0027:\u0027fr-FR\u0027});
-    loadEl.style.display='none';formEl.style.display='block';
-    KR.onSubmit(d=>{if(d.clientAnswer.orderStatus==='PAID'){formEl.style.display='none';okEl.style.display='block';}return false;});
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
+      s.setAttribute('kr-public-key',publicKey);
+      s.setAttribute('kr-language','fr-FR');
+      s.onload=()=>KR.setFormToken(formToken).then(()=>{
+        loadEl.style.display='none';formEl.style.display='block';
+        KR.onSubmit(d=>{if(d.clientAnswer.orderStatus==='PAID'){formEl.style.display='none';okEl.style.display='block';}return false;});
+        resolve();
+      });
+      s.onerror=()=>reject(new Error('SDK PayZen OSB non chargé'));
+      document.head.appendChild(s);
+    });
   }catch(e){loadEl.style.display='none';errEl.style.display='block';errEl.textContent='Impossible de charger le paiement : '+e.message;}
 })();
 <\/script>` : '';
