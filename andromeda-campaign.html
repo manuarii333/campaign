@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Andromeda Campaign Builder — HCS</title>
+<style>
+:root {
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-panel: #1e1e3a;
+  --accent: #6c63ff;
+  --accent-2: #ff6584;
+  --accent-3: #43e97b;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9090b0;
+  --border: #2a2a4a;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-primary); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* HEADER */
+.app-header { background: linear-gradient(135deg,#0f0f1a,#1a1a2e); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 14px; z-index: 100; flex-shrink: 0; }
+.logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg,var(--accent),var(--accent-2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.app-title { font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; }
+.app-subtitle { font-size: 0.65rem; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase; }
+.header-divider { width: 1px; height: 30px; background: var(--border); }
+.campaign-badge { background: linear-gradient(135deg,var(--accent),var(--accent-2)); padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; }
+.header-actions { margin-left: auto; display: flex; gap: 8px; }
+.btn { padding: 7px 14px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #7c73ff; transform: translateY(-1px); }
+.btn-outline { background: transparent; color: var(--text-primary); border: 1px solid var(--border); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+/* LAYOUT */
+.app-body { display: flex; flex: 1; overflow: hidden; }
+
+/* SIDEBAR */
+.sidebar { width: 210px; background: var(--bg-secondary); border-right: 1px solid var(--border); overflow-y: auto; padding: 10px 8px; flex-shrink: 0; }
+.sidebar-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 2px; color: var(--text-secondary); text-transform: uppercase; padding: 4px 8px 8px; }
+.camp-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; margin-bottom: 2px; border: 1px solid transparent; }
+.camp-item:hover { background: var(--bg-card); }
+.camp-item.active { background: var(--bg-card); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.item-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.item-name { font-size: 0.76rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-tag { font-size: 0.6rem; color: var(--text-secondary); }
+.item-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-left: auto; }
+.dot-on { background: var(--accent-3); }
+.dot-off { background: var(--text-secondary); }
+
+/* WORKSPACE */
+.workspace { flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-primary); }
+
+/* Campaign bar */
+.camp-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.camp-title { font-size: 1.1rem; font-weight: 800; }
+.camp-tags { display: flex; gap: 6px; margin-top: 4px; }
+.tag { padding: 2px 8px; border-radius: 10px; font-size: 0.62rem; font-weight: 600; background: rgba(108,99,255,0.2); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+
+/* Builder grid */
+.builder-grid { display: grid; grid-template-columns: 1fr 310px; gap: 14px; margin-bottom: 16px; }
+
+/* Ad preview */
+.ad-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.preview-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.ptab { padding: 5px 12px; border-radius: 16px; font-size: 0.68rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); transition: all 0.2s; }
+.ptab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Facebook mock */
+.fb-mock { background: #fff; border-radius: 8px; overflow: hidden; max-width: 380px; margin: 0 auto; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.fb-head { padding: 9px 12px; display: flex; align-items: center; gap: 8px; background: #fff; border-bottom: 1px solid #e0e0e0; }
+.fb-ava { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#6c63ff,#ff6584); }
+.fb-page { font-size: 0.78rem; font-weight: 600; color: #1c1e21; }
+.fb-spon { font-size: 0.65rem; color: #65676b; }
+.ad-canvas { width: 100%; aspect-ratio: 1; position: relative; overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: center; background: #1a1a2e; }
+.ad-canvas .ad-overlay { position: absolute; inset: 0; }
+.ad-canvas .ad-content { position: relative; z-index: 2; padding: 16px; text-align: center; color: white; width: 100%; }
+.ad-headline { font-size: clamp(13px,3.5vw,20px); font-weight: 800; line-height: 1.2; margin-bottom: 7px; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
+.ad-subline { font-size: clamp(9px,2vw,12px); opacity: 0.9; margin-bottom: 10px; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+.ad-badge { display: inline-block; color: white; padding: 5px 14px; border-radius: 18px; font-weight: 700; font-size: clamp(9px,2vw,11px); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+.upload-hint { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(108,99,255,0.12); border: 2px dashed var(--accent); opacity: 0; transition: opacity 0.2s; cursor: pointer; }
+.ad-canvas:hover .upload-hint { opacity: 1; }
+.upload-hint span { color: var(--accent); font-size: 0.72rem; font-weight: 600; }
+.fb-foot { padding: 9px 12px; background: #f0f2f5; border-top: 1px solid #e0e0e0; }
+.fb-cta-row { display: flex; align-items: center; justify-content: space-between; }
+.fb-domain { font-size: 0.62rem; color: #65676b; text-transform: uppercase; }
+.fb-linktitle { font-size: 0.75rem; font-weight: 600; color: #1c1e21; }
+.fb-cta-btn { background: #e4e6eb; border: none; border-radius: 6px; padding: 7px 14px; font-size: 0.75rem; font-weight: 600; color: #1c1e21; cursor: pointer; }
+.fb-react { padding: 7px 12px; display: flex; gap: 14px; }
+.fb-react span { font-size: 0.68rem; color: #65676b; cursor: pointer; }
+
+/* Gradient swatches */
+.swatch-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+.swatch { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; border: 2px solid var(--border); transition: transform 0.15s; }
+.swatch:hover { transform: scale(1.15); border-color: var(--accent); }
+
+/* Editor panel */
+.editor-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow-y: auto; max-height: 620px; }
+.ep-head { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.8rem; font-weight: 700; }
+.ep-section { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.ep-section:last-child { border-bottom: none; }
+.ep-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 9px; }
+.frow { margin-bottom: 8px; }
+.flabel { font-size: 0.68rem; color: var(--text-secondary); margin-bottom: 3px; display: block; }
+.finput, .fselect { width: 100%; padding: 7px 9px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-primary); font-size: 0.75rem; outline: none; transition: border-color 0.2s; }
+.finput:focus { border-color: var(--accent); }
+.upload-btn { width: 100%; padding: 9px; border-radius: var(--radius-sm); border: 2px dashed var(--border); background: var(--bg-panel); color: var(--text-secondary); font-size: 0.72rem; cursor: pointer; text-align: center; transition: all 0.2s; }
+.upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+.prod-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
+.logo-grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.logo-cell { aspect-ratio: 1; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-panel); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: var(--accent); position: relative; overflow: hidden; transition: border-color 0.2s; }
+.logo-cell:hover { border-color: var(--accent); }
+.logo-cell img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Landing preview */
+.lp-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.lp-head { padding: 11px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; }
+.lp-body { padding: 16px; }
+.lp-hero { border-radius: var(--radius-sm); overflow: hidden; position: relative; min-height: 150px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+.lp-hero-bg { position: absolute; inset: 0; }
+.lp-hero-content { position: relative; z-index: 2; text-align: center; padding: 24px; }
+.lp-hero-content h2 { font-size: 1.2rem; font-weight: 800; color: white; margin-bottom: 7px; }
+.lp-hero-content p { font-size: 0.8rem; color: rgba(255,255,255,0.85); margin-bottom: 14px; }
+.lp-cta { display: inline-block; padding: 10px 24px; border-radius: 22px; background: white; font-weight: 700; font-size: 0.82rem; cursor: pointer; border: none; }
+.lp-prods { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 12px; }
+.lp-prod { background: var(--bg-panel); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.lp-prod-img { aspect-ratio: 1; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.lp-prod-info { padding: 7px; }
+.lp-prod-name { font-size: 0.68rem; font-weight: 600; }
+.lp-prod-price { font-size: 0.68rem; font-weight: 700; }
+.lp-feats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+.lp-feat { background: var(--bg-panel); padding: 10px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border); }
+.lp-feat-icon { font-size: 18px; margin-bottom: 5px; }
+.lp-feat-text { font-size: 0.65rem; color: var(--text-secondary); }
+.lp-plans { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+.lp-plan { background: var(--bg-panel); border-radius: var(--radius-sm); padding: 12px; border: 1px solid var(--border); text-align: center; }
+.lp-plan.feat { border-color: var(--accent); background: rgba(108,99,255,0.1); }
+.lp-plan-name { font-size: 0.68rem; font-weight: 700; color: var(--accent); margin-bottom: 5px; }
+.lp-plan-price { font-size: 1rem; font-weight: 800; margin-bottom: 3px; }
+.lp-plan-per { font-size: 0.6rem; color: var(--text-secondary); margin-bottom: 7px; }
+.lp-plan ul { list-style: none; font-size: 0.62rem; color: var(--text-secondary); text-align: left; }
+.lp-plan ul li::before { content: '✓ '; color: var(--accent-3); }
+.lp-plan ul li { padding: 1px 0; }
+.logo9 { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-bottom: 12px; }
+.logo9-cell { aspect-ratio: 1; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-secondary); cursor: pointer; position: relative; overflow: hidden; transition: border-color 0.2s; }
+.logo9-cell:hover { border-color: var(--accent); }
+.logo9-cell img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo-icon">🌌</div>
+  <div>
+    <div class="app-title">ANDROMEDA</div>
+    <div class="app-subtitle">Campaign Builder — HCS Tahiti</div>
+  </div>
+  <div class="header-divider"></div>
+  <div class="campaign-badge">📣 FACEBOOK ADS 2026</div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="exportAll()">⬇️ Exporter tout</button>
+    <button class="btn btn-primary" onclick="alert('Templates prêts ! Importez dans Facebook Ads Manager.')">🚀 Lancer campagne</button>
+  </div>
+</header>
+
+<div class="app-body">
+  <aside class="sidebar">
+    <div class="sidebar-label">8 Campagnes</div>
+    <div id="sidebarList"></div>
+  </aside>
+  <div class="workspace" id="workspace"></div>
+</div>
+
+<script>
+const CAMPS = [
+  {
+    id:0, icon:'🚗', iconBg:'linear-gradient(135deg,#ff6584,#ff9966)',
+    name:'Sticker Auto', tag:'Pare-brise promo', active:true,
+    tags:['Promo','Sticker','Véhicule'],
+    colors:{primary:'#ff6584',badge:'#ff6584',overlay:'rgba(10,5,20,0.55)'},
+    gradients:['linear-gradient(135deg,#ff6584,#ff9966)','linear-gradient(135deg,#1a1a2e,#e94560)','linear-gradient(135deg,#232526,#414345)'],
+    headline:'TON STICKER POUR TA VOITURE',
+    subline:'Sticker pare-brise 15cm × 1m20 à 1m35 — Sur mesure',
+    badge:'🔥 PROMO LIMITÉE',
+    cta:'Commander maintenant', domain:'hcs-tahiti.com', linktitle:'Commande ton sticker sur mesure',
+    features:[{i:'📐',t:'15cm × 1m20 à 1m35'},{i:'🎨',t:'Impression HD couleurs'},{i:'🚗',t:'Résistant UV & intempéries'}],
+    products:[{e:'🚗',n:'Sticker Pare-brise S',p:'2 500 XPF'},{e:'🚙',n:'Sticker Pare-brise M',p:'3 200 XPF'},{e:'✨',n:'Sticker Custom',p:'Sur devis'}],
+    ltype:'product', heroGrad:'linear-gradient(135deg,#1a1a2e,#e94560)'
+  },
+  {
+    id:1, icon:'👕', iconBg:'linear-gradient(135deg,#4facfe,#00f2fe)',
+    name:'T-Shirt Classic Mars', tag:'Édition collector', active:false,
+    tags:['T-shirt','Mars','Classic'],
+    colors:{primary:'#4facfe',badge:'#4facfe',overlay:'rgba(0,10,30,0.5)'},
+    gradients:['linear-gradient(135deg,#4facfe,#00f2fe)','linear-gradient(135deg,#0f2027,#4facfe)','linear-gradient(135deg,#1a1a2e,#203a43)'],
+    headline:'COLLECTION T-SHIRT MARS 2026',
+    subline:'Designs exclusifs imprimés DTF — Édition collector mars',
+    badge:'🗓️ MOIS DE MARS',
+    cta:'Voir la collection', domain:'hcs-tahiti.com', linktitle:'T-Shirts DTF édition Mars 2026',
+    features:[{i:'🎨',t:'Impression DTF HD'},{i:'👕',t:'100% coton premium'},{i:'📦',t:'Livraison rapide'}],
+    products:[{e:'👕',n:'T-Shirt Blanc Mars',p:'3 500 XPF'},{e:'🖤',n:'T-Shirt Noir Mars',p:'3 500 XPF'},{e:'🌈',n:'T-Shirt Tie-Dye',p:'4 200 XPF'}],
+    ltype:'product', heroGrad:'linear-gradient(135deg,#0f2027,#4facfe)'
+  },
+  {
+    id:2, icon:'🧢', iconBg:'linear-gradient(135deg,#43e97b,#38f9d7)',
+    name:'Casquette Mars', tag:'Édition limitée', active:false,
+    tags:['Casquette','Mars','Accessoire'],
+    colors:{primary:'#43e97b',badge:'#43e97b',overlay:'rgba(0,15,10,0.5)'},
+    gradients:['linear-gradient(135deg,#43e97b,#38f9d7)','linear-gradient(135deg,#093028,#43e97b)','linear-gradient(135deg,#1a1a2e,#237a57)'],
+    headline:'CASQUETTES MARS 2026',
+    subline:'Édition limitée — Logos brodés & DTF personnalisés',
+    badge:'🧢 ÉDITION MARS',
+    cta:'Commander', domain:'hcs-tahiti.com', linktitle:'Casquettes édition Mars 2026',
+    features:[{i:'🧢',t:'Broderie & DTF'},{i:'🎯',t:'Logo sur mesure'},{i:'⚡',t:'Stock limité'}],
+    products:[{e:'🧢',n:'Dad Hat',p:'3 000 XPF'},{e:'🏷️',n:'Snapback',p:'3 500 XPF'},{e:'✨',n:'Casquette Brodée',p:'4 500 XPF'}],
+    ltype:'product', heroGrad:'linear-gradient(135deg,#093028,#43e97b)'
+  },
+  {
+    id:3, icon:'🏄', iconBg:'linear-gradient(135deg,#fa709a,#fee140)',
+    name:'DTF Originals Sports', tag:'Polynésie authentique', active:false,
+    tags:['DTF','Sports','Polynésie'],
+    colors:{primary:'#fa709a',badge:'#fa709a',overlay:'rgba(20,5,20,0.55)'},
+    gradients:['linear-gradient(135deg,#fa709a,#fee140)','linear-gradient(135deg,#1a0533,#fa709a)','linear-gradient(135deg,#2d1b69,#11998e)'],
+    headline:'DTF ORIGINALS — SPORTS POLY.',
+    subline:'Logos uniques édition authentique — Polynésie 2026',
+    badge:'🏄 ÉDITION AUTHENTIQUE',
+    cta:'Découvrir la collection', domain:'hcs-tahiti.com', linktitle:'DTF Originals — Sports Polynésiens',
+    features:[{i:'🏄',t:'Surf · Va\'a · Rugby'},{i:'🌺',t:'Design polynésien'},{i:'🏆',t:'Édition authentique'}],
+    products:[{e:'🏄',n:'DTF Surf Logo',p:'1 200 XPF'},{e:'🚣',n:'DTF Va\'a Crew',p:'1 200 XPF'},{e:'🏉',n:'DTF Rugby Poly.',p:'1 200 XPF'}],
+    ltype:'logos', heroGrad:'linear-gradient(135deg,#1a0533,#fa709a 60%,#fee140)'
+  },
+  {
+    id:4, icon:'📋', iconBg:'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+    name:'Grille DTF 3×3 Collector', tag:'Pack mars 2026', active:false,
+    tags:['DTF','Grille','Collector'],
+    colors:{primary:'#a18cd1',badge:'#a18cd1',overlay:'rgba(10,5,25,0.55)'},
+    gradients:['linear-gradient(135deg,#a18cd1,#fbc2eb)','linear-gradient(135deg,#1a1a2e,#a18cd1)','linear-gradient(135deg,#2d1b69,#fbc2eb)'],
+    headline:'GRILLE DTF 3×3 — COLLECTOR',
+    subline:'9 logos à imprimer sur t-shirt — Mars 2026',
+    badge:'📋 PACK COLLECTOR',
+    cta:'Obtenir le pack', domain:'hcs-tahiti.com', linktitle:'Pack Grille DTF 3×3 Collector Mars',
+    features:[{i:'📋',t:'9 logos inclus'},{i:'🖨️',t:'Prêts à imprimer'},{i:'📅',t:'Édition Mars 2026'}],
+    products:[{e:'📋',n:'Pack Grille 3×3',p:'8 500 XPF'},{e:'🖨️',n:'Grille + Impression',p:'12 000 XPF'},{e:'⭐',n:'Pack Complet DTF',p:'18 000 XPF'}],
+    ltype:'grid', heroGrad:'linear-gradient(135deg,#1a1a2e,#a18cd1)'
+  },
+  {
+    id:5, icon:'🎓', iconBg:'linear-gradient(135deg,#f093fb,#f5576c)',
+    name:'Formation Textile', tag:'Programme pro DTF', active:false,
+    tags:['Formation','Pro','DTF'],
+    colors:{primary:'#f093fb',badge:'#f5576c',overlay:'rgba(20,5,25,0.6)'},
+    gradients:['linear-gradient(135deg,#f093fb,#f5576c)','linear-gradient(135deg,#1a1a2e,#f093fb)','linear-gradient(135deg,#2d1b69,#f5576c)'],
+    headline:'FORMATION TEXTILE DTF PRO',
+    subline:'Maîtrise l\'impression textile — Deviens expert DTF',
+    badge:'🎓 PROGRAMME PRO',
+    cta:'S\'inscrire maintenant', domain:'hcs-tahiti.com', linktitle:'Formation Textile DTF — Programme Pro',
+    features:[{i:'📚',t:'Modules complets'},{i:'🛠️',t:'Pratique en atelier'},{i:'🏆',t:'Certification HCS'}],
+    products:[{e:'📗',n:'Module Débutant',p:'15 000 XPF'},{e:'📘',n:'Module Avancé',p:'25 000 XPF'},{e:'🏆',n:'Formation Complète',p:'35 000 XPF'}],
+    ltype:'training', heroGrad:'linear-gradient(135deg,#1a1a2e,#f093fb 50%,#f5576c)'
+  },
+  {
+    id:6, icon:'🎊', iconBg:'linear-gradient(135deg,#30cfd0,#330867)',
+    name:'New Year Abonnements', tag:'Dès 1 800 XPF/mois', active:false,
+    tags:['Abonnement','New Year','Bonus'],
+    colors:{primary:'#30cfd0',badge:'#30cfd0',overlay:'rgba(5,5,30,0.65)'},
+    gradients:['linear-gradient(135deg,#30cfd0,#330867)','linear-gradient(135deg,#0f0c29,#30cfd0)','linear-gradient(135deg,#302b63,#30cfd0)'],
+    headline:'ABONNEMENTS NEW YEAR 2026',
+    subline:'Accès privilège · Points bonus · Nouveaux services',
+    badge:'🎊 DÈS 1 800 XPF/MOIS',
+    cta:'Choisir mon abonnement', domain:'hcs-tahiti.com', linktitle:'Abonnements HCS — New Year 2026',
+    features:[{i:'⭐',t:'Points bonus'},{i:'🎁',t:'Logos offerts'},{i:'🔔',t:'Offres en avant-première'}],
+    products:[{e:'🌱',n:'Starter',p:'1 800 XPF/mois'},{e:'⚡',n:'Pro',p:'3 500 XPF/mois'},{e:'👑',n:'Premium',p:'5 500 XPF/mois'}],
+    ltype:'subscription', heroGrad:'linear-gradient(135deg,#0f0c29,#302b63 50%,#30cfd0)'
+  },
+  {
+    id:7, icon:'✏️', iconBg:'linear-gradient(135deg,#f6d365,#fda085)',
+    name:'Graphiques / Vecto IA', tag:'Détourage & vectorisation', active:false,
+    tags:['Graphisme','Vectoriel','IA'],
+    colors:{primary:'#f6d365',badge:'#fda085',overlay:'rgba(10,8,5,0.5)'},
+    gradients:['linear-gradient(135deg,#f6d365,#fda085)','linear-gradient(135deg,#2c3e50,#fda085)','linear-gradient(135deg,#1a1a2e,#f6d365)'],
+    headline:'GRAPHIQUES & VECTORISATION IA',
+    subline:'Conversion logo · Détourage IA · Suppression de fond',
+    badge:'✏️ SERVICE PRO',
+    cta:'Demander un devis', domain:'hcs-tahiti.com', linktitle:'Vectorisation & Graphisme — Service IA',
+    features:[{i:'🔄',t:'Vectorisation HD'},{i:'✂️',t:'Détourage IA'},{i:'⚡',t:'Livraison rapide'}],
+    products:[{e:'📐',n:'Vectorisation simple',p:'2 500 XPF'},{e:'✂️',n:'Détourage IA',p:'1 500 XPF'},{e:'🎨',n:'Pack graphique',p:'8 000 XPF'}],
+    ltype:'service', heroGrad:'linear-gradient(135deg,#2c3e50,#f6d365)'
+  }
+];
+
+let current = 0;
+
+// Build sidebar
+function buildSidebar() {
+  const el = document.getElementById('sidebarList');
+  el.innerHTML = CAMPS.map(c => `
+    <div class="camp-item ${c.id===0?'active':''}" id="si-${c.id}" onclick="select(${c.id})">
+      <div class="item-icon" style="background:${c.iconBg}">${c.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="item-name">${c.name}</div>
+        <div class="item-tag">${c.tag}</div>
+      </div>
+      <div class="item-dot ${c.active?'dot-on':'dot-off'}"></div>
+    </div>
+  `).join('');
+}
+
+function select(id) {
+  document.querySelectorAll('.camp-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('si-'+id).classList.add('active');
+  current = id;
+  render(id);
+}
+
+function render(id) {
+  const c = CAMPS[id];
+  const ws = document.getElementById('workspace');
+  ws.innerHTML = `
+    <div class="camp-bar">
+      <div>
+        <div class="camp-title">${c.icon} ${c.name}</div>
+        <div class="camp-tags">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="exportLP(${id})">💾 Exporter LP</button>
+        <button class="btn btn-primary" onclick="exportAd(${id})">📤 Exporter tout</button>
+      </div>
+    </div>
+
+    <div class="builder-grid">
+      <!-- AD PREVIEW -->
+      <div class="ad-wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:0.8rem;font-weight:700">Vignette Facebook Ads</span>
+          <div class="preview-tabs">
+            <button class="ptab active" onclick="fmtSwitch(this,'1/1',${id})">1:1</button>
+            <button class="ptab" onclick="fmtSwitch(this,'1.91/1',${id})">Paysage</button>
+            <button class="ptab" onclick="fmtSwitch(this,'9/16',${id})">Story</button>
+          </div>
+        </div>
+        <div class="fb-mock">
+          <div class="fb-head">
+            <div class="fb-ava"></div>
+            <div>
+              <div class="fb-page">HCS Tahiti</div>
+              <div class="fb-spon">Sponsorisé · 🌐</div>
+            </div>
+          </div>
+          <div class="ad-canvas" id="cv-${id}" style="background:${c.heroGrad}">
+            <div class="ad-overlay" id="ov-${id}" style="background:${c.colors.overlay}"></div>
+            <div class="ad-content">
+              <div class="ad-headline" id="hl-${id}">${c.headline}</div>
+              <div class="ad-subline" id="sl-${id}">${c.subline}</div>
+              <div class="ad-badge" id="bd-${id}" style="background:${c.colors.badge}">${c.badge}</div>
+            </div>
+            <div class="upload-hint" onclick="document.getElementById('bgu-${id}').click()">
+              <span style="font-size:28px">🖼️</span>
+              <span>Charger image de fond</span>
+              <span style="font-size:0.62rem;opacity:0.7">Cliquez ou glissez-déposez</span>
+            </div>
+            <input type="file" id="bgu-${id}" accept="image/*" style="display:none" onchange="loadBg(event,${id})">
+          </div>
+          <div class="fb-foot">
+            <div class="fb-cta-row">
+              <div>
+                <div class="fb-domain" id="dm-${id}">${c.domain}</div>
+                <div class="fb-linktitle" id="lt-${id}">${c.linktitle}</div>
+              </div>
+              <button class="fb-cta-btn" id="ct-${id}">${c.cta}</button>
+            </div>
+          </div>
+          <div class="fb-react"><span>👍 J'aime</span><span>💬 Commenter</span><span>↗️ Partager</span></div>
+        </div>
+        <div>
+          <div style="font-size:0.65rem;color:var(--text-secondary);margin-top:12px;margin-bottom:7px">Thèmes rapides :</div>
+          <div class="swatch-row">
+            ${c.gradients.map(g=>`<div class="swatch" style="background:${g}" onclick="applyGrad('${g}',${id})" title="Appliquer ce thème"></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- EDITOR -->
+      <div class="editor-panel">
+        <div class="ep-head">✏️ Éditeur de composants</div>
+
+        <div class="ep-section">
+          <div class="ep-label">Texte de la publicité</div>
+          <div class="frow"><label class="flabel">Titre principal</label>
+            <input class="finput" value="${c.headline}" oninput="upd('hl-${id}',this.value)"></div>
+          <div class="frow"><label class="flabel">Sous-titre</label>
+            <input class="finput" value="${c.subline}" oninput="upd('sl-${id}',this.value)"></div>
+          <div class="frow"><label class="flabel">Badge promo</label>
+            <input class="finput" value="${c.badge}" oninput="upd('bd-${id}',this.value)"></div>
+          <div class="frow"><label class="flabel">Texte bouton CTA</label>
+            <input class="finput" value="${c.cta}" oninput="upd('ct-${id}',this.value)"></div>
+        </div>
+
+        <div class="ep-section">
+          <div class="ep-label">Image de fond</div>
+          <div class="upload-btn" onclick="document.getElementById('bgu-${id}').click()">🖼️ Charger image de fond (JPG/PNG)</div>
+          <div id="bg-preview-${id}" style="display:none;margin-top:8px;position:relative">
+            <img id="bg-thumb-${id}" style="width:100%;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border);display:block">
+            <span onclick="clearBg(${id})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:0.62rem;padding:2px 7px;border-radius:4px;cursor:pointer;user-select:none">✕ Supprimer</span>
+          </div>
+          <div style="margin-top:8px">
+            <label class="flabel">Opacité superposition</label>
+            <input type="range" min="0" max="90" value="55" style="width:100%;accent-color:var(--accent)" oninput="updOv(this.value,${id})">
+          </div>
+        </div>
+
+        <div class="ep-section">
+          <div class="ep-label">Logo / Image produit</div>
+          <div class="upload-btn" style="position:relative">
+            🏷️ Charger logo ou image produit
+            <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadLogo(event,${id})">
+          </div>
+          <div id="logo-preview-${id}" style="display:none;margin-top:8px;align-items:center;gap:8px">
+            <img id="logo-thumb-${id}" style="width:56px;height:56px;object-fit:contain;border-radius:6px;border:1px solid var(--border);background:var(--bg-panel);flex-shrink:0">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.65rem;color:var(--text-secondary);margin-bottom:4px">Glissez le logo sur la vignette pour le repositionner</div>
+              <span onclick="clearLogo(${id})" style="font-size:0.62rem;color:var(--accent-2);cursor:pointer;user-select:none">✕ Supprimer le logo</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ep-section">
+          <div class="ep-label">Produits (3)</div>
+          ${c.products.map((p,i)=>`
+            <div class="prod-row">
+              <span>${p.e}</span>
+              <input class="finput" style="flex:1" value="${p.n}" placeholder="Nom" oninput="CAMPS[${id}].products[${i}].n=this.value">
+              <input class="finput" style="width:95px" value="${p.p}" placeholder="Prix" oninput="CAMPS[${id}].products[${i}].p=this.value">
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="ep-section">
+          <div class="ep-label">Images produits (cliquer pour charger)</div>
+          <div class="logo-grid3" id="pg-${id}">
+            ${c.products.map((p,i)=>`
+              <div class="logo-cell" onclick="document.getElementById('pi-${id}-${i}').click()" title="${p.n}">+
+                <input type="file" id="pi-${id}-${i}" accept="image/*" style="display:none" onchange="loadProdImg(event,${id},${i})">
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="ep-section">
+          <div class="ep-label">Couleurs</div>
+          <div class="frow"><label class="flabel">Couleur badge</label>
+            <input type="color" value="${c.colors.badge}" style="width:100%;height:32px;border:none;border-radius:6px;cursor:pointer" oninput="document.getElementById('bd-${id}').style.background=this.value">
+          </div>
+        </div>
+
+        <div class="ep-section">
+          <div class="ep-label">Lien & URL</div>
+          <div class="frow"><label class="flabel">Domaine</label>
+            <input class="finput" value="${c.domain}" oninput="upd('dm-${id}',this.value)"></div>
+          <div class="frow"><label class="flabel">Titre du lien</label>
+            <input class="finput" value="${c.linktitle}" oninput="upd('lt-${id}',this.value)"></div>
+          <div class="frow"><label class="flabel">URL de destination</label>
+            <input class="finput" placeholder="https://hcs-tahiti.com/..." id="url-${id}"></div>
+        </div>
+
+        <div class="ep-section">
+          <div class="ep-label">💳 Paiement PayZen / Lyra</div>
+          <div class="frow"><label class="flabel">Montant (XPF)</label>
+            <input class="finput" type="number" min="0" placeholder="ex: 2500" id="pz-amount-${id}"></div>
+          <div class="frow"><label class="flabel">URL Worker PayZen</label>
+            <input class="finput" placeholder="https://worker.workers.dev/payzen-token" id="pz-worker-${id}"></div>
+          <div class="frow"><label class="flabel">Secret Worker</label>
+            <input class="finput" type="password" placeholder="votre_secret" id="pz-secret-${id}"></div>
+          <div class="frow"><label class="flabel">Mode</label>
+            <select class="finput" id="pz-mode-${id}" style="background:var(--bg-panel);color:var(--text)">
+              <option value="TEST">TEST</option>
+              <option value="PRODUCTION">PRODUCTION</option>
+            </select></div>
+          <div style="font-size:0.62rem;color:var(--text-secondary);margin-top:4px">Laissez vide pour ne pas inclure le paiement dans l'export</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LANDING PAGE PREVIEW -->
+    <div class="lp-wrap">
+      <div class="lp-head">
+        <span>🌐 Landing Page — ${c.name}</span>
+        <div style="display:flex;gap:7px">
+          <button class="btn btn-outline" style="font-size:0.7rem;padding:5px 10px" onclick="alert('Ouvre le mode plein écran éditeur')">↗️ Plein écran</button>
+          <button class="btn btn-primary" style="font-size:0.7rem;padding:5px 10px" onclick="exportLP(${id})">📤 Exporter HTML</button>
+        </div>
+      </div>
+      <div class="lp-body">${renderLP(c)}</div>
+    </div>
+  `;
+
+  // Drag & drop
+  const cv = document.getElementById('cv-'+id);
+  cv.addEventListener('dragover', e => { e.preventDefault(); cv.querySelector('.upload-hint').style.opacity='1'; });
+  cv.addEventListener('dragleave', () => { cv.querySelector('.upload-hint').style.opacity='0'; });
+  cv.addEventListener('drop', e => {
+    e.preventDefault();
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) applyBg(f, id);
+  });
+}
+
+function renderLP(c) {
+  const hero = `
+    <div class="lp-hero" id="lp-hero-${c.id}" style="position:relative">
+      <div class="lp-hero-bg" id="lp-hero-bg-${c.id}" style="background:${c.heroGrad}"></div>
+      <div class="lp-hero-content">
+        <h2>${c.headline}</h2>
+        <p>${c.subline}</p>
+        <button class="lp-cta" style="color:${c.colors.primary}">${c.cta}</button>
+      </div>
+    </div>`;
+
+  const feats = `
+    <div class="lp-feats">
+      ${c.features.map(f=>`
+        <div class="lp-feat">
+          <div class="lp-feat-icon">${f.i}</div>
+          <div class="lp-feat-text">${f.t}</div>
+        </div>
+      `).join('')}
+    </div>`;
+
+  const prods = `
+    <div class="lp-prods">
+      ${c.products.map(p=>`
+        <div class="lp-prod">
+          <div class="lp-prod-img" id="lpimg-${c.id}-${c.products.indexOf(p)}">${p.e}</div>
+          <div class="lp-prod-info">
+            <div class="lp-prod-name">${p.n}</div>
+            <div class="lp-prod-price" style="color:${c.colors.primary}">${p.p}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+
+  if (c.ltype === 'subscription') {
+    return hero + feats + `
+      <div class="lp-plans">
+        <div class="lp-plan">
+          <div class="lp-plan-name">STARTER</div>
+          <div class="lp-plan-price">1 800 XPF</div>
+          <div class="lp-plan-per">/mois</div>
+          <ul><li>Services de base</li><li>Points bonus x1</li><li>Newsletter exclusive</li></ul>
+        </div>
+        <div class="lp-plan feat">
+          <div class="lp-plan-name">PRO ⭐</div>
+          <div class="lp-plan-price">3 500 XPF</div>
+          <div class="lp-plan-per">/mois</div>
+          <ul><li>Tous services inclus</li><li>Points bonus x2</li><li>1 logo offert/mois</li><li>Avant-première offres</li></ul>
+        </div>
+        <div class="lp-plan">
+          <div class="lp-plan-name">PREMIUM 👑</div>
+          <div class="lp-plan-price">5 500 XPF</div>
+          <div class="lp-plan-per">/mois</div>
+          <ul><li>Accès illimité</li><li>Points bonus x4</li><li>3 logos offerts/mois</li><li>Conseiller dédié</li><li>Bêta nouveautés</li></ul>
+        </div>
+      </div>`;
+  }
+
+  if (c.ltype === 'grid') {
+    return hero + `
+      <div style="font-size:0.78rem;font-weight:700;margin-bottom:10px">Grille DTF 3×3 — Aperçu logos collector</div>
+      <div class="logo9" id="logo9-${c.id}">
+        ${Array(9).fill(0).map((_,i)=>`
+          <div class="logo9-cell" onclick="document.getElementById('l9-${c.id}-${i}').click()">+
+            <input type="file" id="l9-${c.id}-${i}" accept="image/*" style="display:none" onchange="loadLogoCell(event,${c.id},${i})">
+          </div>
+        `).join('')}
+      </div>` + feats;
+  }
+
+  return hero + prods + feats;
+}
+
+// === INTERACTIONS ===
+function upd(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function fmtSwitch(btn, ratio, id) {
+  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const cv = document.getElementById('cv-'+id);
+  if (cv) cv.style.aspectRatio = ratio;
+}
+
+function updOv(val, id) {
+  const ov = document.getElementById('ov-'+id);
+  if (ov) ov.style.background = `rgba(0,0,0,${val/100})`;
+}
+
+function applyGrad(g, id) {
+  const cv = document.getElementById('cv-'+id);
+  if (cv) { cv.style.background = g; cv.style.backgroundImage = ''; }
+  const ov = document.getElementById('ov-'+id);
+  if (ov) ov.style.display = 'block';
+}
+
+function loadBg(e, id) { const f = e.target.files[0]; if (f) applyBg(f, id); }
+function applyBg(file, id) {
+  const r = new FileReader();
+  r.onload = ev => {
+    const cv = document.getElementById('cv-'+id);
+    // Une seule propriété background shorthand — écrase le dégradé inline sans conflit
+    cv.style.background = `url(${ev.target.result}) center/cover no-repeat`;
+    const ov = document.getElementById('ov-'+id);
+    if (ov) ov.style.display = 'block';
+    const hint = cv.querySelector('.upload-hint');
+    if (hint) hint.style.opacity = '0';
+    // Miniature dans le panneau éditeur
+    const thumb = document.getElementById('bg-thumb-'+id);
+    const preview = document.getElementById('bg-preview-'+id);
+    if (thumb) thumb.src = ev.target.result;
+    if (preview) preview.style.display = 'block';
+    // Synchroniser le hero de la landing page
+    const lpHeroDiv = document.getElementById('lp-hero-'+id);
+    if (lpHeroDiv) {
+      lpHeroDiv.style.background = `url(${ev.target.result}) center/cover no-repeat`;
+      const lpHeroBg = document.getElementById('lp-hero-bg-'+id);
+      if (lpHeroBg) lpHeroBg.style.opacity = '0';
+    }
+  };
+  r.readAsDataURL(file);
+}
+
+function clearBg(id) {
+  const c = CAMPS[id];
+  const cv = document.getElementById('cv-'+id);
+  if (cv) cv.style.background = c.heroGrad;
+  const preview = document.getElementById('bg-preview-'+id);
+  if (preview) preview.style.display = 'none';
+  // Remettre le dégradé sur la LP
+  const lpHeroDiv = document.getElementById('lp-hero-'+id);
+  if (lpHeroDiv) {
+    lpHeroDiv.style.background = '';
+    const lpHeroBg = document.getElementById('lp-hero-bg-'+id);
+    if (lpHeroBg) { lpHeroBg.style.opacity = '1'; lpHeroBg.style.background = c.heroGrad; }
+  }
+}
+
+function loadLogo(e, id) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const cv = document.getElementById('cv-'+id);
+    if (!cv) return;
+    // Supprime l'ancien logo s'il existe
+    const old = cv.querySelector('.logo-overlay');
+    if (old) old.remove();
+    // Ajoute le logo en superposition sur la vignette
+    const img = document.createElement('img');
+    img.src = ev.target.result;
+    img.className = 'logo-overlay';
+    img.style.cssText = 'position:absolute;bottom:10px;right:10px;width:64px;height:64px;object-fit:contain;z-index:5;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.5);cursor:move;';
+    img.title = 'Logo — glissez pour repositionner';
+    cv.appendChild(img);
+    // Drag pour repositionner le logo
+    let dx=0, dy=0, x=0, y=0;
+    img.addEventListener('mousedown', ev2 => {
+      ev2.stopPropagation();
+      x = ev2.clientX; y = ev2.clientY;
+      document.onmousemove = em => {
+        dx = x - em.clientX; dy = y - em.clientY;
+        x = em.clientX; y = em.clientY;
+        img.style.left = (img.offsetLeft - dx)+'px';
+        img.style.top  = (img.offsetTop  - dy)+'px';
+        img.style.bottom = 'auto'; img.style.right = 'auto';
+      };
+      document.onmouseup = () => { document.onmousemove = null; document.onmouseup = null; };
+    });
+    // Afficher le miniature dans le panneau éditeur
+    const logoThumb = document.getElementById('logo-thumb-'+id);
+    const logoPreview = document.getElementById('logo-preview-'+id);
+    if (logoThumb) logoThumb.src = ev.target.result;
+    if (logoPreview) { logoPreview.style.display = 'flex'; }
+    // Synchroniser le logo sur le hero de la landing page
+    const lpHero = document.getElementById('lp-hero-'+id);
+    if (lpHero) {
+      const oldLpLogo = lpHero.querySelector('.lp-logo-overlay');
+      if (oldLpLogo) oldLpLogo.remove();
+      const lpLogo = document.createElement('img');
+      lpLogo.src = ev.target.result;
+      lpLogo.className = 'lp-logo-overlay';
+      lpLogo.style.cssText = 'position:absolute;bottom:12px;right:12px;width:72px;height:72px;object-fit:contain;z-index:5;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.6);';
+      lpHero.appendChild(lpLogo);
+    }
+  };
+  r.readAsDataURL(f);
+}
+
+function clearLogo(id) {
+  const cv = document.getElementById('cv-'+id);
+  if (cv) { const old = cv.querySelector('.logo-overlay'); if (old) old.remove(); }
+  const logoPreview = document.getElementById('logo-preview-'+id);
+  if (logoPreview) logoPreview.style.display = 'none';
+  // Retirer aussi depuis la LP
+  const lpHero = document.getElementById('lp-hero-'+id);
+  if (lpHero) { const old = lpHero.querySelector('.lp-logo-overlay'); if (old) old.remove(); }
+}
+
+function loadProdImg(e, id, idx) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const cell = document.querySelector(`#pg-${id} .logo-cell:nth-child(${idx+1})`);
+    if (cell) cell.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:contain"><input type="file" id="pi-${id}-${idx}" accept="image/*" style="display:none" onchange="loadProdImg(event,${id},${idx})">`;
+    const lpImg = document.getElementById(`lpimg-${id}-${idx}`);
+    if (lpImg) lpImg.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+  };
+  r.readAsDataURL(f);
+}
+
+function loadLogoCell(e, campId, cellIdx) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const cells = document.querySelectorAll(`#logo9-${campId} .logo9-cell`);
+    if (cells[cellIdx]) cells[cellIdx].innerHTML = `<img src="${ev.target.result}"><input type="file" id="l9-${campId}-${cellIdx}" accept="image/*" style="display:none" onchange="loadLogoCell(event,${campId},${cellIdx})">`;
+  };
+  r.readAsDataURL(f);
+}
+
+function exportLP(id) {
+  const c = CAMPS[id];
+
+  // --- Lire les valeurs ACTUELLES du DOM (modifiées par l'éditeur) ---
+  const g = el => document.getElementById(el);
+  const headline  = g('hl-'+id)?.textContent || c.headline;
+  const subline   = g('sl-'+id)?.textContent || c.subline;
+  const badge     = g('bd-'+id)?.textContent || c.badge;
+  const cta       = g('ct-'+id)?.textContent || c.cta;
+  const domain    = g('dm-'+id)?.textContent || c.domain;
+  const linktitle = g('lt-'+id)?.textContent || c.linktitle;
+  const url       = g('url-'+id)?.value?.trim() || '';
+  // Bouton CTA : lien externe si URL saisie, sinon ancre vers les produits
+  const ctaTag = url
+    ? `<a href="${url}" target="_blank" rel="noopener" class="cta-btn">${cta}</a>`
+    : `<a href="#produits" class="cta-btn">${cta}</a>`;
+
+  // Image de fond (canvas ou dégradé original)
+  const cv = g('cv-'+id);
+  const cvBg = cv?.style.background || '';
+  const heroBg = cvBg.includes('url(') ? cvBg : (cvBg || c.heroGrad);
+
+  // Couleur de la superposition (opacité modifiée via slider)
+  const ov = g('ov-'+id);
+  const ovColor = ov?.style.background || c.colors.overlay;
+
+  // Logo overlay éventuel
+  const logoEl = cv?.querySelector('.logo-overlay');
+  const logoHtml = logoEl
+    ? `<img src="${logoEl.src}" style="position:absolute;bottom:24px;right:24px;width:80px;height:80px;object-fit:contain;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.6);z-index:5">`
+    : '';
+
+  // Images produits uploadées
+  const prodImgs = c.products.map((_,i) => {
+    const cell = g('lpimg-'+id+'-'+i);
+    const img = cell?.querySelector('img');
+    return img ? img.src : '';
+  });
+
+  const html = `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${headline} — HCS Tahiti</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f1a;color:#e8e8f0}
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:${heroBg};background-size:cover;background-position:center;position:relative;overflow:hidden}
+.hero-overlay{position:absolute;inset:0;background:${ovColor}}
+.hero-content{max-width:600px;position:relative;z-index:2}
+h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;margin-bottom:14px;line-height:1.1;color:white}
+.sub{font-size:1rem;opacity:0.9;margin-bottom:20px;color:rgba(255,255,255,0.85)}
+.badge-hp{display:inline-block;background:${c.colors.badge};color:white;padding:8px 24px;border-radius:24px;font-weight:700;margin-bottom:20px}
+.cta-btn{display:inline-block;background:white;color:${c.colors.primary};padding:14px 36px;border-radius:30px;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,0.3);cursor:pointer;border:none;transition:transform 0.15s,box-shadow 0.15s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.section{padding:40px 20px;max-width:900px;margin:0 auto}
+.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.prod{background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)}
+.prod-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:48px;background:rgba(255,255,255,0.05)}
+.prod-img img{width:100%;height:100%;object-fit:cover}
+.prod-info{padding:14px}
+.prod-name{font-weight:600;margin-bottom:6px}
+.prod-price{color:${c.colors.primary};font-weight:700;font-size:1.1rem}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:24px}
+.feat{background:rgba(255,255,255,0.05);border-radius:10px;padding:18px;text-align:center;border:1px solid rgba(255,255,255,0.1)}
+.feat-icon{font-size:30px;margin-bottom:8px}
+.feat-txt{font-size:0.82rem;color:rgba(255,255,255,0.7)}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:20px}
+.plan{background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.1)}
+.plan.feat{border-color:${c.colors.primary};background:rgba(108,99,255,0.1)}
+.plan-name{font-weight:700;color:${c.colors.primary};margin-bottom:8px}
+.plan-price{font-size:1.4rem;font-weight:900;margin-bottom:4px}
+.plan-per{font-size:0.72rem;color:rgba(255,255,255,0.5);margin-bottom:12px}
+.plan ul{list-style:none;font-size:0.75rem;color:rgba(255,255,255,0.6);text-align:left}
+.plan ul li::before{content:'✓ ';color:#43e97b}
+.plan ul li{padding:3px 0}
+footer{text-align:center;padding:28px;color:rgba(255,255,255,0.4);font-size:0.82rem;border-top:1px solid rgba(255,255,255,0.1)}
+</style></head>
+<body>
+<div class="hero">
+  <div class="hero-overlay"></div>
+  ${logoHtml}
+  <div class="hero-content">
+    <div class="badge-hp">${badge}</div>
+    <h1>${headline}</h1>
+    <p class="sub">${subline}</p>
+    ${ctaTag}
+  </div>
+</div>
+<div class="section" id="produits">
+  <div class="prods">
+    ${c.products.map((p,i)=>`<div class="prod"><div class="prod-img">${prodImgs[i]?`<img src="${prodImgs[i]}">`:(p.e||'')}</div><div class="prod-info"><div class="prod-name">${p.n}</div><div class="prod-price">${p.p}</div></div></div>`).join('')}
+  </div>
+  <div class="feats">
+    ${c.features.map(f=>`<div class="feat"><div class="feat-icon">${f.i}</div><div class="feat-txt">${f.t}</div></div>`).join('')}
+  </div>
+  ${c.ltype==='subscription'?`<div class="plans">
+    <div class="plan"><div class="plan-name">STARTER</div><div class="plan-price">1 800 XPF</div><div class="plan-per">/mois</div><ul><li>Services de base</li><li>Points bonus x1</li><li>Newsletter exclusive</li></ul></div>
+    <div class="plan feat"><div class="plan-name">PRO ⭐</div><div class="plan-price">3 500 XPF</div><div class="plan-per">/mois</div><ul><li>Tous services inclus</li><li>Points bonus x2</li><li>1 logo offert/mois</li><li>Avant-première offres</li></ul></div>
+    <div class="plan"><div class="plan-name">PREMIUM 👑</div><div class="plan-price">5 500 XPF</div><div class="plan-per">/mois</div><ul><li>Accès illimité</li><li>Points bonus x4</li><li>3 logos/mois</li><li>Conseiller dédié</li></ul></div>
+  </div>`:''}
+</div>
+<footer>© 2026 HCS Tahiti — ${domain} | ${linktitle}</footer>
+</body></html>`;
+  dl(`andromeda-lp-${c.id}-${c.name.replace(/[^\w]/g,'-').toLowerCase()}.html`, html);
+}
+
+function exportAd(id) {
+  const c = CAMPS[id];
+
+  // Valeurs actuelles du DOM
+  const g = el => document.getElementById(el);
+  const headline  = g('hl-'+id)?.textContent || c.headline;
+  const subline   = g('sl-'+id)?.textContent || c.subline;
+  const badge     = g('bd-'+id)?.textContent || c.badge;
+  const cta       = g('ct-'+id)?.textContent || c.cta;
+  const domain    = g('dm-'+id)?.textContent || c.domain;
+  const linktitle = g('lt-'+id)?.textContent || c.linktitle;
+  const url       = g('url-'+id)?.value?.trim() || '';
+  const ctaTag    = url
+    ? `<a href="${url}" target="_blank" rel="noopener" class="cta-btn">${cta}</a>`
+    : `<a href="#produits" class="cta-btn">${cta}</a>`;
+  const ctaFbBtn  = url
+    ? `<a href="${url}" target="_blank" rel="noopener" class="fb-cta">${cta}</a>`
+    : `<button class="fb-cta" onclick="document.getElementById('produits').scrollIntoView({behavior:'smooth'})">${cta}</button>`;
+
+  // PayZen / Lyra
+  const pzAmount = parseInt(g('pz-amount-'+id)?.value) || 0;
+  const pzWorker = g('pz-worker-'+id)?.value?.trim() || '';
+  const pzSecret = g('pz-secret-'+id)?.value?.trim() || '';
+  const pzMode   = g('pz-mode-'+id)?.value || 'TEST';
+  const pzBlock  = pzAmount > 0 && pzWorker ? `
+<!-- SDK PayZen Lyra -->
+<link rel="stylesheet" href="https://static.lyra.com/static/js/krypton-client/V4.0/stable/kr-payment-form.min.css">
+<script src="https://static.lyra.com/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js" kr-public-key="PLACEHOLDER" kr-language="fr-FR"><\/script>
+<style>
+.payment-section{max-width:500px;margin:40px auto;padding:32px 24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:16px}
+.payment-title{font-size:1.1rem;font-weight:700;color:white;margin-bottom:6px;text-align:center}
+.payment-amount{text-align:center;font-size:2rem;font-weight:900;color:${c.colors.primary};margin-bottom:20px}
+.payment-amount span{font-size:1rem;color:rgba(255,255,255,0.5);font-weight:400}
+#pay-loading{text-align:center;color:rgba(255,255,255,0.6);font-size:0.85rem;padding:20px}
+#pay-error{display:none;background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.3);border-radius:8px;padding:12px 16px;color:#ff6b6b;font-size:0.85rem;margin-bottom:14px;text-align:center}
+#pay-success{display:none;background:rgba(67,233,123,0.15);border:1px solid rgba(67,233,123,0.3);border-radius:12px;padding:24px;text-align:center;color:#43e97b}
+.kr-embedded .kr-payment-button{background:${c.colors.primary}!important;border-radius:30px!important;font-weight:700!important}
+</style>
+<div class="payment-section">
+  <div class="payment-title">🔒 Paiement sécurisé</div>
+  <div class="payment-amount">${pzAmount} <span>XPF</span></div>
+  <div id="pay-error"></div>
+  <div id="pay-loading">Chargement du formulaire de paiement…</div>
+  <div class="kr-embedded" id="payzen-form" style="display:none"></div>
+  <div id="pay-success"><h3>✅ Paiement accepté !</h3><p>Merci pour votre commande. Vous recevrez une confirmation par email.</p></div>
+</div>
+<script>
+(async function(){
+  const WORKER_URL='${pzWorker}',WORKER_SECRET='${pzSecret}',MONTANT=${pzAmount},MODE='${pzMode}';
+  const loadEl=document.getElementById('pay-loading'),formEl=document.getElementById('payzen-form'),errEl=document.getElementById('pay-error'),okEl=document.getElementById('pay-success');
+  try{
+    const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Worker-Secret':WORKER_SECRET},body:JSON.stringify({amount:MONTANT,currency:'XPF',orderId:'HCS-'+Date.now(),mode:MODE})});
+    if(!res.ok){const e=await res.json();throw new Error(e.error||'Erreur serveur');}
+    const{formToken,publicKey}=await res.json();
+    KR.setFormConfig({formToken,\u0027kr-public-key\u0027:publicKey,\u0027kr-language\u0027:\u0027fr-FR\u0027});
+    loadEl.style.display='none';formEl.style.display='block';
+    KR.onSubmit(d=>{if(d.clientAnswer.orderStatus==='PAID'){formEl.style.display='none';okEl.style.display='block';}return false;});
+  }catch(e){loadEl.style.display='none';errEl.style.display='block';errEl.textContent='Impossible de charger le paiement : '+e.message;}
+})();
+<\/script>` : '';
+
+  // Image de fond et overlay
+  const cv   = g('cv-'+id);
+  const cvBg = cv?.style.background || '';
+  const heroBg  = cvBg.includes('url(') ? cvBg : (cvBg || c.heroGrad);
+  const ov      = g('ov-'+id);
+  const ovColor = ov?.style.background || c.colors.overlay;
+
+  // Logo overlay
+  const logoEl  = cv?.querySelector('.logo-overlay');
+  const logoHtml = logoEl
+    ? `<img src="${logoEl.src}" style="position:absolute;bottom:12px;right:12px;width:64px;height:64px;object-fit:contain;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.5);z-index:5">`
+    : '';
+
+  // Images produits uploadées
+  const prodImgs = c.products.map((_,i) => {
+    const cell = g('lpimg-'+id+'-'+i);
+    return cell?.querySelector('img')?.src || '';
+  });
+
+  const html = `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${headline} — Andromeda Ad</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#1c1e21}
+/* === VIGNETTE FACEBOOK === */
+.fb-wrap{max-width:500px;margin:30px auto;background:#fff;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);overflow:hidden}
+.fb-head{padding:12px 16px;display:flex;align-items:center;gap:10px}
+.fb-avatar{width:40px;height:40px;border-radius:50%;background:${c.colors.primary};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.85rem;flex-shrink:0}
+.fb-name{font-weight:700;font-size:0.9rem}
+.fb-spon{font-size:0.72rem;color:#65676b}
+.fb-txt{padding:0 16px 10px;font-size:0.92rem;color:#1c1e21;line-height:1.4}
+.ad-canvas{width:100%;aspect-ratio:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:${heroBg};background-size:cover;background-position:center}
+.ad-ov{position:absolute;inset:0;background:${ovColor}}
+.ad-text{position:relative;z-index:2;text-align:center;padding:20px;color:white}
+.ad-title{font-size:clamp(1.2rem,4vw,2rem);font-weight:900;margin-bottom:8px;line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,0.5)}
+.ad-sub{font-size:0.9rem;opacity:0.9;margin-bottom:14px;text-shadow:0 1px 4px rgba(0,0,0,0.5)}
+.ad-badge{display:inline-block;background:${c.colors.badge};color:white;padding:7px 18px;border-radius:20px;font-weight:700;font-size:0.85rem}
+.fb-foot{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e4e6eb}
+.fb-domain{font-size:0.68rem;text-transform:uppercase;color:#65676b;margin-bottom:2px}
+.fb-linktitle{font-weight:700;font-size:0.92rem}
+.fb-cta{background:${c.colors.primary};color:white;border:none;padding:8px 18px;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.85rem}
+.fb-react{padding:8px 16px;border-top:1px solid #e4e6eb;color:#65676b;font-size:0.82rem;display:flex;gap:20px}
+/* === LANDING PAGE === */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:${heroBg};background-size:cover;background-position:center;position:relative;overflow:hidden}
+.hero-overlay{position:absolute;inset:0;background:${ovColor}}
+.hero-content{max-width:600px;position:relative;z-index:2}
+h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;margin-bottom:14px;line-height:1.1;color:white}
+.sub{font-size:1rem;opacity:0.9;margin-bottom:20px;color:rgba(255,255,255,0.85)}
+.badge-hp{display:inline-block;background:${c.colors.badge};color:white;padding:8px 24px;border-radius:24px;font-weight:700;margin-bottom:20px}
+.cta-btn{display:inline-block;background:white;color:${c.colors.primary};padding:14px 36px;border-radius:30px;font-weight:700;font-size:1rem;cursor:pointer;border:none;box-shadow:0 8px 30px rgba(0,0,0,0.3);text-decoration:none}
+.section{padding:40px 20px;max-width:900px;margin:0 auto;background:#0f0f1a}
+.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.prod{background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)}
+.prod-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:48px;background:rgba(255,255,255,0.05)}
+.prod-img img{width:100%;height:100%;object-fit:cover}
+.prod-info{padding:14px;background:#0f0f1a;color:#e8e8f0}
+.prod-name{font-weight:600;margin-bottom:6px}
+.prod-price{color:${c.colors.primary};font-weight:700;font-size:1.1rem}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:24px}
+.feat{background:rgba(255,255,255,0.05);border-radius:10px;padding:18px;text-align:center;border:1px solid rgba(255,255,255,0.1);color:#e8e8f0}
+.feat-icon{font-size:30px;margin-bottom:8px}
+.feat-txt{font-size:0.82rem;color:rgba(255,255,255,0.7)}
+footer{background:#0f0f1a;text-align:center;padding:28px;color:rgba(255,255,255,0.4);font-size:0.82rem;border-top:1px solid rgba(255,255,255,0.1)}
+</style></head>
+<body>
+
+<!-- VIGNETTE FACEBOOK -->
+<div class="fb-wrap">
+  <div class="fb-head">
+    <div class="fb-avatar">HC</div>
+    <div><div class="fb-name">HCS Tahiti</div><div class="fb-spon">Sponsorisé · 🌐</div></div>
+  </div>
+  <div class="fb-txt">${headline} — ${subline}</div>
+  <div class="ad-canvas">
+    <div class="ad-ov"></div>
+    ${logoHtml}
+    <div class="ad-text">
+      <div class="ad-title">${headline}</div>
+      <div class="ad-sub">${subline}</div>
+      <div class="ad-badge">${badge}</div>
+    </div>
+  </div>
+  <div class="fb-foot">
+    <div><div class="fb-domain">${domain}</div><div class="fb-linktitle">${linktitle}</div></div>
+    ${ctaFbBtn}
+  </div>
+  <div class="fb-react"><span>👍 J'aime</span><span>💬 Commenter</span><span>↗️ Partager</span></div>
+</div>
+
+<!-- LANDING PAGE -->
+<div class="hero">
+  <div class="hero-overlay"></div>
+  ${logoHtml}
+  <div class="hero-content">
+    <div class="badge-hp">${badge}</div>
+    <h1>${headline}</h1>
+    <p class="sub">${subline}</p>
+    ${ctaTag}
+  </div>
+</div>
+<div class="section" id="produits">
+  <div class="prods">
+    ${c.products.map((p,i)=>`<div class="prod"><div class="prod-img">${prodImgs[i]?`<img src="${prodImgs[i]}">`:(p.e||'')}</div><div class="prod-info"><div class="prod-name">${p.n}</div><div class="prod-price">${p.p}</div></div></div>`).join('')}
+  </div>
+  <div class="feats">
+    ${c.features.map(f=>`<div class="feat"><div class="feat-icon">${f.i}</div><div class="feat-txt">${f.t}</div></div>`).join('')}
+  </div>
+</div>
+${pzBlock}
+<footer>© 2026 HCS Tahiti — ${domain} | ${linktitle}</footer>
+</body></html>`;
+
+  dl(`andromeda-ad-${c.id}-${c.name.replace(/[^\w]/g,'-').toLowerCase()}.html`, html);
+}
+
+function exportAll() {
+  CAMPS.forEach((c,i) => setTimeout(()=>exportLP(c.id), i*400));
+}
+
+function dl(name, content) {
+  const a = document.createElement('a');
+  a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(content);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+
+// Init
+buildSidebar();
+render(0);
+</script>
+</body>
+</html>

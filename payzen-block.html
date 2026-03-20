@@ -1,0 +1,167 @@
+<!--
+  BLOC PAYZEN/LYRA — À coller dans votre landing page exportée
+  Remplacez WORKER_URL et WORKER_SECRET par vos vraies valeurs
+-->
+
+<!-- SDK PayZen Lyra (chargé depuis leur CDN sécurisé) -->
+<link rel="stylesheet"
+  href="https://static.lyra.com/static/js/krypton-client/V4.0/stable/kr-payment-form.min.css">
+<script src="https://static.lyra.com/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js"
+  kr-public-key="PLACEHOLDER"
+  kr-language="fr-FR">
+</script>
+
+<style>
+/* === Section paiement === */
+.payment-section {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 32px 24px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+}
+.payment-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 6px;
+  text-align: center;
+}
+.payment-amount {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #6c63ff;
+  margin-bottom: 20px;
+}
+.payment-amount span {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.5);
+  font-weight: 400;
+}
+#payment-loading {
+  text-align: center;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.85rem;
+  padding: 20px;
+}
+#payment-error {
+  display: none;
+  background: rgba(255,80,80,0.15);
+  border: 1px solid rgba(255,80,80,0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+  text-align: center;
+}
+#payment-success {
+  display: none;
+  background: rgba(67,233,123,0.15);
+  border: 1px solid rgba(67,233,123,0.3);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  color: #43e97b;
+}
+#payment-success h3 { font-size: 1.2rem; margin-bottom: 8px; }
+#payment-success p  { color: rgba(255,255,255,0.7); font-size: 0.85rem; }
+
+/* Surcharge du style Lyra pour thème sombre */
+.kr-embedded .kr-payment-button {
+  background: #6c63ff !important;
+  border-radius: 30px !important;
+  font-weight: 700 !important;
+}
+</style>
+
+<!-- Section paiement -->
+<div class="payment-section" id="section-paiement">
+  <div class="payment-title">🔒 Paiement sécurisé</div>
+  <div class="payment-amount">
+    2 500 <span>XPF</span>
+  </div>
+
+  <div id="payment-error"></div>
+
+  <div id="payment-loading">Chargement du formulaire de paiement…</div>
+
+  <!-- Formulaire PayZen — rempli dynamiquement -->
+  <div class="kr-embedded" id="payzen-form" style="display:none"></div>
+
+  <div id="payment-success">
+    <h3>✅ Paiement accepté !</h3>
+    <p>Merci pour votre commande. Vous recevrez une confirmation par email.</p>
+  </div>
+</div>
+
+<script>
+(async function initPayzen() {
+  // ⚙️ CONFIG — à adapter
+  const WORKER_URL    = 'https://votre-worker.workers.dev/payzen-token';
+  const WORKER_SECRET = 'VOTRE_SECRET_ICI';
+  const MONTANT_XPF   = 2500;   // En XPF (entier, pas de centimes)
+  const MODE          = 'TEST'; // 'TEST' ou 'PRODUCTION'
+
+  const loadingEl = document.getElementById('payment-loading');
+  const formEl    = document.getElementById('payzen-form');
+  const errorEl   = document.getElementById('payment-error');
+  const successEl = document.getElementById('payment-success');
+
+  function showError(msg) {
+    loadingEl.style.display = 'none';
+    errorEl.style.display   = 'block';
+    errorEl.textContent     = msg;
+  }
+
+  try {
+    // 1. Demander le formToken au Worker
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Worker-Secret': WORKER_SECRET,
+      },
+      body: JSON.stringify({
+        amount:    MONTANT_XPF,
+        currency:  'XPF',
+        orderId:   'HCS-' + Date.now(),
+        mode:      MODE,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Erreur serveur');
+    }
+
+    const { formToken, publicKey } = await res.json();
+
+    // 2. Injecter la clé publique dans le SDK PayZen
+    KR.setFormConfig({
+      formToken:  formToken,
+      'kr-public-key': publicKey,
+      'kr-language': 'fr-FR',
+    });
+
+    // 3. Afficher le formulaire
+    loadingEl.style.display = 'none';
+    formEl.style.display    = 'block';
+
+    // 4. Écouter le succès du paiement
+    KR.onSubmit(paymentData => {
+      if (paymentData.clientAnswer.orderStatus === 'PAID') {
+        formEl.style.display    = 'none';
+        successEl.style.display = 'block';
+        // Optionnel : envoyer confirmation à votre backend
+      }
+      return false; // empêche la redirection automatique
+    });
+
+  } catch (err) {
+    showError('Impossible de charger le paiement : ' + err.message);
+  }
+})();
+</script>

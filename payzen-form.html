@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paiement securise — HCS Tahiti</title>
+
+  <!-- PayZen OSB Polynesie — CSS formulaire -->
+  <link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css">
+  <link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .pay-card {
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .pay-header { text-align: center; margin-bottom: 28px; }
+
+    .pay-logo {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #e94560, #f5a623);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+
+    .pay-subtitle { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+
+    .order-summary {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .order-item:last-child { margin-bottom: 0; }
+    .order-label { color: rgba(255,255,255,0.6); }
+
+    .order-total {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin-top: 12px;
+      padding-top: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .order-total .order-value { color: #e94560; font-size: 1.3rem; }
+
+    .field-group { margin-bottom: 20px; }
+
+    .field-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .field-group input {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field-group input:focus { border-color: #e94560; }
+    .field-group input::placeholder { color: rgba(255,255,255,0.3); }
+
+    #payzen-form-container { display: none; margin-bottom: 20px; }
+
+    .btn-pay {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #e94560, #c0392b);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-pay:hover { opacity: 0.9; }
+    .btn-pay:active { transform: scale(0.98); }
+    .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status-msg {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .status-msg.loading { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); display: block; }
+    .status-msg.error   { background: rgba(233,69,96,0.15); color: #e94560; border: 1px solid rgba(233,69,96,0.3); display: block; }
+    .status-msg.success { background: rgba(39,174,96,0.15); color: #27ae60; border: 1px solid rgba(39,174,96,0.3); display: block; }
+
+    .cards-logos { display: flex; justify-content: center; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+
+    .cards-logos span {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.6);
+      font-weight: 600;
+    }
+
+    .secure-badge { text-align: center; margin-top: 16px; font-size: 0.75rem; color: rgba(255,255,255,0.35); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+  </style>
+</head>
+<body>
+
+<div class="pay-card">
+
+  <div class="pay-header">
+    <div class="pay-logo">HCS TAHITI</div>
+    <div class="pay-subtitle">Paiement securise via PayZen OSB</div>
+  </div>
+
+  <!-- Resume commande -->
+  <div class="order-summary">
+    <div class="order-item">
+      <span class="order-label">Produit</span>
+      <span id="prod-name">Sticker pare-brise 15cm</span>
+    </div>
+    <div class="order-item">
+      <span class="order-label">Quantite</span>
+      <span id="prod-qty">1</span>
+    </div>
+    <div class="order-item order-total">
+      <span class="order-label">Total</span>
+      <span class="order-value" id="prod-total">2 500 XPF</span>
+    </div>
+  </div>
+
+  <!-- Email client -->
+  <div class="field-group">
+    <label>Votre adresse email</label>
+    <input type="email" id="customer-email" placeholder="exemple@mail.com">
+  </div>
+
+  <!-- Bouton initialisation -->
+  <button class="btn-pay" id="btn-init-pay" onclick="initPayment()">
+    Payer maintenant
+  </button>
+
+  <!-- Formulaire PayZen (injecte apres init) -->
+  <div id="payzen-form-container">
+    <div id="myPaymentForm">
+      <div class="kr-smart-form" kr-card-form></div>
+    </div>
+  </div>
+
+  <!-- Messages etat -->
+  <div class="status-msg" id="status-msg"></div>
+
+  <!-- Cartes acceptees -->
+  <div class="cards-logos">
+    <span>CB</span>
+    <span>VISA</span>
+    <span>MASTERCARD</span>
+    <span>MAESTRO</span>
+    <span>E-CB</span>
+  </div>
+
+  <div class="secure-badge">
+    Paiement chiffre SSL — Donnees bancaires non stockees<br>
+    Powered by Lyra / OSB Polynesie
+  </div>
+
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────────────────────────
+  const CONFIG = {
+    workerUrl   : 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token',
+    workerSecret: 'hcs-payzen-2026',
+    shopId      : '41545085',
+    // Cle publique de test OSB (client-side, non sensible)
+    publicKey   : '41545085:testpublickey_HJw0fXMbbvOAzJuN1BXImXIu5U16qkSHv2eQVjSu0YftA',
+    // Cle publique de production (utiliser quand mode = 'PRODUCTION')
+    // publicKey: '41545085:publickey_IzNDzp5XcAadriFpCh08meZmg8Ri6WbyIG6TIQ9mpu2NA',
+    mode        : 'TEST',   // Changer en 'PRODUCTION' pour aller en prod
+    amount      : 2500,     // Montant en XPF
+    currency    : 'XPF',
+    // SDK OSB Polynesie officiel
+    sdkUrl      : 'https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js',
+  };
+
+  // Lecture des parametres URL : ?amount=3000&product=Casquette&qty=2
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('amount'))  CONFIG.amount = parseInt(params.get('amount'));
+  if (params.get('product')) document.getElementById('prod-name').textContent = params.get('product');
+  if (params.get('qty'))     document.getElementById('prod-qty').textContent  = params.get('qty');
+  document.getElementById('prod-total').textContent = CONFIG.amount.toLocaleString('fr-FR') + ' XPF';
+
+  // ── AFFICHAGE ETAT ───────────────────────────────────────────────────────────
+  function showStatus(msg, type) {
+    const el = document.getElementById('status-msg');
+    el.className = 'status-msg ' + type;
+    el.innerHTML = msg;
+  }
+
+  // ── INITIALISER LE PAIEMENT ──────────────────────────────────────────────────
+  async function initPayment() {
+    const email = document.getElementById('customer-email').value.trim();
+    if (!email || !email.includes('@')) {
+      showStatus('Veuillez saisir un email valide.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-init-pay');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Chargement...';
+    showStatus('Connexion securisee a PayZen...', 'loading');
+
+    try {
+      // 1. Appel au Worker Cloudflare pour obtenir le formToken
+      const res = await fetch(CONFIG.workerUrl, {
+        method : 'POST',
+        headers: {
+          'Content-Type'   : 'application/json',
+          'X-Worker-Secret': CONFIG.workerSecret,
+        },
+        body: JSON.stringify({
+          amount       : CONFIG.amount,
+          currency     : CONFIG.currency,
+          orderId      : 'HCS-' + Date.now(),
+          customerEmail: email,
+          mode         : CONFIG.mode,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Erreur Worker : ' + res.status);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error + (data.detail ? ' — ' + data.detail : ''));
+
+      // 2. Charger le SDK PayZen et afficher le formulaire
+      await loadPayzenSDK(data.formToken);
+
+    } catch (err) {
+      showStatus('Erreur : ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = 'Reessayer';
+    }
+  }
+
+  // ── CHARGER SDK ET AFFICHER FORMULAIRE ───────────────────────────────────────
+  function loadPayzenSDK(formToken) {
+    return new Promise((resolve, reject) => {
+      const old = document.getElementById('payzen-sdk');
+      if (old) old.remove();
+
+      const script = document.createElement('script');
+      script.id  = 'payzen-sdk';
+      script.src = CONFIG.sdkUrl;
+      // Cle publique complete : shopId:testpublickey_xxx
+      script.setAttribute('kr-public-key', CONFIG.publicKey);
+      script.setAttribute('kr-post-url-success', window.location.origin + '/paiement-confirme.html');
+      script.setAttribute('kr-language', 'fr-FR');
+
+      script.onload = () => {
+        KR.setFormToken(formToken).then(() => {
+          document.getElementById('payzen-form-container').style.display = 'block';
+          document.getElementById('btn-init-pay').style.display = 'none';
+          document.getElementById('status-msg').className = 'status-msg';
+
+          // Ecouter la reponse de paiement
+          KR.onSubmit(resp => {
+            if (resp.clientAnswer.orderStatus === 'PAID') {
+              showStatus('Paiement accepte ! Merci pour votre commande.', 'success');
+              document.getElementById('payzen-form-container').style.display = 'none';
+            } else {
+              showStatus('Paiement refuse : ' + resp.clientAnswer.orderStatus, 'error');
+            }
+            return false;
+          });
+
+          resolve();
+        });
+      };
+
+      script.onerror = () => reject(new Error('Impossible de charger le SDK PayZen OSB'));
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+</body>
+</html>
