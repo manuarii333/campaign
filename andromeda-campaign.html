@@ -299,6 +299,150 @@ const CAMPS = [
 
 let current = 0;
 
+// ============================================================
+// STATE — Persistance de l'état édité par campagne
+// ============================================================
+const STATE = {};
+
+function saveState(id) {
+  const g = el => document.getElementById(el);
+  const cv = g('cv-'+id);
+  if (!cv) return; // workspace pas encore rendu, rien à sauver
+
+  // Textes → mise à jour de CAMPS[] pour que render() les réutilise
+  const txt = t => g(t+'-'+id)?.textContent;
+  if (txt('hl')) CAMPS[id].headline   = txt('hl');
+  if (txt('sl')) CAMPS[id].subline    = txt('sl');
+  if (txt('bd')) CAMPS[id].badge      = txt('bd');
+  if (txt('ct')) CAMPS[id].cta        = txt('ct');
+  if (txt('dm')) CAMPS[id].domain     = txt('dm');
+  if (txt('lt')) CAMPS[id].linktitle  = txt('lt');
+
+  // Image de fond (data URL ou dégradé)
+  const bgStyle = cv.style.background || '';
+  const bgUrl = bgStyle.includes('url(') ? bgStyle : null;
+
+  // Logo sur la vignette
+  const logoEl = cv.querySelector('.logo-overlay');
+
+  // Overlay couleur/opacité
+  const ovBg = g('ov-'+id)?.style.background || null;
+
+  // Images produits (data URLs depuis lpimg-id-i)
+  const prodImgs = [0,1,2].map(i => {
+    const cell = g('lpimg-'+id+'-'+i);
+    return cell?.querySelector('img')?.src || null;
+  });
+
+  STATE[id] = {
+    bgUrl,
+    logoUrl:    logoEl ? logoEl.src : null,
+    logoLeft:   logoEl ? logoEl.style.left   : null,
+    logoTop:    logoEl ? logoEl.style.top    : null,
+    logoBottom: logoEl ? logoEl.style.bottom : null,
+    logoRight:  logoEl ? logoEl.style.right  : null,
+    ovBg,
+    url:        g('url-'+id)?.value       || '',
+    pzAmount:   g('pz-amount-'+id)?.value || '',
+    pzWorker:   g('pz-worker-'+id)?.value || '',
+    pzSecret:   g('pz-secret-'+id)?.value || '',
+    pzMode:     g('pz-mode-'+id)?.value   || 'TEST',
+    prodImgs,
+  };
+}
+
+function restoreState(id) {
+  const s = STATE[id];
+  const g = el => document.getElementById(el);
+  const cv = g('cv-'+id);
+  if (!cv || !s) return;
+
+  // --- Image de fond ---
+  if (s.bgUrl) {
+    cv.style.background = s.bgUrl;
+    const match = s.bgUrl.match(/url\(["']?([^"')]+)["']?\)/);
+    const dataUrl = match ? match[1] : null;
+    if (dataUrl) {
+      const thumb = g('bg-thumb-'+id);
+      const preview = g('bg-preview-'+id);
+      if (thumb)   thumb.src = dataUrl;
+      if (preview) preview.style.display = 'block';
+    }
+    const ov = g('ov-'+id);
+    if (ov) ov.style.display = 'block';
+    const lpHeroDiv = g('lp-hero-'+id);
+    if (lpHeroDiv) {
+      lpHeroDiv.style.background = s.bgUrl;
+      const lpHeroBg = g('lp-hero-bg-'+id);
+      if (lpHeroBg) lpHeroBg.style.opacity = '0';
+    }
+  }
+
+  // --- Overlay ---
+  if (s.ovBg) {
+    const ov = g('ov-'+id);
+    if (ov) ov.style.background = s.ovBg;
+  }
+
+  // --- Logo ---
+  if (s.logoUrl) {
+    const img = document.createElement('img');
+    img.src = s.logoUrl;
+    img.className = 'logo-overlay';
+    img.style.cssText = 'position:absolute;bottom:10px;right:10px;width:64px;height:64px;object-fit:contain;z-index:5;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.5);cursor:move;';
+    if (s.logoLeft)   { img.style.left = s.logoLeft;   img.style.right  = 'auto'; }
+    if (s.logoTop)    { img.style.top  = s.logoTop;    img.style.bottom = 'auto'; }
+    if (s.logoBottom) img.style.bottom = s.logoBottom;
+    if (s.logoRight)  img.style.right  = s.logoRight;
+    cv.appendChild(img);
+    // Drag & drop du logo restauré
+    let dx=0,dy=0,x=0,y=0;
+    img.addEventListener('mousedown', ev2 => {
+      ev2.stopPropagation();
+      x=ev2.clientX; y=ev2.clientY;
+      document.onmousemove=em=>{dx=x-em.clientX;dy=y-em.clientY;x=em.clientX;y=em.clientY;img.style.left=(img.offsetLeft-dx)+'px';img.style.top=(img.offsetTop-dy)+'px';img.style.bottom='auto';img.style.right='auto';};
+      document.onmouseup=()=>{document.onmousemove=null;document.onmouseup=null;};
+    });
+    const logoThumb = g('logo-thumb-'+id);
+    const logoPreview = g('logo-preview-'+id);
+    if (logoThumb)   logoThumb.src = s.logoUrl;
+    if (logoPreview) logoPreview.style.display = 'flex';
+    const lpHero = g('lp-hero-'+id);
+    if (lpHero) {
+      const lpLogo = document.createElement('img');
+      lpLogo.src = s.logoUrl;
+      lpLogo.className = 'lp-logo-overlay';
+      lpLogo.style.cssText = 'position:absolute;bottom:12px;right:12px;width:72px;height:72px;object-fit:contain;z-index:5;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.6);';
+      lpHero.appendChild(lpLogo);
+    }
+  }
+
+  // --- Champs PayZen ---
+  if (g('pz-amount-'+id)) g('pz-amount-'+id).value = s.pzAmount;
+  if (g('pz-worker-'+id)) g('pz-worker-'+id).value = s.pzWorker;
+  if (g('pz-secret-'+id)) g('pz-secret-'+id).value = s.pzSecret;
+  if (g('pz-mode-'+id))   g('pz-mode-'+id).value   = s.pzMode;
+  if (g('url-'+id))       g('url-'+id).value        = s.url;
+
+  // --- Images produits ---
+  if (s.prodImgs) {
+    s.prodImgs.forEach((src, i) => {
+      if (!src) return;
+      const cell = document.querySelector(`#pg-${id} .logo-cell:nth-child(${i+1})`);
+      if (cell) cell.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:contain"><input type="file" id="pi-${id}-${i}" accept="image/*" style="display:none" onchange="loadProdImg(event,${id},${i})">`;
+      const lpImg = g('lpimg-'+id+'-'+i);
+      if (lpImg) lpImg.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover">`;
+    });
+  }
+}
+
+// Config PayZen par défaut (partagée toutes campagnes)
+const PZ_DEFAULTS = {
+  worker: 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token',
+  secret: 'hcs-payzen-2026',
+  mode: 'TEST'
+};
+
 // Met à jour le dot actif dans la sidebar
 function setActive(id) {
   document.querySelectorAll('.camp-item').forEach((el, i) => {
@@ -322,6 +466,7 @@ function buildSidebar() {
 }
 
 function select(id) {
+  saveState(current); // ← sauver l'état de la campagne actuelle avant de changer
   document.querySelectorAll('.camp-item').forEach(el => el.classList.remove('active'));
   document.getElementById('si-'+id).classList.add('active');
   current = id;
@@ -484,13 +629,13 @@ function render(id) {
           <div class="frow"><label class="flabel">Montant (XPF)</label>
             <input class="finput" type="number" min="0" placeholder="ex: 2500" id="pz-amount-${id}"></div>
           <div class="frow"><label class="flabel">URL Worker PayZen</label>
-            <input class="finput" placeholder="https://worker.workers.dev/payzen-token" id="pz-worker-${id}"></div>
+            <input class="finput" placeholder="https://worker.workers.dev/payzen-token" id="pz-worker-${id}" value="${PZ_DEFAULTS.worker}"></div>
           <div class="frow"><label class="flabel">Secret Worker</label>
-            <input class="finput" type="password" placeholder="votre_secret" id="pz-secret-${id}"></div>
+            <input class="finput" type="password" placeholder="votre_secret" id="pz-secret-${id}" value="${PZ_DEFAULTS.secret}"></div>
           <div class="frow"><label class="flabel">Mode</label>
             <select class="finput" id="pz-mode-${id}" style="background:var(--bg-panel);color:var(--text)">
-              <option value="TEST">TEST</option>
-              <option value="PRODUCTION">PRODUCTION</option>
+              <option value="TEST" ${PZ_DEFAULTS.mode==='TEST'?'selected':''}>TEST</option>
+              <option value="PRODUCTION" ${PZ_DEFAULTS.mode==='PRODUCTION'?'selected':''}>PRODUCTION</option>
             </select></div>
           <div style="font-size:0.62rem;color:var(--text-secondary);margin-top:4px">Laissez vide pour ne pas inclure le paiement dans l'export</div>
         </div>
@@ -509,6 +654,8 @@ function render(id) {
       <div class="lp-body">${renderLP(c)}</div>
     </div>
   `;
+
+  restoreState(id);
 
   // Drag & drop
   const cv = document.getElementById('cv-'+id);
