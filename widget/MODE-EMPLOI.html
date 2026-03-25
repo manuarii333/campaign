@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCS Payment Widget — Mode d'emploi</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f1a; color: #e8e8f0; line-height: 1.6; }
+
+    /* Header */
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-bottom: 1px solid #2a2a4a;
+      padding: 48px 32px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block; padding: 5px 16px; border-radius: 20px;
+      background: rgba(108,99,255,.15); border: 1px solid rgba(108,99,255,.4);
+      color: #a29bfe; font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .hero h1 { font-size: 2rem; font-weight: 900; margin-bottom: 10px; }
+    .hero h1 span { background: linear-gradient(135deg, #6c63ff, #ff6584); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { color: #9090b0; font-size: .95rem; max-width: 540px; margin: 0 auto; }
+    .hero-url {
+      display: inline-block; margin-top: 20px; padding: 10px 20px;
+      background: #16213e; border: 1px solid #2a2a4a; border-radius: 10px;
+      font-family: monospace; font-size: .82rem; color: #a29bfe;
+    }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,26,.95); border-bottom: 1px solid #2a2a4a;
+      padding: 0 32px; display: flex; gap: 0; backdrop-filter: blur(10px);
+      overflow-x: auto;
+    }
+    .nav a {
+      display: block; padding: 14px 18px; color: #9090b0; text-decoration: none;
+      font-size: .78rem; font-weight: 600; border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: all .2s;
+    }
+    .nav a:hover { color: #e8e8f0; border-bottom-color: #6c63ff; }
+
+    /* Layout */
+    .container { max-width: 860px; margin: 0 auto; padding: 48px 24px; }
+
+    /* Sections */
+    .section { margin-bottom: 56px; }
+    .section-anchor { display: block; height: 80px; margin-top: -80px; }
+    h2 {
+      font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;
+      padding-bottom: 12px; border-bottom: 1px solid #2a2a4a;
+      display: flex; align-items: center; gap: 10px;
+    }
+    h2 .num {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, #6c63ff, #ff6584);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 900; flex-shrink: 0;
+    }
+    h3 { font-size: .9rem; font-weight: 700; margin: 20px 0 10px; color: #a29bfe; }
+    p { color: #c0c0d8; font-size: .88rem; margin-bottom: 12px; }
+
+    /* Code blocks */
+    pre {
+      background: #111122; border: 1px solid #2a2a4a; border-radius: 10px;
+      padding: 18px 20px; overflow-x: auto; margin: 12px 0;
+      position: relative;
+    }
+    code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: .8rem; line-height: 1.8; }
+    pre code { color: #e8e8f0; }
+    .kw { color: #ff79c6; }
+    .str { color: #f1fa8c; }
+    .attr { color: #8be9fd; }
+    .val { color: #50fa7b; }
+    .cm { color: #6272a4; font-style: italic; }
+    .tag { color: #ff79c6; }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: #2a2a4a; border: none; color: #9090b0;
+      padding: 4px 10px; border-radius: 6px; font-size: .65rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .copy-btn:hover { background: #6c63ff; color: white; }
+
+    /* Cards */
+    .card {
+      background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px;
+      padding: 18px 20px; margin-bottom: 12px;
+    }
+    .card-title { font-size: .82rem; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .card-desc { font-size: .78rem; color: #9090b0; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .8rem; }
+    th {
+      background: #16213e; padding: 10px 14px; text-align: left;
+      font-size: .65rem; text-transform: uppercase; letter-spacing: 1px; color: #9090b0;
+      border-bottom: 1px solid #2a2a4a;
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid #1e1e3a; color: #c0c0d8; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(108,99,255,.04); }
+    code.inline {
+      background: #16213e; border: 1px solid #2a2a4a; border-radius: 4px;
+      padding: 2px 7px; font-size: .75rem; color: #8be9fd;
+    }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 14px; }
+    .step {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 16px 18px;
+    }
+    .step-num {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #6c63ff, #ff6584);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; font-weight: 900; color: white;
+    }
+    .step-body { flex: 1; }
+    .step-title { font-size: .85rem; font-weight: 700; margin-bottom: 4px; }
+    .step-text { font-size: .78rem; color: #9090b0; }
+
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 5px;
+      font-size: .65rem; font-weight: 700; vertical-align: middle;
+    }
+    .badge-test  { background: rgba(246,211,101,.15); color: #f6d365; border: 1px solid rgba(246,211,101,.3); }
+    .badge-prod  { background: rgba(67,233,123,.15);  color: #43e97b; border: 1px solid rgba(67,233,123,.3); }
+    .badge-req   { background: rgba(255,107,107,.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,.3); }
+    .badge-opt   { background: rgba(108,99,255,.15);  color: #a29bfe; border: 1px solid rgba(108,99,255,.3); }
+
+    /* Alert */
+    .alert {
+      border-radius: 10px; padding: 14px 16px; margin: 14px 0;
+      font-size: .8rem; display: flex; gap: 10px; align-items: flex-start;
+    }
+    .alert-warn { background: rgba(246,211,101,.1); border: 1px solid rgba(246,211,101,.3); color: #f6d365; }
+    .alert-info { background: rgba(108,99,255,.1);  border: 1px solid rgba(108,99,255,.3);  color: #a29bfe; }
+    .alert-ok   { background: rgba(67,233,123,.1);  border: 1px solid rgba(67,233,123,.3);  color: #43e97b; }
+    .alert-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .alert-text { color: #c0c0d8; }
+    .alert-text strong { color: #e8e8f0; }
+
+    /* Test cards */
+    .test-card-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1e1e3a; }
+    .test-card-row:last-child { border: none; }
+    .test-card-num { font-family: monospace; background: #16213e; border: 1px solid #2a2a4a; padding: 5px 12px; border-radius: 6px; font-size: .8rem; flex: 1; letter-spacing: 1px; }
+    .test-card-copy { background: none; border: 1px solid #2a2a4a; color: #9090b0; padding: 4px 10px; border-radius: 6px; font-size: .65rem; cursor: pointer; }
+    .test-card-copy:hover { border-color: #6c63ff; color: #a29bfe; }
+
+    /* Deploy steps */
+    .deploy-flow {
+      background: #111122; border: 1px solid #2a2a4a; border-radius: 12px;
+      padding: 20px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .deploy-cmd { display: flex; align-items: center; gap: 12px; }
+    .deploy-arrow { color: #6c63ff; font-size: .9rem; padding-left: 8px; }
+    .deploy-cmd code { font-family: monospace; font-size: .8rem; color: #50fa7b; }
+    .deploy-cmd span { font-size: .72rem; color: #9090b0; }
+
+    /* Footer */
+    footer {
+      text-align: center; padding: 40px; border-top: 1px solid #2a2a4a;
+      color: #9090b0; font-size: .75rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">💳 HCS Payment Widget</div>
+  <h1>Mode d'emploi <span>complet</span></h1>
+  <p>Intégrez le paiement OSB Polynésie sur n'importe quelle page web en 2 lignes de code.</p>
+  <div class="hero-url">https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js</div>
+</div>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="#installation">Installation</a>
+  <a href="#cas-1">Montant fixe</a>
+  <a href="#cas-2">Multi-tarifs</a>
+  <a href="#cas-3">Montant libre</a>
+  <a href="#parametres">Paramètres</a>
+  <a href="#events">Événements JS</a>
+  <a href="#test">Test</a>
+  <a href="#prod">Production</a>
+  <a href="#deploiement">Déploiement</a>
+</nav>
+
+<div class="container">
+
+  <!-- Installation -->
+  <div class="section">
+    <span class="section-anchor" id="installation"></span>
+    <h2><span class="num">1</span> Installation</h2>
+    <p>Aucune dépendance, aucun npm. Deux lignes suffisent sur n'importe quelle page HTML.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Ajouter un conteneur</div>
+          <div class="step-text">Un simple <code class="inline">&lt;div&gt;</code> avec des attributs <code class="inline">data-*</code> pour configurer le widget.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Charger le script</div>
+          <div class="step-text">Le widget s'initialise automatiquement au chargement de la page.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">C'est tout</div>
+          <div class="step-text">Le bouton apparaît. Le checkout 4 étapes est prêt. Les paiements arrivent sur ton compte OSB.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-text">Le widget requiert une URL <strong>https://</strong> ou <strong>http://localhost</strong>. Il ne fonctionne pas en ouvrant le fichier directement depuis l'explorateur (<strong>file://</strong>).</div>
+    </div>
+  </div>
+
+  <!-- Cas 1 : Montant fixe -->
+  <div class="section">
+    <span class="section-anchor" id="cas-1"></span>
+    <h2><span class="num">2</span> Cas 1 — Montant fixe</h2>
+    <p>Un produit, un prix. Le client clique, passe commande, paye.</p>
+
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code><span class="cm">&lt;!-- Conteneur widget --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">id</span>=<span class="str">"hcs-pay"</span>
+  <span class="attr">data-amount</span>=<span class="str">"2500"</span>
+  <span class="attr">data-product</span>=<span class="str">"T-Shirt Classic Mars"</span>
+  <span class="attr">data-mode</span>=<span class="str">"PRODUCTION"</span>
+  <span class="attr">data-color</span>=<span class="str">"#4facfe"</span>
+  <span class="attr">data-shop</span>=<span class="str">"HCS Tahiti"</span>
+  <span class="attr">data-label</span>=<span class="str">"Commander maintenant"</span><span class="tag">&gt;&lt;/div&gt;</span>
+
+<span class="cm">&lt;!-- Script widget (à placer avant &lt;/body&gt;) --&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js"</span><span class="tag">&gt;&lt;/script&gt;</span></code></pre>
+  </div>
+
+  <!-- Cas 2 : Multi-tarifs -->
+  <div class="section">
+    <span class="section-anchor" id="cas-2"></span>
+    <h2><span class="num">3</span> Cas 2 — Sélecteur multi-tarifs</h2>
+    <p>Le client choisit son pack ou sa formule avant de payer. Utilise <code class="inline">data-products</code> avec un tableau JSON.</p>
+
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code><span class="tag">&lt;div</span> <span class="attr">id</span>=<span class="str">"hcs-pay"</span>
+  <span class="attr">data-products</span>=<span class="str">'[
+    {"name":"Sticker A5","price":800,"description":"Impression DTF haute qualité"},
+    {"name":"Pack 5 stickers","price":3500,"description":"Économisez 500 XPF"},
+    {"name":"Pack 10 stickers","price":6000,"description":"Meilleur prix du pack"}
+  ]'</span>
+  <span class="attr">data-mode</span>=<span class="str">"PRODUCTION"</span>
+  <span class="attr">data-color</span>=<span class="str">"#f093fb"</span>
+  <span class="attr">data-shop</span>=<span class="str">"HCS Tahiti"</span>
+  <span class="attr">data-label</span>=<span class="str">"Choisir mon pack"</span><span class="tag">&gt;&lt;/div&gt;</span>
+
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js"</span><span class="tag">&gt;&lt;/script&gt;</span></code></pre>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">💡</span>
+      <div class="alert-text">Chaque objet du tableau peut contenir <strong>name</strong> (obligatoire), <strong>price</strong> (obligatoire) et <strong>description</strong> (optionnel).</div>
+    </div>
+  </div>
+
+  <!-- Cas 3 : Montant libre -->
+  <div class="section">
+    <span class="section-anchor" id="cas-3"></span>
+    <h2><span class="num">4</span> Cas 3 — Montant libre</h2>
+    <p>Le client saisit lui-même le montant. Idéal pour les acomptes, dons ou devis personnalisés.</p>
+
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code><span class="tag">&lt;div</span> <span class="attr">id</span>=<span class="str">"hcs-pay"</span>
+  <span class="attr">data-free-amount</span>=<span class="str">"true"</span>
+  <span class="attr">data-min</span>=<span class="str">"500"</span>
+  <span class="attr">data-max</span>=<span class="str">"200000"</span>
+  <span class="attr">data-product</span>=<span class="str">"Acompte commande personnalisée"</span>
+  <span class="attr">data-mode</span>=<span class="str">"PRODUCTION"</span>
+  <span class="attr">data-color</span>=<span class="str">"#6c63ff"</span>
+  <span class="attr">data-shop</span>=<span class="str">"HCS Tahiti"</span><span class="tag">&gt;&lt;/div&gt;</span>
+
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js"</span><span class="tag">&gt;&lt;/script&gt;</span></code></pre>
+  </div>
+
+  <!-- Paramètres -->
+  <div class="section">
+    <span class="section-anchor" id="parametres"></span>
+    <h2><span class="num">5</span> Tous les paramètres</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Attribut</th>
+          <th>Requis</th>
+          <th>Valeur</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="inline">data-amount</code></td>
+          <td><span class="badge badge-req">Requis*</span></td>
+          <td><code class="inline">2500</code></td>
+          <td>Montant fixe en XPF (entier, sans décimales)</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-product</code></td>
+          <td><span class="badge badge-opt">Optionnel</span></td>
+          <td><code class="inline">"T-Shirt"</code></td>
+          <td>Nom du produit affiché dans le checkout</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-products</code></td>
+          <td><span class="badge badge-req">Requis*</span></td>
+          <td>JSON array</td>
+          <td>Multi-tarifs — remplace data-amount</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-free-amount</code></td>
+          <td><span class="badge badge-opt">Optionnel</span></td>
+          <td><code class="inline">"true"</code></td>
+          <td>Active la saisie libre du montant</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-min</code></td>
+          <td><span class="badge badge-opt">Optionnel</span></td>
+          <td><code class="inline">500</code></td>
+          <td>Montant minimum (free-amount) — défaut : 100</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-max</code></td>
+          <td><span class="badge badge-opt">Optionnel</span></td>
+          <td><code class="inline">200000</code></td>
+          <td>Montant maximum (free-amount) — défaut : 999999</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-mode</code></td>
+          <td><span class="badge badge-opt">Optionnel</span></td>
+          <td><code class="inline">TEST</code> / <code class="inline">PRODUCTION</code></td>
+          <td>Mode paiement — défaut : TEST</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-color</code></td>
+          <td><span class="badge badge-opt">Optionnel</span></td>
+          <td><code class="inline">#6c63ff</code></td>
+          <td>Couleur principale du widget (hex)</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-label</code></td>
+          <td><span class="badge badge-opt">Optionnel</span></td>
+          <td><code class="inline">"Payer par carte"</code></td>
+          <td>Texte affiché sur le bouton principal</td>
+        </tr>
+        <tr>
+          <td><code class="inline">data-shop</code></td>
+          <td><span class="badge badge-opt">Optionnel</span></td>
+          <td><code class="inline">"HCS Tahiti"</code></td>
+          <td>Nom de la boutique dans le checkout</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:.72rem;color:#9090b0;">* Au moins un de <code class="inline">data-amount</code>, <code class="inline">data-products</code> ou <code class="inline">data-free-amount</code> est requis.</p>
+  </div>
+
+  <!-- Events JS -->
+  <div class="section">
+    <span class="section-anchor" id="events"></span>
+    <h2><span class="num">6</span> Événements JavaScript</h2>
+    <p>Le widget émet des événements pour réagir au résultat du paiement (redirection, confirmation, analytics…).</p>
+
+    <h3>hcs:success — Paiement accepté</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code><span class="kw">document</span>.getElementById(<span class="str">'hcs-pay'</span>).addEventListener(<span class="str">'hcs:success'</span>, <span class="kw">function</span>(e) {
+  <span class="cm">// e.detail = { orderId, amount, product }</span>
+  console.log(<span class="str">'✅ Paiement accepté'</span>, e.detail);
+
+  <span class="cm">// Exemple : rediriger vers une page de confirmation</span>
+  window.location.href = <span class="str">'/merci.html?order='</span> + e.detail.orderId;
+});</code></pre>
+
+    <h3>hcs:error — Erreur paiement</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code><span class="kw">document</span>.getElementById(<span class="str">'hcs-pay'</span>).addEventListener(<span class="str">'hcs:error'</span>, <span class="kw">function</span>(e) {
+  <span class="cm">// e.detail = { message }</span>
+  console.error(<span class="str">'❌ Erreur'</span>, e.detail.message);
+});</code></pre>
+
+    <table>
+      <thead><tr><th>Événement</th><th>Données disponibles</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code class="inline">hcs:success</code></td>
+          <td><code class="inline">orderId</code> · <code class="inline">amount</code> · <code class="inline">product</code></td>
+          <td>Paiement accepté par OSB</td>
+        </tr>
+        <tr>
+          <td><code class="inline">hcs:error</code></td>
+          <td><code class="inline">message</code></td>
+          <td>Erreur technique ou connexion Worker</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Test -->
+  <div class="section">
+    <span class="section-anchor" id="test"></span>
+    <h2><span class="num">7</span> Tester le widget</h2>
+
+    <div class="alert alert-ok">
+      <span class="alert-icon">✅</span>
+      <div class="alert-text">Ouvre <strong>widget-test.html</strong> sur un serveur local pour tester les 6 scénarios.</div>
+    </div>
+
+    <h3>Lancer le serveur local</h3>
+    <pre><code><span class="cm"># Depuis le dossier campaign/ :</span>
+python -m http.server 3000
+
+<span class="cm"># Ouvrir dans le navigateur :</span>
+http://localhost:3000/widget/widget-test.html</code></pre>
+
+    <h3>Cartes de test OSB Polynésie</h3>
+    <div class="card">
+      <div class="test-card-row">
+        <span style="font-size:.72rem;font-weight:700;color:#43e97b;width:80px">✅ Accepté</span>
+        <div class="test-card-num">4970 1000 0000 0055</div>
+        <button class="test-card-copy" onclick="navigator.clipboard.writeText('4970100000000055');this.textContent='✓'">Copier</button>
+        <span style="font-size:.72rem;color:#9090b0">Exp: 12/26 · CVV: 123</span>
+      </div>
+      <div class="test-card-row">
+        <span style="font-size:.72rem;font-weight:700;color:#ff6b6b;width:80px">❌ Refusé</span>
+        <div class="test-card-num">4970 1000 0000 0015</div>
+        <button class="test-card-copy" onclick="navigator.clipboard.writeText('4970100000000015');this.textContent='✓'">Copier</button>
+        <span style="font-size:.72rem;color:#9090b0">Exp: 12/26 · CVV: 123</span>
+      </div>
+      <div class="test-card-row">
+        <span style="font-size:.72rem;font-weight:700;color:#f6d365;width:80px">🔐 3DS</span>
+        <div class="test-card-num">4970 1000 0000 0063</div>
+        <button class="test-card-copy" onclick="navigator.clipboard.writeText('4970100000000063');this.textContent='✓'">Copier</button>
+        <span style="font-size:.72rem;color:#9090b0">Exp: 12/26 · CVV: 123</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Production -->
+  <div class="section">
+    <span class="section-anchor" id="prod"></span>
+    <h2><span class="num">8</span> Passer en production</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Changer le mode</div>
+          <div class="step-text">Remplacer <code class="inline">data-mode="TEST"</code> par <code class="inline">data-mode="PRODUCTION"</code> dans le HTML.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Vérifier les clés Cloudflare</div>
+          <div class="step-text">S'assurer que <code class="inline">PAYZEN_PROD_KEY</code> et <code class="inline">PAYZEN_PUBLIC_PROD_KEY</code> sont configurés dans les secrets du Worker.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Héberger en HTTPS</div>
+          <div class="step-text">La page qui intègre le widget doit être accessible en <strong>https://</strong>. Les SDKs bancaires refusent les origines non sécurisées.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Vérifier dans le back office OSB</div>
+          <div class="step-text">Se connecter au back office OSB Polynésie pour confirmer que les transactions apparaissent bien.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-text">Ne jamais exposer <strong>PAYZEN_TEST_KEY</strong> ou <strong>PAYZEN_PROD_KEY</strong> dans le code HTML ou JavaScript côté client. Ces clés sont uniquement dans le Worker Cloudflare.</div>
+    </div>
+  </div>
+
+  <!-- Déploiement -->
+  <div class="section">
+    <span class="section-anchor" id="deploiement"></span>
+    <h2><span class="num">9</span> Mettre à jour le widget</h2>
+    <p>Après avoir modifié <code class="inline">hcs-payment-widget.js</code>, déployer en 3 commandes depuis le dossier <code class="inline">campaign/</code> :</p>
+
+    <div class="deploy-flow">
+      <div class="deploy-cmd">
+        <span class="deploy-arrow">$</span>
+        <code>cp widget/hcs-payment-widget.js public/widget.js</code>
+        <span>Synchronise la source dans public/</span>
+      </div>
+      <div class="deploy-cmd">
+        <span class="deploy-arrow">$</span>
+        <code>npx wrangler deploy</code>
+        <span>Déploie le Worker + Assets sur Cloudflare</span>
+      </div>
+      <div class="deploy-cmd">
+        <span class="deploy-arrow">$</span>
+        <code>git add -A && git commit -m "update widget" && git push</code>
+        <span>Sauvegarde sur GitHub</span>
+      </div>
+    </div>
+
+    <div class="alert alert-ok" style="margin-top:16px">
+      <span class="alert-icon">🚀</span>
+      <div class="alert-text">Le widget est disponible immédiatement après le déploiement Cloudflare à l'URL : <strong>https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js</strong></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  HCS Payment Widget · OSB Polynésie / PayZen · Cloudflare Workers · HCS Tahiti 2026
+</footer>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.parentElement;
+    const text = pre.querySelector('code').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ Copié';
+      setTimeout(() => btn.textContent = 'Copier', 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
