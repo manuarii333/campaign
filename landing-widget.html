@@ -735,17 +735,37 @@
   });
 
   // Formulaire
-  function submitForm() {
+  const WORKER_URL = 'https://payzen-hcs.highcoffeeshirt.workers.dev';
+
+  async function submitForm() {
     const nom      = document.getElementById('f-nom').value.trim();
     const boutique = document.getElementById('f-boutique').value.trim();
     const tel      = document.getElementById('f-tel').value.trim();
+    const email    = (document.getElementById('f-email')?.value || '').trim();
+    const plan     = (document.getElementById('f-plan')?.value || '').trim();
+    const message  = (document.getElementById('f-message')?.value || '').trim();
+
     if (!nom || !boutique || !tel) {
       toast('⚠️ Remplissez les champs obligatoires', 'warn'); return;
     }
-    // Ici : envoyer vers un webhook, email, ou WhatsApp
-    // Pour l'instant on simule le succès
-    document.getElementById('modal-form-wrap').style.display = 'none';
-    document.getElementById('modal-success').style.display = 'block';
+
+    const btn = event.currentTarget || document.querySelector('[onclick="submitForm()"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
+
+    try {
+      const res = await fetch(WORKER_URL + '/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom, boutique, tel, email, plan, message }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+      document.getElementById('modal-form-wrap').style.display = 'none';
+      document.getElementById('modal-success').style.display = 'block';
+    } catch (e) {
+      toast('❌ ' + e.message, 'warn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Envoyer ma demande →'; }
+    }
   }
 
   // FAQ accordion

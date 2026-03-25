@@ -156,6 +156,20 @@ export default {
       return handleMerchantsMigrate(request, env);
     }
 
+    // ── Leads / Contact (/contact) ─────────────────────────
+    if (method === 'POST' && pathname === '/contact') {
+      return handleContactSubmit(request, env);
+    }
+    if (method === 'POST' && pathname === '/contact/migrate') {
+      return handleLeadsMigrate(request, env);
+    }
+    if (method === 'GET' && pathname === '/admin/leads') {
+      return handleAdminListLeads(request, env);
+    }
+    if (method === 'PATCH' && pathname.startsWith('/admin/leads/')) {
+      return handleAdminUpdateLead(request, pathname, env);
+    }
+
     return err('Not found', 404);
   },
 };
@@ -886,4 +900,107 @@ async function handleMerchantsMigrate(request, env) {
   } catch (e) {
     return err('Migration échouée: ' + e.message, 500);
   }
+}
+
+// ─────────────────────────────────────────────────────────
+// POST /contact — soumission formulaire (public)
+// ─────────────────────────────────────────────────────────
+async function handleContactSubmit(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const { nom, boutique, tel, email = '', plan = '', message = '' } = body;
+  if (!nom || !boutique || !tel) return err('Champs requis: nom, boutique, tel');
+
+  const id = 'lead_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  const now = new Date().toISOString();
+
+  try {
+    await env.HCS_DB.prepare(
+      `INSERT INTO leads (id, nom, boutique, tel, email, plan, message, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?)`
+    ).bind(id, nom, boutique, tel, email, plan, message, now).run();
+  } catch (e) {
+    return err('Erreur enregistrement: ' + e.message, 500);
+  }
+
+  // Notification Discord (optionnel — secret DISCORD_WEBHOOK_URL)
+  if (env.DISCORD_WEBHOOK_URL) {
+    const emoji = plan === 'Business' ? '🏆' : plan === 'Pro' ? '⭐' : '🌱';
+    const content = [
+      `**${emoji} Nouvelle demande HCS Pay**`,
+      `👤 **${nom}** — ${boutique}`,
+      `📞 ${tel}${email ? ' · ' + email : ''}`,
+      `📦 Plan : **${plan || 'Non précisé'}**`,
+      message ? `💬 ${message}` : '',
+    ].filter(Boolean).join('\n');
+    try {
+      await fetch(env.DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+    } catch (_) { /* webhook optionnel */ }
+  }
+
+  return json({ success: true, id }, 201, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// POST /contact/migrate — crée la table leads (admin)
+// ─────────────────────────────────────────────────────────
+async function handleLeadsMigrate(request, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  try {
+    await env.HCS_DB.prepare(`
+      CREATE TABLE IF NOT EXISTS leads (
+        id         TEXT PRIMARY KEY,
+        nom        TEXT NOT NULL,
+        boutique   TEXT NOT NULL,
+        tel        TEXT NOT NULL,
+        email      TEXT DEFAULT '',
+        plan       TEXT DEFAULT '',
+        message    TEXT DEFAULT '',
+        status     TEXT NOT NULL DEFAULT 'new',
+        created_at TEXT NOT NULL
+      )
+    `).run();
+    return json({ success: true, message: 'Table leads créée' }, 200, request);
+  } catch (e) {
+    return err('Migration échouée: ' + e.message, 500);
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// GET /admin/leads — liste des demandes (admin)
+// ─────────────────────────────────────────────────────────
+async function handleAdminListLeads(request, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  const { results } = await env.HCS_DB
+    .prepare('SELECT * FROM leads ORDER BY created_at DESC')
+    .all();
+  return json({ leads: results || [] }, 200, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// PATCH /admin/leads/:id — changer statut (admin)
+// ─────────────────────────────────────────────────────────
+async function handleAdminUpdateLead(request, pathname, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  const id = pathname.replace('/admin/leads/', '');
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const { status } = body;
+  if (!status) return err('status requis');
+
+  await env.HCS_DB.prepare('UPDATE leads SET status = ? WHERE id = ?')
+    .bind(status, id).run();
+  return json({ success: true }, 200, request);
 }

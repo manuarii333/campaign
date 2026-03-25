@@ -353,6 +353,9 @@
       <div class="nav-item" onclick="showPage('snippet')">
         <span class="icon">💻</span> Générateur de code
       </div>
+      <div class="nav-item" onclick="showPage('leads')">
+        <span class="icon">📥</span> Leads <span id="leads-badge" style="display:none;background:var(--accent);color:#fff;font-size:.6rem;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px">0</span>
+      </div>
       <div class="nav-item" onclick="runMigration()">
         <span class="icon">⚙️</span> Migration DB
       </div>
@@ -590,6 +593,33 @@
         </div>
       </div>
 
+      <!-- ── LEADS ──────────────────────────────────────────────── -->
+      <div id="page-leads" class="page-view">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">📥 Demandes reçues</div>
+            <button class="btn btn-secondary btn-sm" onclick="loadLeads()">↻ Actualiser</button>
+          </div>
+          <div style="padding:0 24px 24px">
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+              <button class="btn btn-sm" id="lf-all"  onclick="filterLeads('all')"       style="background:var(--accent);color:#fff">Tous</button>
+              <button class="btn btn-secondary btn-sm" id="lf-new"  onclick="filterLeads('new')">🔵 Nouveaux</button>
+              <button class="btn btn-secondary btn-sm" id="lf-contacted" onclick="filterLeads('contacted')">🟡 Contactés</button>
+              <button class="btn btn-secondary btn-sm" id="lf-done" onclick="filterLeads('done')">🟢 Convertis</button>
+              <button class="btn btn-secondary btn-sm" id="lf-lost" onclick="filterLeads('lost')">⚫ Perdus</button>
+            </div>
+            <div id="leads-run-migrate" style="display:none;background:rgba(246,211,101,.1);border:1px solid rgba(246,211,101,.3);border-radius:10px;padding:14px;margin-bottom:16px;font-size:.8rem;color:#f6d365">
+              ⚠️ La table <code>leads</code> n'existe pas encore.
+              <button class="btn btn-primary btn-sm" style="margin-left:8px" onclick="runLeadsMigration()">Créer la table</button>
+            </div>
+            <table class="table" id="leads-table">
+              <thead><tr><th>Date</th><th>Nom</th><th>Boutique</th><th>Contact</th><th>Plan</th><th>Statut</th><th></th></tr></thead>
+              <tbody id="leads-body"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -666,6 +696,7 @@ function showPage(id) {
   });
   if (id === 'merchants') renderMerchantsTable();
   if (id === 'dashboard') renderDashboard();
+  if (id === 'leads') loadLeads();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1007,6 +1038,101 @@ async function runMigration() {
     });
     const d = await res.json();
     toast(d.success ? '✅ ' + d.message : '❌ ' + d.error, d.success ? 'ok' : 'err');
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LEADS
+// ═══════════════════════════════════════════════════════════════
+let allLeads = [];
+let leadsFilter = 'all';
+
+async function loadLeads() {
+  try {
+    const res = await fetch(WORKER + '/admin/leads', { headers: { 'X-Admin-Secret': SECRET } });
+    if (res.status === 500) {
+      document.getElementById('leads-run-migrate').style.display = 'block';
+      document.getElementById('leads-body').innerHTML =
+        '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Table non créée</td></tr>';
+      return;
+    }
+    document.getElementById('leads-run-migrate').style.display = 'none';
+    const data = await res.json();
+    allLeads = data.leads || [];
+    // Badge nouveaux
+    const newCount = allLeads.filter(l => l.status === 'new').length;
+    const badge = document.getElementById('leads-badge');
+    if (newCount > 0) { badge.style.display = 'inline'; badge.textContent = newCount; }
+    else { badge.style.display = 'none'; }
+    renderLeads();
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+function filterLeads(f) {
+  leadsFilter = f;
+  ['all','new','contacted','done','lost'].forEach(k => {
+    const el = document.getElementById('lf-' + k);
+    if (el) { el.style.background = k === f ? 'var(--accent)' : ''; el.style.color = k === f ? '#fff' : ''; }
+  });
+  renderLeads();
+}
+
+function renderLeads() {
+  const list = leadsFilter === 'all' ? allLeads : allLeads.filter(l => l.status === leadsFilter);
+  const statusLabel = { new: '🔵 Nouveau', contacted: '🟡 Contacté', done: '🟢 Converti', lost: '⚫ Perdu' };
+  const tbody = document.getElementById('leads-body');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Aucune demande</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(l => `
+    <tr>
+      <td style="white-space:nowrap;font-size:.72rem;color:var(--muted)">${l.created_at.slice(0,10)}</td>
+      <td style="font-weight:600">${l.nom}</td>
+      <td>${l.boutique}</td>
+      <td style="font-size:.78rem">${l.tel}${l.email ? '<br><span style="color:var(--muted)">' + l.email + '</span>' : ''}</td>
+      <td><span style="background:rgba(108,99,255,.15);padding:2px 8px;border-radius:99px;font-size:.7rem">${l.plan || '—'}</span></td>
+      <td>${statusLabel[l.status] || l.status}</td>
+      <td>
+        <select style="font-size:.72rem;padding:3px 6px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text);cursor:pointer"
+          onchange="updateLeadStatus('${l.id}', this.value)">
+          <option value="new"       ${l.status==='new'?'selected':''}>🔵 Nouveau</option>
+          <option value="contacted" ${l.status==='contacted'?'selected':''}>🟡 Contacté</option>
+          <option value="done"      ${l.status==='done'?'selected':''}>🟢 Converti</option>
+          <option value="lost"      ${l.status==='lost'?'selected':''}>⚫ Perdu</option>
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function updateLeadStatus(id, status) {
+  try {
+    await fetch(WORKER + '/admin/leads/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET },
+      body: JSON.stringify({ status }),
+    });
+    const lead = allLeads.find(l => l.id === id);
+    if (lead) lead.status = status;
+    const newCount = allLeads.filter(l => l.status === 'new').length;
+    const badge = document.getElementById('leads-badge');
+    if (newCount > 0) { badge.style.display = 'inline'; badge.textContent = newCount; }
+    else { badge.style.display = 'none'; }
+    renderLeads();
+    toast('✅ Statut mis à jour');
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+async function runLeadsMigration() {
+  try {
+    const res = await fetch(WORKER + '/contact/migrate', {
+      method: 'POST',
+      headers: { 'X-Admin-Secret': SECRET }
+    });
+    const d = await res.json();
+    if (d.success) { toast('✅ ' + d.message); loadLeads(); }
+    else toast('❌ ' + d.error, 'err');
   } catch(e) { toast('❌ ' + e.message, 'err'); }
 }
 
