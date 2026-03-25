@@ -12,3 +12,12 @@ PAYZEN_PUBLIC_PROD_KEY = "41545085:publickey_IzNDzp5XcAadriFpCh08meZmg8Ri6WbyYIG
 [[kv_namespaces]]
 binding = "HCS_ORDERS"
 id = "a06eba8a86b2408fa871a269ff184719"
+
+[[d1_databases]]
+binding = "HCS_DB"
+database_name = "hcs-orders-db"
+database_id = "a9cb51bb-0ca0-424b-8e97-a90bf41278da"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
