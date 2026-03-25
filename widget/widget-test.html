@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCS Widget — Application de test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e8e8f0;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-bottom: 1px solid #2a2a4a;
+      padding: 20px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, #6c63ff, #ff6584);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .header-title { font-size: 1.1rem; font-weight: 800; }
+    .header-sub { font-size: .72rem; color: #9090b0; margin-top: 2px; }
+    .mode-badge {
+      padding: 5px 14px; border-radius: 20px; font-size: .72rem; font-weight: 700;
+      background: rgba(246,211,101,.15); border: 1px solid rgba(246,211,101,.4); color: #f6d365;
+    }
+    .mode-badge.prod {
+      background: rgba(67,233,123,.15); border-color: rgba(67,233,123,.4); color: #43e97b;
+    }
+
+    /* Layout */
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+    .section-title {
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2px; color: #9090b0; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px; background: #2a2a4a;
+    }
+
+    /* Grid des cas de test */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 48px; }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .card-head {
+      padding: 16px 20px;
+      border-bottom: 1px solid #2a2a4a;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; flex-shrink: 0;
+    }
+    .card-head-text { }
+    .card-name { font-size: .88rem; font-weight: 700; }
+    .card-desc { font-size: .7rem; color: #9090b0; margin-top: 2px; }
+    .card-body { padding: 20px; }
+
+    /* Mode toggle */
+    .toggle-bar {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .toggle-label { font-size: .85rem; font-weight: 600; }
+    .toggle-sub { font-size: .72rem; color: #9090b0; margin-top: 2px; }
+    .toggle-wrap { display: flex; gap: 8px; }
+    .toggle-btn {
+      padding: 8px 20px; border-radius: 8px; border: 1px solid #2a2a4a;
+      background: #16213e; color: #9090b0; font-size: .8rem; font-weight: 700;
+      cursor: pointer; transition: all .2s;
+    }
+    .toggle-btn.active-test {
+      background: rgba(246,211,101,.15); border-color: #f6d365; color: #f6d365;
+    }
+    .toggle-btn.active-prod {
+      background: rgba(67,233,123,.15); border-color: #43e97b; color: #43e97b;
+    }
+
+    /* Log events */
+    .log-wrap {
+      background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; overflow: hidden;
+    }
+    .log-head {
+      padding: 14px 20px; border-bottom: 1px solid #2a2a4a;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .log-title { font-size: .82rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .log-dot { width: 8px; height: 8px; border-radius: 50%; background: #43e97b; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .log-clear {
+      font-size: .72rem; color: #9090b0; background: none; border: none;
+      cursor: pointer; padding: 4px 10px; border-radius: 6px;
+    }
+    .log-clear:hover { color: #ff6b6b; background: rgba(255,107,107,.1); }
+    .log-body { padding: 16px 20px; min-height: 120px; max-height: 280px; overflow-y: auto; font-family: monospace; }
+    .log-empty { color: #9090b0; font-size: .78rem; font-style: italic; }
+    .log-entry {
+      display: flex; gap: 10px; margin-bottom: 10px; font-size: .75rem; line-height: 1.6;
+    }
+    .log-time { color: #9090b0; flex-shrink: 0; padding-top: 1px; }
+    .log-tag {
+      padding: 1px 7px; border-radius: 4px; font-size: .65rem; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+    }
+    .log-tag.success { background: rgba(67,233,123,.2); color: #43e97b; }
+    .log-tag.error   { background: rgba(255,107,107,.2); color: #ff6b6b; }
+    .log-tag.info    { background: rgba(108,99,255,.2); color: #a29bfe; }
+    .log-msg { color: #e8e8f0; word-break: break-all; }
+
+    /* Cartes test */
+    .test-cards {
+      background: #16213e; border: 1px solid #2a2a4a; border-radius: 10px;
+      padding: 14px 16px; margin-top: 32px;
+    }
+    .test-cards-title { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9090b0; margin-bottom: 12px; }
+    .test-card-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .78rem; }
+    .test-card-row:last-child { margin-bottom: 0; }
+    .test-card-num { font-family: monospace; background: #1a1a2e; padding: 4px 10px; border-radius: 6px; color: #e8e8f0; letter-spacing: 1px; font-size: .75rem; flex: 1; }
+    .test-card-result { font-size: .68rem; font-weight: 700; }
+    .ok   { color: #43e97b; }
+    .ko   { color: #ff6b6b; }
+    .tds  { color: #f6d365; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-logo">💳</div>
+      <div>
+        <div class="header-title">HCS Payment Widget</div>
+        <div class="header-sub">Application de test d'intégration</div>
+      </div>
+    </div>
+    <div class="mode-badge" id="mode-badge">⚡ Mode TEST</div>
+  </div>
+
+  <div class="container">
+
+    <!-- Toggle mode -->
+    <div class="toggle-bar">
+      <div>
+        <div class="toggle-label">Mode de paiement</div>
+        <div class="toggle-sub">Bascule entre TEST (cartes fictives) et PRODUCTION (vrais paiements)</div>
+      </div>
+      <div class="toggle-wrap">
+        <button class="toggle-btn active-test" id="btn-test" onclick="setMode('TEST')">⚡ TEST</button>
+        <button class="toggle-btn" id="btn-prod" onclick="setMode('PRODUCTION')">✅ PRODUCTION</button>
+      </div>
+    </div>
+
+    <!-- Cas 1 : Montant fixe -->
+    <div class="section-title">Cas 1 — Montant fixe</div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon" style="background:rgba(79,172,254,.15)">👕</div>
+          <div class="card-head-text">
+            <div class="card-name">T-Shirt Classic Mars</div>
+            <div class="card-desc">1 produit · prix fixe 2 500 XPF</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="w1"
+            data-amount="2500"
+            data-product="T-Shirt Classic Mars"
+            data-color="#4facfe"
+            data-shop="HCS Tahiti"
+            data-label="Commander ce T-Shirt">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon" style="background:rgba(67,233,123,.15)">🧢</div>
+          <div class="card-head-text">
+            <div class="card-name">Casquette Mars</div>
+            <div class="card-desc">1 produit · prix fixe 1 800 XPF</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="w2"
+            data-amount="1800"
+            data-product="Casquette Mars"
+            data-color="#43e97b"
+            data-shop="HCS Tahiti"
+            data-label="Commander cette casquette">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Cas 2 : Multi-tarifs -->
+    <div class="section-title">Cas 2 — Sélecteur multi-tarifs</div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon" style="background:rgba(240,147,251,.15)">🎨</div>
+          <div class="card-head-text">
+            <div class="card-name">Stickers DTF</div>
+            <div class="card-desc">3 formats · client choisit son pack</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="w3"
+            data-products='[{"name":"Sticker A5","price":800,"description":"Impression DTF haute qualité"},{"name":"Pack 5 stickers","price":3500,"description":"Économisez 500 XPF vs unité"},{"name":"Pack 10 stickers","price":6000,"description":"Le meilleur prix du pack"}]'
+            data-color="#f093fb"
+            data-shop="HCS Tahiti"
+            data-label="Choisir mon pack">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon" style="background:rgba(246,211,101,.15)">📚</div>
+          <div class="card-head-text">
+            <div class="card-name">Formation Textile</div>
+            <div class="card-desc">3 formules · demi-journée / journée / premium</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="w4"
+            data-products='[{"name":"Demi-journée","price":5000,"description":"4h · initiation impression DTF"},{"name":"Journée complète","price":9000,"description":"8h · maîtrise complète du processus"},{"name":"Formation Premium","price":15000,"description":"2 jours · certification + matériel offert"}]'
+            data-color="#f6d365"
+            data-shop="HCS Formation"
+            data-label="Réserver ma formation">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Cas 3 : Montant libre -->
+    <div class="section-title">Cas 3 — Montant libre</div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon" style="background:rgba(108,99,255,.15)">💰</div>
+          <div class="card-head-text">
+            <div class="card-name">Acompte sur commande</div>
+            <div class="card-desc">Montant libre · min 500 XPF</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="w5"
+            data-free-amount="true"
+            data-min="500"
+            data-max="200000"
+            data-product="Acompte commande personnalisée"
+            data-color="#6c63ff"
+            data-shop="HCS Tahiti"
+            data-label="Payer l'acompte">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon" style="background:rgba(255,101,132,.15)">🎁</div>
+          <div class="card-head-text">
+            <div class="card-name">Don / Participation</div>
+            <div class="card-desc">Montant libre · min 200 XPF</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="w6"
+            data-free-amount="true"
+            data-min="200"
+            data-max="50000"
+            data-product="Participation association"
+            data-color="#ff6584"
+            data-shop="HCS Events"
+            data-label="Faire un don">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Log des événements -->
+    <div class="section-title">Événements JavaScript</div>
+    <div class="log-wrap">
+      <div class="log-head">
+        <div class="log-title"><div class="log-dot"></div> Écoute des events hcs:success / hcs:error</div>
+        <button class="log-clear" onclick="clearLog()">Effacer</button>
+      </div>
+      <div class="log-body" id="log">
+        <div class="log-empty" id="log-empty">En attente d'un paiement… Déclenche un paiement pour voir les événements apparaître ici.</div>
+      </div>
+    </div>
+
+    <!-- Cartes de test -->
+    <div class="test-cards" style="margin-top:24px">
+      <div class="test-cards-title">Cartes de test OSB Polynésie</div>
+      <div class="test-card-row">
+        <div class="test-card-result ok">✅ Accepté</div>
+        <div class="test-card-num">4970 1000 0000 0055</div>
+        <div style="color:#9090b0;font-size:.72rem">Expiration 12/26 — CVV 123</div>
+      </div>
+      <div class="test-card-row">
+        <div class="test-card-result ko">❌ Refusé</div>
+        <div class="test-card-num">4970 1000 0000 0015</div>
+        <div style="color:#9090b0;font-size:.72rem">Expiration 12/26 — CVV 123</div>
+      </div>
+      <div class="test-card-row">
+        <div class="test-card-result tds">🔐 3DS</div>
+        <div class="test-card-num">4970 1000 0000 0063</div>
+        <div style="color:#9090b0;font-size:.72rem">Expiration 12/26 — CVV 123</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Widget -->
+  <script src="https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js"></script>
+
+  <script>
+    // ── Mode toggle ──────────────────────────────────────────────
+    let currentMode = 'TEST';
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      // Met à jour le badge header
+      const badge = document.getElementById('mode-badge');
+      if (mode === 'TEST') {
+        badge.textContent = '⚡ Mode TEST';
+        badge.className = 'mode-badge';
+      } else {
+        badge.textContent = '✅ Mode PRODUCTION';
+        badge.className = 'mode-badge prod';
+      }
+
+      // Active/désactive les boutons
+      document.getElementById('btn-test').className = 'toggle-btn' + (mode === 'TEST' ? ' active-test' : '');
+      document.getElementById('btn-prod').className = 'toggle-btn' + (mode === 'PRODUCTION' ? ' active-prod' : '');
+
+      // Met à jour le data-mode sur tous les widgets et les réinitialise
+      ['w1','w2','w3','w4','w5','w6'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.dataset.mode = mode;
+        // Réinitialise le widget
+        delete el.dataset.hcsInit;
+        el.innerHTML = '';
+      });
+
+      // Réinjection du script widget
+      const old = document.getElementById('hcs-widget-script');
+      if (old) old.remove();
+      const s = document.createElement('script');
+      s.id = 'hcs-widget-script';
+      s.src = 'https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js?v=' + Date.now();
+      document.body.appendChild(s);
+
+      addLog('info', 'Mode basculé → ' + mode);
+    }
+
+    // ── Log événements ───────────────────────────────────────────
+    function now() {
+      return new Date().toLocaleTimeString('fr-FR');
+    }
+
+    function addLog(type, msg) {
+      const empty = document.getElementById('log-empty');
+      if (empty) empty.remove();
+      const log = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+        <span class="log-time">${now()}</span>
+        <span class="log-tag ${type}">${type.toUpperCase()}</span>
+        <span class="log-msg">${msg}</span>`;
+      log.insertBefore(entry, log.firstChild);
+    }
+
+    function clearLog() {
+      const log = document.getElementById('log');
+      log.innerHTML = '<div class="log-empty" id="log-empty">Log effacé.</div>';
+    }
+
+    // ── Écoute des events sur tout le document ───────────────────
+    document.addEventListener('hcs:success', function(e) {
+      const d = e.detail;
+      addLog('success', `✅ Paiement accepté — Commande <strong>${d.orderId}</strong> · ${d.product} · ${d.amount.toLocaleString('fr-FR')} XPF`);
+    });
+
+    document.addEventListener('hcs:error', function(e) {
+      addLog('error', '❌ Erreur paiement — ' + e.detail.message);
+    });
+
+    addLog('info', 'Widget chargé depuis payzen-hcs.highcoffeeshirt.workers.dev');
+  </script>
+
+</body>
+</html>
