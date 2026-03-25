@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCS · Gestion des marchands</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #0f0f1a;
+      --bg2:      #1a1a2e;
+      --bg3:      #16213e;
+      --bg4:      #1e1e3a;
+      --border:   #2a2a4a;
+      --text:     #e8e8f0;
+      --muted:    #9090b0;
+      --accent:   #6c63ff;
+      --accent2:  #ff6584;
+      --green:    #43e97b;
+      --yellow:   #f6d365;
+      --red:      #ff6b6b;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── LOGIN ─────────────────────────────────────────────────── */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(108,99,255,.15) 0%, transparent 60%);
+    }
+    .login-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 20px;
+      padding: 40px; width: 100%; max-width: 380px; text-align: center;
+    }
+    .login-logo {
+      width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    }
+    .login-title { font-size: 1.2rem; font-weight: 900; margin-bottom: 6px; }
+    .login-sub   { font-size: .78rem; color: var(--muted); margin-bottom: 28px; }
+    .login-field { margin-bottom: 14px; text-align: left; }
+    .login-field label { display: block; font-size: .68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .login-input {
+      width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg3); color: var(--text); font-size: .88rem; outline: none;
+      transition: border-color .2s;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-err { color: var(--red); font-size: .75rem; margin-bottom: 12px; display: none; }
+    .login-err.show { display: block; }
+
+    /* ── APP SHELL ─────────────────────────────────────────────── */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; top: 0; left: 0; width: 220px; height: 100vh;
+      background: var(--bg2); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 50;
+    }
+    .sidebar-brand {
+      padding: 20px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand-logo {
+      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center; font-size: .9rem;
+    }
+    .brand-name  { font-size: .88rem; font-weight: 800; }
+    .brand-role  { font-size: .62rem; color: var(--muted); }
+
+    .nav-section { padding: 14px 10px 4px; }
+    .nav-section-label { font-size: .58rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; padding: 0 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px; margin: 2px 0;
+      color: var(--muted); font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s;
+    }
+    .nav-item:hover    { background: var(--bg3); color: var(--text); }
+    .nav-item.active   { background: rgba(108,99,255,.15); color: var(--accent); }
+    .nav-item .icon    { font-size: .9rem; flex-shrink: 0; width: 18px; text-align: center; }
+    .nav-badge {
+      margin-left: auto; padding: 1px 6px; border-radius: 10px; font-size: .6rem; font-weight: 800;
+      background: var(--accent); color: white;
+    }
+
+    .sidebar-foot {
+      margin-top: auto; padding: 14px 10px; border-top: 1px solid var(--border);
+    }
+    .sidebar-worker {
+      font-size: .62rem; color: var(--muted); padding: 0 8px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* Main */
+    .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar {
+      padding: 14px 28px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(15,15,26,.8); backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 40;
+    }
+    .page-title { font-size: .95rem; font-weight: 800; }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+    .content { padding: 28px; flex: 1; }
+
+    /* Pages */
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+
+    /* ── BOUTONS ────────────────────────────────────────────────── */
+    .btn {
+      padding: 8px 18px; border-radius: 9px; border: none;
+      font-size: .8rem; font-weight: 700; cursor: pointer; transition: all .15s;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; box-shadow: 0 4px 16px rgba(108,99,255,.35); }
+    .btn-secondary { background: var(--bg4); border: 1px solid var(--border); color: var(--muted); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: rgba(67,233,123,.15); border: 1px solid rgba(67,233,123,.3); color: var(--green); }
+    .btn-danger  { background: rgba(255,107,107,.12); border: 1px solid rgba(255,107,107,.3); color: var(--red); }
+    .btn-sm { padding: 5px 12px; font-size: .72rem; }
+    .btn-xs { padding: 3px 8px; font-size: .65rem; border-radius: 6px; }
+
+    /* ── CARTES STAT ────────────────────────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+      padding: 20px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .stat-icon { font-size: 1.4rem; }
+    .stat-val  { font-size: 1.8rem; font-weight: 900; line-height: 1; }
+    .stat-label{ font-size: .72rem; color: var(--muted); font-weight: 600; }
+    .stat-card.accent { border-color: rgba(108,99,255,.4); background: rgba(108,99,255,.06); }
+    .stat-card.green  { border-color: rgba(67,233,123,.3); background: rgba(67,233,123,.05); }
+    .stat-card.yellow { border-color: rgba(246,211,101,.3); background: rgba(246,211,101,.05); }
+
+    /* ── TABLE ──────────────────────────────────────────────────── */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .card-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .card-title { font-size: .85rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    th { background: var(--bg3); padding: 10px 16px; text-align: left; font-size: .62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 13px 16px; border-bottom: 1px solid rgba(42,42,74,.5); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(108,99,255,.03); }
+
+    .mid-cell { font-family: monospace; font-size: .72rem; }
+    .mid-tag {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 10px; color: #8be9fd; cursor: pointer; transition: all .15s; display: inline-block;
+    }
+    .mid-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 12px; font-size: .65rem; font-weight: 700; }
+    .badge-active   { background: rgba(67,233,123,.12); border: 1px solid rgba(67,233,123,.3); color: var(--green); }
+    .badge-inactive { background: rgba(255,107,107,.12); border: 1px solid rgba(255,107,107,.3); color: var(--red); }
+    .badge-test     { background: rgba(246,211,101,.12); border: 1px solid rgba(246,211,101,.3); color: var(--yellow); }
+
+    .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+    .empty-state { text-align: center; padding: 48px; color: var(--muted); }
+    .empty-state .icon { font-size: 2rem; margin-bottom: 10px; }
+    .empty-state p { font-size: .82rem; }
+
+    /* ── SEARCH ─────────────────────────────────────────────────── */
+    .search-input {
+      padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg3); color: var(--text); font-size: .78rem; outline: none; width: 220px;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    /* ── WIZARD ─────────────────────────────────────────────────── */
+    .wizard-wrap {
+      max-width: 620px; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .wizard-progress {
+      display: flex; border-bottom: 1px solid var(--border); background: var(--bg3);
+    }
+    .wz-step {
+      flex: 1; padding: 12px 8px; text-align: center; position: relative;
+      border-right: 1px solid var(--border);
+    }
+    .wz-step:last-child { border-right: none; }
+    .wz-dot {
+      width: 26px; height: 26px; border-radius: 50%; margin: 0 auto 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 800; border: 2px solid var(--border);
+      background: var(--bg4); color: var(--muted);
+    }
+    .wz-step.done   .wz-dot { background: var(--green); border-color: var(--green); color: #0f0f1a; }
+    .wz-step.active .wz-dot { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 12px rgba(108,99,255,.5); }
+    .wz-label { font-size: .6rem; color: var(--muted); font-weight: 600; }
+    .wz-step.active .wz-label { color: var(--accent); }
+    .wz-step.done   .wz-label { color: var(--green); }
+
+    .wizard-body { padding: 28px; }
+    .wz-title { font-size: 1rem; font-weight: 900; margin-bottom: 6px; }
+    .wz-sub   { font-size: .78rem; color: var(--muted); margin-bottom: 24px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-label { font-size: .68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; gap: 6px; }
+    .req { color: var(--red); }
+    .form-input {
+      padding: 10px 13px; border-radius: 9px; border: 1px solid var(--border);
+      background: var(--bg3); color: var(--text); font-size: .82rem; outline: none;
+      font-family: inherit; transition: border-color .2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--muted); }
+    .form-hint { font-size: .67rem; color: var(--muted); margin-top: 2px; }
+    .form-hint.warn { color: var(--yellow); }
+    .form-hint.err  { color: var(--red); display: none; }
+    .form-hint.err.show { display: block; }
+
+    .wz-foot { display: flex; gap: 10px; margin-top: 24px; }
+
+    /* ── SUCCESS CARD ───────────────────────────────────────────── */
+    .success-card {
+      background: rgba(67,233,123,.06); border: 1px solid rgba(67,233,123,.3);
+      border-radius: 14px; padding: 28px; text-align: center;
+    }
+    .success-icon { font-size: 2.4rem; margin-bottom: 12px; }
+    .success-title { font-size: 1.1rem; font-weight: 900; color: var(--green); margin-bottom: 6px; }
+    .success-sub   { font-size: .8rem; color: var(--muted); margin-bottom: 20px; }
+    .mid-display {
+      background: var(--bg3); border: 2px solid rgba(108,99,255,.5); border-radius: 10px;
+      padding: 14px; font-family: monospace; font-size: .95rem; color: #8be9fd;
+      letter-spacing: 1px; margin-bottom: 16px; cursor: pointer; transition: all .2s;
+    }
+    .mid-display:hover { border-color: var(--accent); background: rgba(108,99,255,.1); }
+    .mid-sub { font-size: .72rem; color: var(--muted); }
+
+    /* ── SNIPPET ────────────────────────────────────────────────── */
+    .snippet-pre {
+      background: #0d0d1f; border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px 18px; font-family: monospace; font-size: .75rem; line-height: 1.8;
+      color: var(--text); overflow-x: auto; white-space: pre; text-align: left;
+      margin: 14px 0;
+    }
+    .attr  { color: #8be9fd; }
+    .val   { color: #f1fa8c; }
+    .tag   { color: #ff79c6; }
+    .cm    { color: #6272a4; }
+
+    /* ── ALERTE TOAST ───────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      padding: 12px 20px; border-radius: 10px; font-size: .8rem; font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4); transform: translateY(80px);
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1); max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); }
+    .toast.ok   { background: rgba(67,233,123,.15); border: 1px solid rgba(67,233,123,.4); color: var(--green); }
+    .toast.err  { background: rgba(255,107,107,.15); border: 1px solid rgba(255,107,107,.4); color: var(--red); }
+
+    /* ── MODAL ──────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200;
+      display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 18px;
+      padding: 28px; width: 90%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-size: .95rem; font-weight: 800; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; padding: 2px 8px; border-radius: 6px; }
+    .modal-close:hover { color: var(--text); background: var(--bg4); }
+
+    /* ── DETAIL MARCHAND ────────────────────────────────────────── */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail-field { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .detail-label { font-size: .62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 5px; }
+    .detail-val   { font-size: .82rem; font-weight: 600; word-break: break-all; }
+    .detail-field.full { grid-column: 1 / -1; }
+
+    /* ── ALERT INLINE ───────────────────────────────────────────── */
+    .alert {
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+      font-size: .78rem; display: flex; gap: 10px; align-items: flex-start;
+    }
+    .alert-warn { background: rgba(246,211,101,.08); border: 1px solid rgba(246,211,101,.3); color: var(--yellow); }
+    .alert-info { background: rgba(108,99,255,.08);  border: 1px solid rgba(108,99,255,.3);  color: #a29bfe; }
+    .alert-body { color: var(--text); line-height: 1.6; }
+    .alert-body strong { color: white; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- LOGIN                                                         -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">💳</div>
+    <div class="login-title">HCS Marchands</div>
+    <div class="login-sub">Tableau de bord d'installation</div>
+
+    <div class="login-field">
+      <label>URL du Worker</label>
+      <input class="login-input" id="login-worker" value="https://payzen-hcs.highcoffeeshirt.workers.dev" />
+    </div>
+    <div class="login-field">
+      <label>Admin Secret</label>
+      <input class="login-input" id="login-secret" type="password" placeholder="Votre clé admin" />
+    </div>
+    <div id="login-err" class="login-err">Secret incorrect ou Worker inaccessible.</div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">
+      🔑 Connexion
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- APP                                                           -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">💳</div>
+      <div>
+        <div class="brand-name">HCS Marchands</div>
+        <div class="brand-role">Administration</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Principal</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <span class="icon">📊</span> Tableau de bord
+      </div>
+      <div class="nav-item" onclick="showPage('merchants')">
+        <span class="icon">🏪</span> Marchands
+        <span class="nav-badge" id="nav-count">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('new')">
+        <span class="icon">➕</span> Nouveau marchand
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Outils</div>
+      <div class="nav-item" onclick="showPage('snippet')">
+        <span class="icon">💻</span> Générateur de code
+      </div>
+      <div class="nav-item" onclick="runMigration()">
+        <span class="icon">⚙️</span> Migration DB
+      </div>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="sidebar-worker" id="sidebar-worker-url">—</div>
+      <div class="nav-item" onclick="logout()" style="margin-top:8px">
+        <span class="icon">🚪</span> Déconnexion
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="topbar-title">Tableau de bord</div>
+      <div class="topbar-actions">
+        <span id="topbar-worker" style="font-size:.7rem;color:var(--muted)"></span>
+        <button class="btn btn-primary btn-sm" onclick="showPage('new')">+ Nouveau marchand</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD ──────────────────────────────────────────── -->
+      <div id="page-dashboard" class="page-view active">
+        <div class="stats-grid">
+          <div class="stat-card accent">
+            <div class="stat-icon">🏪</div>
+            <div class="stat-val" id="stat-total">—</div>
+            <div class="stat-label">Marchands total</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-val" id="stat-active">—</div>
+            <div class="stat-label">Marchands actifs</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon">⏸</div>
+            <div class="stat-val" id="stat-inactive">—</div>
+            <div class="stat-label">Marchands inactifs</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🏪 Marchands récents</div>
+            <button class="btn btn-secondary btn-sm" onclick="showPage('merchants')">Voir tous →</button>
+          </div>
+          <table>
+            <thead><tr><th>Boutique</th><th>Merchant ID</th><th>Statut</th><th>Créé le</th><th>Actions</th></tr></thead>
+            <tbody id="dashboard-table"><tr><td colspan="5" class="empty-state"><p>Chargement…</p></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── MARCHANDS ──────────────────────────────────────────── -->
+      <div id="page-merchants" class="page-view">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🏪 Tous les marchands</div>
+            <div style="display:flex;gap:8px">
+              <input class="search-input" id="search-input" placeholder="🔍 Rechercher…" oninput="filterTable()" />
+              <button class="btn btn-primary btn-sm" onclick="loadMerchants()">↺ Actualiser</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Boutique</th><th>Merchant ID</th><th>Shop ID</th><th>Statut</th><th>Créé le</th><th>Actions</th></tr></thead>
+            <tbody id="merchants-table"><tr><td colspan="6" class="empty-state"><p>Chargement…</p></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── NOUVEAU MARCHAND (WIZARD) ──────────────────────────── -->
+      <div id="page-new" class="page-view">
+        <div class="wizard-wrap">
+          <!-- Étapes -->
+          <div class="wizard-progress" id="wz-progress">
+            <div class="wz-step active" id="wz-s1"><div class="wz-dot">1</div><div class="wz-label">Boutique</div></div>
+            <div class="wz-step"        id="wz-s2"><div class="wz-dot">2</div><div class="wz-label">Clés OSB</div></div>
+            <div class="wz-step"        id="wz-s3"><div class="wz-dot">3</div><div class="wz-label">Vérification</div></div>
+            <div class="wz-step"        id="wz-s4"><div class="wz-dot">4</div><div class="wz-label">Terminé</div></div>
+          </div>
+
+          <div class="wizard-body">
+            <!-- Étape 1 : Infos boutique -->
+            <div id="wz-step1">
+              <div class="wz-title">Informations de la boutique</div>
+              <div class="wz-sub">Renseignez les informations de base du nouveau marchand.</div>
+              <div class="form-grid">
+                <div class="form-field full">
+                  <div class="form-label">Nom de la boutique <span class="req">*</span></div>
+                  <input class="form-input" id="f-name" placeholder="Ex: Boutique Reva Tahiti" />
+                  <div class="form-hint">Nom affiché dans le checkout et dans l'admin</div>
+                  <div class="form-hint err" id="err-name">Ce champ est obligatoire</div>
+                </div>
+              </div>
+              <div class="wz-foot">
+                <button class="btn btn-primary" onclick="wz1Next()">Continuer →</button>
+              </div>
+            </div>
+
+            <!-- Étape 2 : Clés OSB -->
+            <div id="wz-step2" style="display:none">
+              <div class="wz-title">Clés d'API OSB Polynésie</div>
+              <div class="wz-sub">Entrez les clés récupérées dans le back-office PayZen du marchand.</div>
+              <div class="alert alert-warn">
+                <span>⚠️</span>
+                <div class="alert-body"><strong>Sécurité :</strong> Ces clés sont chiffrées AES-256 avant stockage. Elles ne seront jamais visibles dans le HTML du marchand.</div>
+              </div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <div class="form-label">Shop ID <span class="req">*</span></div>
+                  <input class="form-input" id="f-shopid" placeholder="41545085" />
+                  <div class="form-hint">Visible dans le back-office OSB</div>
+                  <div class="form-hint err" id="err-shopid">Obligatoire</div>
+                </div>
+                <div class="form-field" style="grid-column:1/-1;height:1px;background:var(--border);margin:4px 0"></div>
+                <div class="form-field">
+                  <div class="form-label">Clé REST TEST <span class="req">*</span></div>
+                  <input class="form-input" id="f-testkey" type="password" placeholder="testpassword_xxxx…" />
+                  <div class="form-hint warn">🔒 Secrète — chiffrée à l'enregistrement</div>
+                  <div class="form-hint err" id="err-testkey">Obligatoire</div>
+                </div>
+                <div class="form-field">
+                  <div class="form-label">Clé REST PROD <span class="req">*</span></div>
+                  <input class="form-input" id="f-prodkey" type="password" placeholder="prodpassword_xxxx…" />
+                  <div class="form-hint warn">🔒 Secrète — chiffrée à l'enregistrement</div>
+                  <div class="form-hint err" id="err-prodkey">Obligatoire</div>
+                </div>
+                <div class="form-field">
+                  <div class="form-label">Clé publique TEST <span class="req">*</span></div>
+                  <input class="form-input" id="f-pubtestkey" placeholder="41545085:testpublickey_…" />
+                  <div class="form-hint">Pas secrète — utilisée côté navigateur</div>
+                  <div class="form-hint err" id="err-pubtestkey">Obligatoire</div>
+                </div>
+                <div class="form-field">
+                  <div class="form-label">Clé publique PROD <span class="req">*</span></div>
+                  <input class="form-input" id="f-pubprodkey" placeholder="41545085:publickey_…" />
+                  <div class="form-hint">Pas secrète — utilisée côté navigateur</div>
+                  <div class="form-hint err" id="err-pubprodkey">Obligatoire</div>
+                </div>
+              </div>
+              <div class="wz-foot">
+                <button class="btn btn-primary" onclick="wz2Next()">Vérifier et créer →</button>
+                <button class="btn btn-secondary" onclick="wzGo(1)">← Retour</button>
+              </div>
+            </div>
+
+            <!-- Étape 3 : Récap + confirmation -->
+            <div id="wz-step3" style="display:none">
+              <div class="wz-title">Vérification avant enregistrement</div>
+              <div class="wz-sub">Confirmez les informations avant de créer le compte marchand.</div>
+              <div class="detail-grid" id="wz-recap"></div>
+              <div class="wz-foot" style="margin-top:20px">
+                <button class="btn btn-primary" id="wz-create-btn" onclick="createMerchant()">✅ Confirmer et créer</button>
+                <button class="btn btn-secondary" onclick="wzGo(2)">← Modifier</button>
+              </div>
+            </div>
+
+            <!-- Étape 4 : Succès -->
+            <div id="wz-step4" style="display:none">
+              <div class="success-card">
+                <div class="success-icon">🎉</div>
+                <div class="success-title">Marchand créé avec succès !</div>
+                <div class="success-sub">Voici le Merchant ID à transmettre au marchand.</div>
+                <div class="mid-display" id="created-mid" onclick="copyMid()" title="Cliquer pour copier"></div>
+                <div class="mid-sub">👆 Cliquer pour copier — Ce code va dans <code style="color:#8be9fd">data-merchant-id</code> du HTML</div>
+              </div>
+              <div style="margin-top:20px">
+                <div class="card-title" style="margin-bottom:12px">💻 Code d'intégration prêt</div>
+                <pre class="snippet-pre" id="wz-snippet"></pre>
+                <div style="display:flex;gap:8px;margin-top:10px">
+                  <button class="btn btn-primary btn-sm" onclick="copySnippet('wz-snippet')">📋 Copier le code</button>
+                  <button class="btn btn-secondary btn-sm" onclick="resetWizard(); showPage('merchants')">Voir tous les marchands</button>
+                  <button class="btn btn-secondary btn-sm" onclick="resetWizard()">+ Nouveau marchand</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GÉNÉRATEUR DE SNIPPET ──────────────────────────────── -->
+      <div id="page-snippet" class="page-view">
+        <div class="card" style="max-width:720px">
+          <div class="card-head"><div class="card-title">💻 Générateur de code d'intégration</div></div>
+          <div style="padding:24px">
+            <div class="form-grid" style="margin-bottom:20px">
+              <div class="form-field">
+                <div class="form-label">Merchant ID <span class="req">*</span></div>
+                <input class="form-input" id="sg-mid" placeholder="mrc_abc123xyz" oninput="updateSnippet()" />
+              </div>
+              <div class="form-field">
+                <div class="form-label">Mode</div>
+                <select class="form-input" id="sg-mode" onchange="updateSnippet()">
+                  <option value="TEST">TEST (cartes fictives)</option>
+                  <option value="PRODUCTION">PRODUCTION (vrais paiements)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <div class="form-label">Type de widget</div>
+                <select class="form-input" id="sg-type" onchange="updateSnippet()">
+                  <option value="fixed">Montant fixe</option>
+                  <option value="multi">Multi-tarifs</option>
+                  <option value="free">Montant libre</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <div class="form-label">Couleur</div>
+                <input class="form-input" id="sg-color" value="#6c63ff" oninput="updateSnippet()" />
+              </div>
+              <div class="form-field">
+                <div class="form-label">Montant (XPF)</div>
+                <input class="form-input" id="sg-amount" value="2500" type="number" oninput="updateSnippet()" />
+              </div>
+              <div class="form-field">
+                <div class="form-label">Nom produit</div>
+                <input class="form-input" id="sg-product" value="Mon produit" oninput="updateSnippet()" />
+              </div>
+              <div class="form-field">
+                <div class="form-label">Nom boutique</div>
+                <input class="form-input" id="sg-shop" value="Ma Boutique" oninput="updateSnippet()" />
+              </div>
+              <div class="form-field">
+                <div class="form-label">Texte bouton</div>
+                <input class="form-input" id="sg-label" value="Payer par carte" oninput="updateSnippet()" />
+              </div>
+            </div>
+            <div class="form-label" style="margin-bottom:8px">Code généré</div>
+            <pre class="snippet-pre" id="sg-output"></pre>
+            <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="copySnippet('sg-output')">📋 Copier le code</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── MODAL DÉTAIL MARCHAND ──────────────────────────────────── -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="detail-modal-title">Détail marchand</div>
+      <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
+    </div>
+    <div id="detail-modal-body"></div>
+  </div>
+</div>
+
+<!-- ── TOAST ──────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+let WORKER = '';
+let SECRET = '';
+let allMerchants = [];
+
+// ═══════════════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════════════
+async function doLogin() {
+  WORKER = document.getElementById('login-worker').value.trim().replace(/\/$/, '');
+  SECRET = document.getElementById('login-secret').value.trim();
+  if (!WORKER || !SECRET) { showLoginErr(); return; }
+
+  try {
+    const res = await fetch(WORKER + '/admin/merchants', {
+      headers: { 'X-Admin-Secret': SECRET }
+    });
+    if (!res.ok) { showLoginErr(); return; }
+    const data = await res.json();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('sidebar-worker-url').textContent = WORKER.replace('https://', '');
+    document.getElementById('topbar-worker').textContent = WORKER.replace('https://', '');
+    processMerchants(data.merchants || []);
+    updateSnippet();
+  } catch(e) { showLoginErr(); }
+}
+function showLoginErr() {
+  document.getElementById('login-err').classList.add('show');
+}
+document.getElementById('login-secret').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+const PAGE_TITLES = {
+  dashboard: 'Tableau de bord',
+  merchants: 'Tous les marchands',
+  new:       'Nouveau marchand',
+  snippet:   'Générateur de code',
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id)?.classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[id] || id;
+  // Activer le nav item correspondant
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes("'" + id + "'")) n.classList.add('active');
+  });
+  if (id === 'merchants') renderMerchantsTable();
+  if (id === 'dashboard') renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DONNÉES MARCHANDS
+// ═══════════════════════════════════════════════════════════════
+async function loadMerchants() {
+  try {
+    const res = await fetch(WORKER + '/admin/merchants', { headers: { 'X-Admin-Secret': SECRET } });
+    const data = await res.json();
+    processMerchants(data.merchants || []);
+    toast('✅ Liste actualisée');
+  } catch(e) { toast('❌ Erreur chargement', 'err'); }
+}
+
+function processMerchants(list) {
+  allMerchants = list;
+  document.getElementById('nav-count').textContent = list.length;
+  document.getElementById('stat-total').textContent    = list.length;
+  document.getElementById('stat-active').textContent   = list.filter(m => m.active).length;
+  document.getElementById('stat-inactive').textContent = list.filter(m => !m.active).length;
+  renderDashboard();
+  renderMerchantsTable();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const tbody = document.getElementById('dashboard-table');
+  const list  = allMerchants.slice(0, 5);
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">🏪</div><p>Aucun marchand — <a href="#" onclick="showPage(\'new\')" style="color:var(--accent)">créer le premier</a></p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(m => merchantRow(m, false)).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABLE MARCHANDS
+// ═══════════════════════════════════════════════════════════════
+function renderMerchantsTable(filter = '') {
+  const tbody = document.getElementById('merchants-table');
+  const list  = filter
+    ? allMerchants.filter(m => m.name.toLowerCase().includes(filter) || m.id.includes(filter))
+    : allMerchants;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🏪</div><p>Aucun résultat</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(m => merchantRow(m, true)).join('');
+}
+
+function merchantRow(m, full) {
+  const date = m.created_at?.slice(0,10) || '—';
+  const badge = m.active
+    ? '<span class="badge badge-active">● Actif</span>'
+    : '<span class="badge badge-inactive">● Inactif</span>';
+  const actions = full ? `
+    <div class="actions-cell">
+      <button class="btn btn-secondary btn-xs" onclick="openDetail('${m.id}')">👁 Détail</button>
+      <button class="btn btn-secondary btn-xs" onclick="openSnippetFor('${m.id}')">💻 Code</button>
+      ${m.active
+        ? `<button class="btn btn-danger btn-xs" onclick="toggleActive('${m.id}', 0)">⏸</button>`
+        : `<button class="btn btn-success btn-xs" onclick="toggleActive('${m.id}', 1)">▶</button>`}
+    </div>` : `
+    <div class="actions-cell">
+      <button class="btn btn-secondary btn-xs" onclick="openSnippetFor('${m.id}')">💻 Code</button>
+    </div>`;
+
+  if (full) return `<tr>
+    <td style="font-weight:700">${m.name}</td>
+    <td class="mid-cell"><div class="mid-tag" onclick="copyText('${m.id}')" title="Copier">${m.id}</div></td>
+    <td style="font-family:monospace;font-size:.72rem;color:var(--muted)">${m.shop_id}</td>
+    <td>${badge}</td>
+    <td style="color:var(--muted);font-size:.72rem">${date}</td>
+    <td>${actions}</td>
+  </tr>`;
+  return `<tr>
+    <td style="font-weight:700">${m.name}</td>
+    <td class="mid-cell"><div class="mid-tag" onclick="copyText('${m.id}')" title="Copier">${m.id}</div></td>
+    <td>${badge}</td>
+    <td style="color:var(--muted);font-size:.72rem">${date}</td>
+    <td>${actions}</td>
+  </tr>`;
+}
+
+function filterTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  renderMerchantsTable(q);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DETAIL MODAL
+// ═══════════════════════════════════════════════════════════════
+function openDetail(id) {
+  const m = allMerchants.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('detail-modal-title').textContent = '🏪 ' + m.name;
+  document.getElementById('detail-modal-body').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-field full">
+        <div class="detail-label">Merchant ID (à donner au marchand)</div>
+        <div class="detail-val" style="color:#8be9fd;font-family:monospace;cursor:pointer" onclick="copyText('${m.id}')">${m.id} <span style="font-size:.65rem;color:var(--muted)">(cliquer pour copier)</span></div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-label">Nom boutique</div>
+        <div class="detail-val">${m.name}</div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-label">Shop ID PayZen</div>
+        <div class="detail-val" style="font-family:monospace">${m.shop_id}</div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-label">Statut</div>
+        <div class="detail-val">${m.active ? '✅ Actif' : '⏸ Inactif'}</div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-label">Créé le</div>
+        <div class="detail-val">${m.created_at?.slice(0,19).replace('T',' ') || '—'}</div>
+      </div>
+      <div class="detail-field full">
+        <div class="detail-label">Clés secrètes</div>
+        <div class="detail-val" style="color:var(--muted);font-size:.75rem">🔒 Stockées chiffrées AES-256 — non accessibles en clair</div>
+      </div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="form-label" style="margin-bottom:8px">Code d'intégration HTML</div>
+      <pre class="snippet-pre" id="detail-snippet">${buildSnippet(m.id, 'TEST', '#6c63ff', m.name)}</pre>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-primary btn-sm" onclick="copySnippet('detail-snippet')">📋 Copier</button>
+        ${m.active
+          ? `<button class="btn btn-danger btn-sm" onclick="toggleActive('${m.id}',0);closeModal('detail-modal')">⏸ Désactiver</button>`
+          : `<button class="btn btn-success btn-sm" onclick="toggleActive('${m.id}',1);closeModal('detail-modal')">▶ Activer</button>`}
+      </div>
+    </div>`;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIVATION / DÉSACTIVATION
+// ═══════════════════════════════════════════════════════════════
+async function toggleActive(id, active) {
+  try {
+    await fetch(WORKER + '/admin/merchants/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET },
+      body: JSON.stringify({ active })
+    });
+    toast(active ? '✅ Marchand activé' : '⏸ Marchand désactivé');
+    await loadMerchants();
+    renderMerchantsTable(document.getElementById('search-input')?.value || '');
+  } catch(e) { toast('❌ Erreur', 'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WIZARD
+// ═══════════════════════════════════════════════════════════════
+let wzData = {};
+let wzCurrent = 1;
+
+function wzGo(step) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('wz-step' + i).style.display = i === step ? '' : 'none';
+    const el = document.getElementById('wz-s' + i);
+    el.className = 'wz-step' + (i < step ? ' done' : i === step ? ' active' : '');
+  });
+  wzCurrent = step;
+}
+
+function wz1Next() {
+  const name = document.getElementById('f-name').value.trim();
+  const errEl = document.getElementById('err-name');
+  if (!name) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  wzData.name = name;
+  wzGo(2);
+}
+
+function wz2Next() {
+  const fields = ['shopid','testkey','prodkey','pubtestkey','pubprodkey'];
+  let ok = true;
+  fields.forEach(f => {
+    const val = document.getElementById('f-' + f).value.trim();
+    const err = document.getElementById('err-' + f);
+    if (!val) { err.classList.add('show'); ok = false; }
+    else { err.classList.remove('show'); wzData[f] = val; }
+  });
+  if (!ok) return;
+
+  // Récap
+  document.getElementById('wz-recap').innerHTML = `
+    <div class="detail-field full">
+      <div class="detail-label">Nom de la boutique</div>
+      <div class="detail-val">${wzData.name}</div>
+    </div>
+    <div class="detail-field">
+      <div class="detail-label">Shop ID</div>
+      <div class="detail-val" style="font-family:monospace">${wzData.shopid}</div>
+    </div>
+    <div class="detail-field">
+      <div class="detail-label">Clé REST TEST</div>
+      <div class="detail-val" style="font-family:monospace;color:var(--yellow)">🔒 ${wzData.testkey.slice(0,12)}…</div>
+    </div>
+    <div class="detail-field">
+      <div class="detail-label">Clé REST PROD</div>
+      <div class="detail-val" style="font-family:monospace;color:var(--yellow)">🔒 ${wzData.prodkey.slice(0,12)}…</div>
+    </div>
+    <div class="detail-field full">
+      <div class="detail-label">Clé publique TEST</div>
+      <div class="detail-val" style="font-family:monospace;font-size:.72rem">${wzData.pubtestkey}</div>
+    </div>
+    <div class="detail-field full">
+      <div class="detail-label">Clé publique PROD</div>
+      <div class="detail-val" style="font-family:monospace;font-size:.72rem">${wzData.pubprodkey}</div>
+    </div>`;
+  wzGo(3);
+}
+
+async function createMerchant() {
+  const btn = document.getElementById('wz-create-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Création en cours…';
+  try {
+    const res = await fetch(WORKER + '/admin/merchants', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET },
+      body: JSON.stringify({
+        name:          wzData.name,
+        shopId:        wzData.shopid,
+        testKey:       wzData.testkey,
+        prodKey:       wzData.prodkey,
+        publicTestKey: wzData.pubtestkey,
+        publicProdKey: wzData.pubprodkey,
+      })
+    });
+    const d = await res.json();
+    if (d.success) {
+      const mid = d.merchantId;
+      document.getElementById('created-mid').textContent = mid;
+      document.getElementById('wz-snippet').textContent = buildSnippet(mid, 'TEST', '#6c63ff', wzData.name);
+      wzGo(4);
+      await loadMerchants();
+    } else {
+      toast('❌ ' + (d.error || 'Erreur création'), 'err');
+      btn.disabled = false; btn.textContent = '✅ Confirmer et créer';
+    }
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+    btn.disabled = false; btn.textContent = '✅ Confirmer et créer';
+  }
+}
+
+function copyMid() {
+  const mid = document.getElementById('created-mid').textContent;
+  copyText(mid);
+}
+
+function resetWizard() {
+  wzData = {};
+  ['f-name','f-shopid','f-testkey','f-prodkey','f-pubtestkey','f-pubprodkey'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  wzGo(1);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SNIPPET GENERATOR
+// ═══════════════════════════════════════════════════════════════
+function buildSnippet(mid, mode, color, shop, type = 'fixed', amount = 2500, product = 'Mon produit', label = 'Payer par carte') {
+  const w = WORKER || 'https://payzen-hcs.highcoffeeshirt.workers.dev';
+  if (type === 'multi') return `<div id="hcs-pay"
+  data-merchant-id="${mid}"
+  data-products='[
+    {"name":"Formule 1","price":1500,"description":"Description courte"},
+    {"name":"Formule 2","price":3000,"description":"Description courte"},
+    {"name":"Formule 3","price":5000,"description":"Description courte"}
+  ]'
+  data-mode="${mode}"
+  data-color="${color}"
+  data-shop="${shop}"
+  data-label="${label}">
+</div>
+<script src="${w}/widget.js"><\/script>`;
+
+  if (type === 'free') return `<div id="hcs-pay"
+  data-merchant-id="${mid}"
+  data-free-amount="true"
+  data-min="500"
+  data-max="200000"
+  data-product="${product}"
+  data-mode="${mode}"
+  data-color="${color}"
+  data-shop="${shop}">
+</div>
+<script src="${w}/widget.js"><\/script>`;
+
+  return `<div id="hcs-pay"
+  data-merchant-id="${mid}"
+  data-amount="${amount}"
+  data-product="${product}"
+  data-mode="${mode}"
+  data-color="${color}"
+  data-shop="${shop}"
+  data-label="${label}">
+</div>
+<script src="${w}/widget.js"><\/script>`;
+}
+
+function updateSnippet() {
+  const mid     = document.getElementById('sg-mid')?.value     || 'mrc_VOTRE_ID';
+  const mode    = document.getElementById('sg-mode')?.value    || 'TEST';
+  const type    = document.getElementById('sg-type')?.value    || 'fixed';
+  const color   = document.getElementById('sg-color')?.value   || '#6c63ff';
+  const amount  = document.getElementById('sg-amount')?.value  || '2500';
+  const product = document.getElementById('sg-product')?.value || 'Mon produit';
+  const shop    = document.getElementById('sg-shop')?.value    || 'Ma Boutique';
+  const label   = document.getElementById('sg-label')?.value   || 'Payer par carte';
+  const out = document.getElementById('sg-output');
+  if (out) out.textContent = buildSnippet(mid, mode, color, shop, type, amount, product, label);
+}
+
+function openSnippetFor(mid) {
+  const m = allMerchants.find(x => x.id === mid);
+  showPage('snippet');
+  document.getElementById('sg-mid').value  = mid;
+  document.getElementById('sg-shop').value = m?.name || '';
+  updateSnippet();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MIGRATION
+// ═══════════════════════════════════════════════════════════════
+async function runMigration() {
+  try {
+    const res = await fetch(WORKER + '/admin/merchants/migrate', {
+      method: 'POST',
+      headers: { 'X-Admin-Secret': SECRET }
+    });
+    const d = await res.json();
+    toast(d.success ? '✅ ' + d.message : '❌ ' + d.error, d.success ? 'ok' : 'err');
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITAIRES
+// ═══════════════════════════════════════════════════════════════
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast('📋 Copié : ' + text.slice(0,20) + '…'));
+}
+function copySnippet(id) {
+  const text = document.getElementById(id)?.textContent || '';
+  navigator.clipboard.writeText(text).then(() => toast('📋 Code copié dans le presse-papiers'));
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.getElementById('detail-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('detail-modal')) closeModal('detail-modal');
+});
+
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function logout() {
+  WORKER = ''; SECRET = ''; allMerchants = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-secret').value = '';
+  document.getElementById('login-err').classList.remove('show');
+}
+</script>
+</body>
+</html>
