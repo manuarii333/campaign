@@ -16,6 +16,7 @@
       --muted:    #9090b0;
       --accent:   #6c63ff;
       --accent2:  #ff6584;
+      --red:      #ff4d6d;
       --green:    #43e97b;
       --yellow:   #f6d365;
       --red:      #ff6b6b;
@@ -356,6 +357,9 @@
       <div class="nav-item" onclick="showPage('leads')">
         <span class="icon">📥</span> Leads <span id="leads-badge" style="display:none;background:var(--accent);color:#fff;font-size:.6rem;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px">0</span>
       </div>
+      <div class="nav-item" onclick="showPage('subscriptions')">
+        <span class="icon">💳</span> Abonnements <span id="subs-badge" style="display:none;background:var(--red,#ff4d6d);color:#fff;font-size:.6rem;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px">!</span>
+      </div>
       <div class="nav-item" onclick="runMigration()">
         <span class="icon">⚙️</span> Migration DB
       </div>
@@ -593,6 +597,49 @@
         </div>
       </div>
 
+      <!-- ── ABONNEMENTS ────────────────────────────────────────── -->
+      <div id="page-subscriptions" class="page-view">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-head">
+            <div class="card-title">💳 Abonnements actifs</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm" onclick="loadSubs()">↻ Actualiser</button>
+              <button class="btn btn-primary btn-sm" onclick="openNewSubModal()">+ Nouvel abonnement</button>
+            </div>
+          </div>
+          <div id="subs-migrate-warn" style="display:none;padding:12px 24px;background:rgba(246,211,101,.08);border-bottom:1px solid rgba(246,211,101,.2);font-size:.8rem;color:#f6d365">
+            ⚠️ Table non créée.
+            <button class="btn btn-primary btn-sm" style="margin-left:8px" onclick="runSubsMigration()">Créer la table</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Marchand</th><th>Plan</th><th>Prix/mois</th><th>Prochain paiement</th><th>Dernier paiement</th><th>Statut</th><th></th></tr></thead>
+              <tbody id="subs-body"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Stats revenus -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px">
+          <div class="stat-card">
+            <div class="stat-value" id="sub-count">—</div>
+            <div class="stat-label">Abonnements actifs</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(0,214,143,.2)">
+            <div class="stat-value" style="color:#00d68f" id="sub-mrr">—</div>
+            <div class="stat-label">Revenu mensuel (XPF)</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(108,99,255,.2)">
+            <div class="stat-value" style="color:var(--accent)" id="sub-arr">—</div>
+            <div class="stat-label">Revenu annuel (XPF)</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(255,77,109,.2)">
+            <div class="stat-value" style="color:#ff4d6d" id="sub-overdue">—</div>
+            <div class="stat-label">En retard</div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── LEADS ──────────────────────────────────────────────── -->
       <div id="page-leads" class="page-view">
         <div class="card">
@@ -623,6 +670,50 @@
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ── MODAL NOUVEL ABONNEMENT ───────────────────────────────── -->
+<div class="modal-overlay" id="new-sub-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">💳 Nouvel abonnement</div>
+      <button class="modal-close" onclick="closeModal('new-sub-modal')">✕</button>
+    </div>
+    <div style="padding:20px">
+      <div class="form-field">
+        <div class="form-label">Marchand <span class="req">*</span></div>
+        <select class="form-input" id="ns-merchant">
+          <option value="">— Choisir un marchand —</option>
+        </select>
+      </div>
+      <div class="form-grid">
+        <div class="form-field">
+          <div class="form-label">Plan <span class="req">*</span></div>
+          <select class="form-input" id="ns-plan" onchange="onPlanChange()">
+            <option value="Starter">Starter — 3 900 XPF/mois</option>
+            <option value="Pro">Pro — 7 900 XPF/mois</option>
+            <option value="Business">Business — 14 900 XPF/mois</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <div class="form-label">Prix (XPF/mois) <span class="req">*</span></div>
+          <input class="form-input" id="ns-price" type="number" value="3900" />
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="form-label">Date de début</div>
+        <input class="form-input" id="ns-start" type="date" />
+      </div>
+      <div class="form-field">
+        <div class="form-label">Notes</div>
+        <input class="form-input" id="ns-notes" placeholder="Ex: période d'essai, remise…" />
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-secondary" onclick="closeModal('new-sub-modal')">Annuler</button>
+        <button class="btn btn-primary" onclick="createSub()">Créer l'abonnement</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── MODAL DÉTAIL MARCHAND ──────────────────────────────────── -->
 <div class="modal-overlay" id="detail-modal">
@@ -697,6 +788,7 @@ function showPage(id) {
   if (id === 'merchants') renderMerchantsTable();
   if (id === 'dashboard') renderDashboard();
   if (id === 'leads') loadLeads();
+  if (id === 'subscriptions') loadSubs();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1038,6 +1130,146 @@ async function runMigration() {
     });
     const d = await res.json();
     toast(d.success ? '✅ ' + d.message : '❌ ' + d.error, d.success ? 'ok' : 'err');
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ABONNEMENTS
+// ═══════════════════════════════════════════════════════════════
+let allSubs = [];
+
+async function loadSubs() {
+  try {
+    const res = await fetch(WORKER + '/admin/subscriptions', { headers: { 'X-Admin-Secret': SECRET } });
+    if (res.status === 500) {
+      document.getElementById('subs-migrate-warn').style.display = 'block';
+      document.getElementById('subs-body').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Table non créée</td></tr>';
+      return;
+    }
+    document.getElementById('subs-migrate-warn').style.display = 'none';
+    const data = await res.json();
+    allSubs = data.subscriptions || [];
+    renderSubs();
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+function renderSubs() {
+  const today = new Date().toISOString().slice(0,10);
+  const active = allSubs.filter(s => s.status === 'active');
+  const overdue = allSubs.filter(s => s.status === 'active' && s.next_billing < today);
+  const mrr = active.reduce((a, s) => a + (s.price_xpf || 0), 0);
+
+  document.getElementById('sub-count').textContent   = active.length;
+  document.getElementById('sub-mrr').textContent     = mrr.toLocaleString('fr-FR') + ' ';
+  document.getElementById('sub-arr').textContent     = (mrr * 12).toLocaleString('fr-FR') + ' ';
+  document.getElementById('sub-overdue').textContent = overdue.length;
+
+  // Badge navbar
+  const badge = document.getElementById('subs-badge');
+  if (overdue.length > 0) { badge.style.display = 'inline'; badge.textContent = overdue.length; }
+  else badge.style.display = 'none';
+
+  const statusLabel = { active: '🟢 Actif', paused: '🟡 Pausé', cancelled: '⚫ Annulé' };
+  const planColor   = { Starter: 'rgba(108,99,255,.15)', Pro: 'rgba(0,214,143,.15)', Business: 'rgba(246,211,101,.15)' };
+
+  const tbody = document.getElementById('subs-body');
+  if (!allSubs.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Aucun abonnement — <a href="#" onclick="openNewSubModal()" style="color:var(--accent)">créer le premier</a></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = allSubs.map(s => {
+    const overDue = s.status === 'active' && s.next_billing < today;
+    const nextBg  = overDue ? 'color:#ff4d6d;font-weight:700' : '';
+    return `<tr>
+      <td style="font-weight:600">${s.merchant_name || s.merchant_id}<br><span style="font-size:.7rem;color:var(--muted)">${s.merchant_id}</span></td>
+      <td><span style="background:${planColor[s.plan]||'rgba(255,255,255,.08)'};padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:700">${s.plan}</span></td>
+      <td style="font-weight:700">${(s.price_xpf||0).toLocaleString('fr-FR')} XPF</td>
+      <td style="${nextBg}">${s.next_billing}${overDue ? ' ⚠️' : ''}</td>
+      <td style="color:var(--muted);font-size:.8rem">${s.last_paid || '—'}</td>
+      <td>${statusLabel[s.status] || s.status}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="markPaid('${s.id}')">✅ Payé</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleSubStatus('${s.id}','${s.status}')">
+          ${s.status === 'active' ? '⏸ Pause' : '▶ Reprendre'}
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function markPaid(id) {
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    await fetch(WORKER + '/admin/subscriptions/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET },
+      body: JSON.stringify({ lastPaid: today, status: 'active' }),
+    });
+    toast('✅ Paiement enregistré');
+    loadSubs();
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+async function toggleSubStatus(id, current) {
+  const status = current === 'active' ? 'paused' : 'active';
+  try {
+    await fetch(WORKER + '/admin/subscriptions/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET },
+      body: JSON.stringify({ status }),
+    });
+    toast(status === 'active' ? '▶ Abonnement repris' : '⏸ Abonnement en pause');
+    loadSubs();
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+function openNewSubModal() {
+  // Remplir la liste des marchands
+  const sel = document.getElementById('ns-merchant');
+  sel.innerHTML = '<option value="">— Choisir un marchand —</option>' +
+    allMerchants.filter(m => m.active).map(m =>
+      `<option value="${m.id}">${m.name} (${m.id})</option>`
+    ).join('');
+  document.getElementById('ns-start').value = new Date().toISOString().slice(0,10);
+  openModal('new-sub-modal');
+}
+
+function onPlanChange() {
+  const prices = { Starter: 3900, Pro: 7900, Business: 14900 };
+  const plan = document.getElementById('ns-plan').value;
+  document.getElementById('ns-price').value = prices[plan] || 3900;
+}
+
+async function createSub() {
+  const merchantId = document.getElementById('ns-merchant').value;
+  const plan       = document.getElementById('ns-plan').value;
+  const priceXpf   = parseInt(document.getElementById('ns-price').value);
+  const startDate  = document.getElementById('ns-start').value;
+  const notes      = document.getElementById('ns-notes').value;
+
+  if (!merchantId) { toast('⚠️ Choisir un marchand', 'warn'); return; }
+
+  try {
+    const res = await fetch(WORKER + '/admin/subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET },
+      body: JSON.stringify({ merchantId, plan, priceXpf, startDate, notes }),
+    });
+    const d = await res.json();
+    if (d.success) { toast('✅ Abonnement créé'); closeModal('new-sub-modal'); loadSubs(); }
+    else toast('❌ ' + d.error, 'err');
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+}
+
+async function runSubsMigration() {
+  try {
+    const res = await fetch(WORKER + '/admin/subscriptions/migrate', {
+      method: 'POST', headers: { 'X-Admin-Secret': SECRET }
+    });
+    const d = await res.json();
+    if (d.success) { toast('✅ ' + d.message); loadSubs(); }
+    else toast('❌ ' + d.error, 'err');
   } catch(e) { toast('❌ ' + e.message, 'err'); }
 }
 

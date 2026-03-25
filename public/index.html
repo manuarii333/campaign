@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCS Pay — Paiement en ligne en XPF pour la Polynésie</title>
+  <meta name="description" content="Acceptez les paiements par carte bancaire sur votre site en moins d'une journée. Solution clé en main pour les commerçants de Polynésie française.">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f1a; --bg2: #1a1a2e; --bg3: #16213e;
+      --border: #2a2a4a; --text: #e8e8f0; --muted: #9090b0;
+      --accent: #6c63ff; --accent2: #ff6584;
+      --green: #43e97b; --yellow: #f6d365;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+    /* ── BOUTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      padding: 14px 28px; border-radius: 12px; font-size: .92rem; font-weight: 800;
+      cursor: pointer; border: none; text-decoration: none; transition: all .2s; letter-spacing: .3px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; box-shadow: 0 6px 24px rgba(108,99,255,.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(108,99,255,.5); }
+    .btn-outline {
+      background: transparent; border: 2px solid rgba(255,255,255,.2); color: white;
+    }
+    .btn-outline:hover { border-color: white; background: rgba(255,255,255,.08); }
+    .btn-white {
+      background: white; color: var(--accent); box-shadow: 0 6px 24px rgba(0,0,0,.3);
+    }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,0,0,.4); }
+    .btn-lg { padding: 16px 36px; font-size: 1rem; border-radius: 14px; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 14px 40px; display: flex; align-items: center; justify-content: space-between;
+      background: rgba(15,15,26,.9); border-bottom: 1px solid rgba(42,42,74,.5);
+      backdrop-filter: blur(16px);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .navbar-logo {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center; font-size: .9rem;
+    }
+    .navbar-name { font-size: .95rem; font-weight: 900; color: var(--text); }
+    .navbar-name span { background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .navbar-links { display: flex; align-items: center; gap: 24px; }
+    .navbar-links a { color: var(--muted); text-decoration: none; font-size: .82rem; font-weight: 600; transition: color .2s; }
+    .navbar-links a:hover { color: var(--text); }
+    .navbar-cta { display: flex; gap: 10px; align-items: center; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(108,99,255,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(255,101,132,.12) 0%, transparent 60%),
+        var(--bg);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236c63ff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-inner { position: relative; max-width: 780px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 18px; border-radius: 20px; margin-bottom: 24px;
+      background: rgba(108,99,255,.12); border: 1px solid rgba(108,99,255,.35);
+      color: #a29bfe; font-size: .72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .hero-badge::before { content: '●'; color: var(--green); font-size: .5rem; }
+    .hero h1 { font-size: clamp(2rem, 6vw, 3.6rem); font-weight: 900; line-height: 1.1; margin-bottom: 20px; }
+    .hero h1 em { font-style: normal; background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero-sub { font-size: clamp(.9rem, 2vw, 1.1rem); color: var(--muted); max-width: 560px; margin: 0 auto 36px; line-height: 1.7; }
+    .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 56px; }
+    .hero-proof {
+      display: flex; align-items: center; justify-content: center; gap: 28px;
+      flex-wrap: wrap; font-size: .75rem; color: var(--muted);
+    }
+    .hero-proof-item { display: flex; align-items: center; gap: 6px; }
+    .hero-proof-item span { font-weight: 700; color: var(--text); }
+
+    /* Widget démo flottant */
+    .hero-demo {
+      margin-top: 56px; display: flex; justify-content: center;
+    }
+    .demo-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 20px;
+      padding: 28px; max-width: 360px; width: 100%;
+      box-shadow: 0 24px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(108,99,255,.2);
+    }
+    .demo-card-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; }
+    .demo-prod {
+      background: var(--bg3); border: 2px solid rgba(108,99,255,.4); border-radius: 12px;
+      padding: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .demo-prod-name { font-size: .88rem; font-weight: 700; }
+    .demo-prod-price { font-size: 1.1rem; font-weight: 900; color: var(--accent); }
+    .demo-btn {
+      width: 100%; padding: 13px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; font-size: .88rem; font-weight: 800; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(108,99,255,.4); transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .demo-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,.5); }
+    .demo-secure { font-size: .65rem; color: var(--muted); text-align: center; margin-top: 10px; }
+
+    /* ── LOGOS ── */
+    .logos-bar {
+      background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 20px 40px; text-align: center;
+    }
+    .logos-label { font-size: .65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; margin-bottom: 14px; }
+    .logos-row { display: flex; align-items: center; justify-content: center; gap: 32px; flex-wrap: wrap; }
+    .logo-pill {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 18px; font-size: .78rem; font-weight: 700; color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── SECTIONS COMMUNES ── */
+    section { padding: 96px 24px; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 12px; }
+    .section-title { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; line-height: 1.15; margin-bottom: 16px; }
+    .section-title em { font-style: normal; background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .section-sub { font-size: .95rem; color: var(--muted); max-width: 560px; line-height: 1.7; margin-bottom: 48px; }
+
+    /* ── FONCTIONNEMENT ── */
+    .how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+    .how-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 28px 24px;
+      position: relative; transition: border-color .2s;
+    }
+    .how-card:hover { border-color: rgba(108,99,255,.5); }
+    .how-num {
+      width: 36px; height: 36px; border-radius: 10px; margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center; font-size: .88rem; font-weight: 900;
+    }
+    .how-title { font-size: .92rem; font-weight: 800; margin-bottom: 8px; }
+    .how-text  { font-size: .8rem; color: var(--muted); line-height: 1.7; }
+    .how-arrow { position: absolute; top: 50%; right: -14px; transform: translateY(-50%); color: var(--accent); font-size: 1.2rem; z-index: 1; }
+    @media (max-width: 900px) { .how-arrow { display: none; } }
+
+    /* ── FEATURES ── */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .feature-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 24px;
+      transition: all .2s;
+    }
+    .feature-card:hover { border-color: rgba(108,99,255,.4); transform: translateY(-2px); }
+    .feature-icon { font-size: 1.6rem; margin-bottom: 14px; }
+    .feature-title { font-size: .92rem; font-weight: 800; margin-bottom: 8px; }
+    .feature-text  { font-size: .8rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── TARIFS ── */
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; }
+    .pricing-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 20px;
+      padding: 32px 28px; position: relative; transition: all .2s;
+    }
+    .pricing-card:hover { transform: translateY(-4px); }
+    .pricing-card.popular {
+      border-color: rgba(108,99,255,.6); background: rgba(108,99,255,.06);
+      box-shadow: 0 0 0 1px rgba(108,99,255,.3), 0 16px 48px rgba(108,99,255,.15);
+    }
+    .popular-badge {
+      position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; padding: 4px 16px; border-radius: 20px; font-size: .65rem; font-weight: 800;
+      letter-spacing: 1px; text-transform: uppercase; white-space: nowrap;
+    }
+    .pricing-name  { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+    .pricing-price {
+      font-size: 2.4rem; font-weight: 900; line-height: 1; margin-bottom: 4px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .pricing-period { font-size: .75rem; color: var(--muted); margin-bottom: 24px; }
+    .pricing-list   { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .pricing-list li { display: flex; align-items: flex-start; gap: 9px; font-size: .82rem; color: #c0c0d8; }
+    .pricing-list li::before { content: '✓'; color: var(--green); font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+    .pricing-list li.muted::before { content: '–'; color: var(--muted); }
+    .pricing-list li.muted { color: var(--muted); }
+    .pricing-btn {
+      width: 100%; padding: 12px; border: none; border-radius: 10px;
+      font-size: .85rem; font-weight: 800; cursor: pointer; transition: all .2s;
+    }
+    .pricing-btn.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white;
+      box-shadow: 0 4px 16px rgba(108,99,255,.35);
+    }
+    .pricing-btn.primary:hover { transform: translateY(-2px); }
+    .pricing-btn.secondary {
+      background: var(--bg3); border: 1px solid var(--border); color: var(--muted);
+    }
+    .pricing-btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .pricing-note { text-align: center; margin-top: 32px; font-size: .78rem; color: var(--muted); }
+
+    /* ── TÉMOIGNAGES ── */
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .testimonial-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 28px;
+    }
+    .testimonial-stars { color: var(--yellow); font-size: .9rem; margin-bottom: 14px; }
+    .testimonial-text { font-size: .85rem; color: #c0c0d8; line-height: 1.75; margin-bottom: 18px; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); flex-shrink: 0;
+    }
+    .testimonial-name { font-size: .82rem; font-weight: 700; }
+    .testimonial-role { font-size: .7rem; color: var(--muted); }
+
+    /* ── FAQ ── */
+    .faq-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .faq-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .faq-q {
+      padding: 18px 20px; font-size: .88rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      transition: background .2s;
+    }
+    .faq-q:hover { background: var(--bg3); }
+    .faq-icon { color: var(--accent); font-size: 1.1rem; transition: transform .2s; flex-shrink: 0; }
+    .faq-a { padding: 0 20px 18px; font-size: .82rem; color: var(--muted); line-height: 1.75; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+    /* ── CTA FINAL ── */
+    .cta-section {
+      background: linear-gradient(135deg, rgba(108,99,255,.12) 0%, rgba(255,101,132,.08) 100%);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 96px 24px; text-align: center;
+    }
+    .cta-section h2 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; margin-bottom: 16px; }
+    .cta-section p { font-size: .95rem; color: var(--muted); max-width: 480px; margin: 0 auto 36px; line-height: 1.7; }
+
+    /* ── CONTACT MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200;
+      display: none; align-items: center; justify-content: center; backdrop-filter: blur(6px); padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 20px;
+      padding: 36px; width: 100%; max-width: 480px; position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; color: var(--muted); font-size: 1.3rem;
+      cursor: pointer; padding: 4px 8px; border-radius: 6px;
+    }
+    .modal-close:hover { color: var(--text); background: var(--bg3); }
+    .modal-icon { font-size: 2rem; margin-bottom: 14px; }
+    .modal-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 6px; }
+    .modal-sub   { font-size: .8rem; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+    .form-field  { margin-bottom: 14px; }
+    .form-label  { display: block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 6px; }
+    .form-input  {
+      width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg3); color: var(--text); font-size: .85rem; outline: none;
+      font-family: inherit; transition: border-color .2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--muted); }
+    textarea.form-input { resize: vertical; min-height: 90px; }
+    .form-select { appearance: none; cursor: pointer; }
+    .modal-success { text-align: center; padding: 20px 0; display: none; }
+    .modal-success .icon { font-size: 2.4rem; margin-bottom: 12px; }
+    .modal-success h3 { font-size: 1rem; font-weight: 900; color: var(--green); margin-bottom: 8px; }
+    .modal-success p { font-size: .8rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg2); border-top: 1px solid var(--border);
+      padding: 48px 40px 32px;
+    }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    .footer-brand { }
+    .footer-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .footer-logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: .9rem; }
+    .footer-logo-name { font-weight: 900; font-size: .95rem; }
+    .footer-desc { font-size: .78rem; color: var(--muted); line-height: 1.7; max-width: 280px; }
+    .footer-col-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 14px; }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: .8rem; transition: color .2s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-bottom { border-top: 1px solid var(--border); padding-top: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .footer-copy { font-size: .72rem; color: var(--muted); }
+    .footer-osb  { display: flex; align-items: center; gap: 8px; font-size: .72rem; color: var(--muted); }
+
+    @media (max-width: 700px) {
+      .navbar-links, .navbar-cta .btn-outline { display: none; }
+      .footer-top { grid-template-columns: 1fr; }
+      .hero { padding: 100px 20px 60px; }
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 300;
+      padding: 12px 20px; border-radius: 10px; font-size: .82rem; font-weight: 700;
+      background: rgba(67,233,123,.15); border: 1px solid rgba(67,233,123,.4); color: var(--green);
+      transform: translateY(80px); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+    .toast.show { transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="navbar-brand" href="#">
+    <div class="navbar-logo">💳</div>
+    <div class="navbar-name">HCS <span>Pay</span></div>
+  </a>
+  <div class="navbar-links">
+    <a href="#comment">Comment ça marche</a>
+    <a href="#fonctionnalites">Fonctionnalités</a>
+    <a href="#tarifs">Tarifs</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="navbar-cta">
+    <a href="#tarifs" class="btn btn-outline" style="padding:9px 20px;font-size:.8rem;border-radius:9px">Voir les tarifs</a>
+    <button class="btn btn-primary" style="padding:9px 20px;font-size:.8rem;border-radius:9px" onclick="openModal()">Démarrer gratuitement</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Spécialement conçu pour la Polynésie française</div>
+    <h1>Acceptez les paiements<br>par carte en <em>XPF</em><br>sur votre site</h1>
+    <p class="hero-sub">Intégrez un bouton de paiement sécurisé en 2 lignes de code. Sans développeur. Sans serveur. Opérationnel en moins d'une journée.</p>
+    <div class="hero-ctas">
+      <button class="btn btn-primary btn-lg" onclick="openModal()">🚀 Démarrer — 30 jours gratuits</button>
+      <a href="#comment" class="btn btn-outline btn-lg">Voir comment ça marche</a>
+    </div>
+    <div class="hero-proof">
+      <div class="hero-proof-item">🔒 <span>Paiement sécurisé</span> OSB Polynésie</div>
+      <div class="hero-proof-item">⚡ <span>Mise en ligne</span> en 24h</div>
+      <div class="hero-proof-item">💰 <span>XPF</span> Franc Pacifique</div>
+      <div class="hero-proof-item">🛠️ <span>Aucun développeur</span> requis</div>
+    </div>
+
+    <!-- Démo widget -->
+    <div class="hero-demo">
+      <div class="demo-card">
+        <div class="demo-card-title">Aperçu du widget sur votre site</div>
+        <div class="demo-prod">
+          <div>
+            <div class="demo-prod-name">T-Shirt Classic</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:3px">Taille au choix • Livraison incluse</div>
+          </div>
+          <div class="demo-prod-price">2 500 XPF</div>
+        </div>
+        <button class="demo-btn" onclick="openModal()">
+          💳 Commander maintenant
+        </button>
+        <div class="demo-secure">🔐 Paiement sécurisé par OSB Polynésie · Visa · Mastercard</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS -->
+<div class="logos-bar">
+  <div class="logos-label">Compatible avec</div>
+  <div class="logos-row">
+    <div class="logo-pill">🏦 OSB Polynésie</div>
+    <div class="logo-pill">💳 Visa</div>
+    <div class="logo-pill">💳 Mastercard</div>
+    <div class="logo-pill">☁️ Cloudflare</div>
+    <div class="logo-pill">🌐 Tout site HTML</div>
+    <div class="logo-pill">🛒 WordPress</div>
+  </div>
+</div>
+
+<!-- COMMENT ÇA MARCHE -->
+<section id="comment" style="background:var(--bg)">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:56px">
+      <div class="section-label">Simple comme bonjour</div>
+      <h2 class="section-title">En ligne en <em>4 étapes</em></h2>
+      <p class="section-sub" style="margin:0 auto">De votre première demande jusqu'au premier paiement encaissé.</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-num">1</div>
+        <div class="how-title">Vous contactez HCS</div>
+        <div class="how-text">Envoyez votre demande. Nous créons votre compte marchand et vous fournissons votre code unique en quelques heures.</div>
+        <div class="how-arrow">→</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">2</div>
+        <div class="how-title">Vous collez 2 lignes de code</div>
+        <div class="how-text">Un simple copier-coller dans votre page HTML. Aucune compétence technique requise. Même votre webmaster le fait en 5 minutes.</div>
+        <div class="how-arrow">→</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">3</div>
+        <div class="how-title">Vous testez</div>
+        <div class="how-text">30 jours gratuits en mode test avec des cartes fictives pour valider le parcours client complet avant de passer en ligne.</div>
+        <div class="how-arrow">→</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">4</div>
+        <div class="how-title">Vous encaissez</div>
+        <div class="how-text">Changez une ligne. Vos clients paient par carte. L'argent arrive directement sur votre compte bancaire OSB Polynésie.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FONCTIONNALITÉS -->
+<section id="fonctionnalites" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:56px">
+      <div class="section-label">Tout ce qu'il vous faut</div>
+      <h2 class="section-title">Des fonctionnalités <em>professionnelles</em></h2>
+      <p class="section-sub" style="margin:0 auto">Pensé pour les commerçants polynésiens, pas pour les développeurs.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">💳</div>
+        <div class="feature-title">Checkout 4 étapes</div>
+        <div class="feature-text">Panier → Coordonnées → Livraison ou retrait boutique → Paiement. Interface moderne, fluide sur mobile.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">Couleurs personnalisables</div>
+        <div class="feature-text">Adaptez la couleur du widget aux couleurs de votre marque. Un simple code hexadécimal dans le HTML.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <div class="feature-title">Multi-tarifs & packs</div>
+        <div class="feature-text">Proposez plusieurs formules ou packs. Le client sélectionne son choix avant de payer. Idéal pour les abonnements.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✏️</div>
+        <div class="feature-title">Montant libre</div>
+        <div class="feature-text">Le client saisit lui-même le montant. Parfait pour les acomptes, devis, dons ou commandes personnalisées.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">Sécurité bancaire</div>
+        <div class="feature-text">Vos clés PayZen sont chiffrées AES-256. Jamais exposées dans votre HTML. Authentification 3DS intégrée.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <div class="feature-title">100% mobile</div>
+        <div class="feature-text">Interface responsive, optimisée pour les smartphones. La majorité de vos clients commandent depuis leur téléphone.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div class="feature-title">Suivi des commandes</div>
+        <div class="feature-text">Tableau de bord admin pour consulter toutes vos commandes, leur statut, planifier les retraits. Export CSV disponible.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Aucun serveur à gérer</div>
+        <div class="feature-text">Hébergé sur Cloudflare, disponible 24h/24. Aucune maintenance de votre côté. Mises à jour automatiques.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TARIFS -->
+<section id="tarifs" style="background:var(--bg)">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:56px">
+      <div class="section-label">Transparent & sans surprise</div>
+      <h2 class="section-title">Des tarifs <em>accessibles</em></h2>
+      <p class="section-sub" style="margin:0 auto">Abonnement mensuel sans engagement. 30 jours gratuits pour tester. Les frais bancaires OSB sont négociés directement avec votre banque.</p>
+    </div>
+    <div class="pricing-grid">
+
+      <div class="pricing-card">
+        <div class="pricing-name">Starter</div>
+        <div class="pricing-price">3 900</div>
+        <div class="pricing-period">XPF / mois · sans engagement</div>
+        <ul class="pricing-list">
+          <li>1 widget de paiement</li>
+          <li>Montant fixe ou libre</li>
+          <li>Checkout 4 étapes</li>
+          <li>Support par email</li>
+          <li class="muted">Multi-tarifs</li>
+          <li class="muted">Tableau de bord commandes</li>
+        </ul>
+        <button class="pricing-btn secondary" onclick="openModal('Starter')">Commencer l'essai gratuit</button>
+      </div>
+
+      <div class="pricing-card popular">
+        <div class="popular-badge">⭐ Le plus populaire</div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-price">7 900</div>
+        <div class="pricing-period">XPF / mois · sans engagement</div>
+        <ul class="pricing-list">
+          <li>3 widgets de paiement</li>
+          <li>Multi-tarifs & packs</li>
+          <li>Couleurs personnalisées</li>
+          <li>Tableau de bord commandes</li>
+          <li>Support prioritaire (WhatsApp)</li>
+          <li class="muted">Widgets illimités</li>
+        </ul>
+        <button class="pricing-btn primary" onclick="openModal('Pro')">Commencer l'essai gratuit</button>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-name">Business</div>
+        <div class="pricing-price">14 900</div>
+        <div class="pricing-period">XPF / mois · sans engagement</div>
+        <ul class="pricing-list">
+          <li>Widgets illimités</li>
+          <li>Toutes les fonctionnalités Pro</li>
+          <li>Page suivi commandes client</li>
+          <li>Export CSV des ventes</li>
+          <li>Intégration sur mesure</li>
+          <li>Support dédié (appel + WhatsApp)</li>
+        </ul>
+        <button class="pricing-btn secondary" onclick="openModal('Business')">Commencer l'essai gratuit</button>
+      </div>
+
+    </div>
+    <p class="pricing-note">Tous les plans incluent 30 jours d'essai gratuit · Annulation à tout moment · Frais OSB Polynésie en sus (contactez votre agence bancaire)</p>
+  </div>
+</section>
+
+<!-- TÉMOIGNAGES -->
+<section style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:48px">
+      <div class="section-label">Ils nous font confiance</div>
+      <h2 class="section-title">Ce qu'ils <em>en disent</em></h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">"En moins d'une heure mon site acceptait les cartes. Je n'y croyais pas. Le checkout est propre, mes clients adorent."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">🌺</div>
+          <div>
+            <div class="testimonial-name">Teura M.</div>
+            <div class="testimonial-role">Boutique artisanat — Papeete</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">"J'avais peur que ce soit compliqué. HCS a tout configuré. J'ai juste collé un bout de code et ça marche parfaitement."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">🏄</div>
+          <div>
+            <div class="testimonial-name">Matahai T.</div>
+            <div class="testimonial-role">École de surf — Moorea</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">"Le suivi des commandes m'a vraiment aidé à m'organiser pour les retraits. Simple, clair, efficace. Je recommande."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">👕</div>
+          <div>
+            <div class="testimonial-name">Reva H.</div>
+            <div class="testimonial-role">Créateur textile — Tahiti</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background:var(--bg)">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:48px">
+      <div class="section-label">Questions fréquentes</div>
+      <h2 class="section-title">Vous avez des <em>questions ?</em></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Faut-il déjà avoir un compte OSB Polynésie ? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Oui. Vous devez avoir un contrat marchand actif avec OSB Polynésie (Banque de Polynésie) pour encaisser des paiements. Si vous n'en avez pas encore, contactez votre agence OSB pour ouvrir un compte marchand PayZen. HCS gère ensuite la partie technique.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Mes clés bancaires sont-elles en sécurité ? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Vos clés PayZen sont chiffrées en AES-256 avant d'être stockées. Elles ne transitent jamais dans votre code HTML ni dans le navigateur de vos clients. Seul le serveur Cloudflare y accède pour créer les paiements, en mémoire uniquement.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Mon site doit-il être en HTTPS ? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Oui, un certificat SSL est obligatoire pour les paiements en ligne (exigence des SDKs bancaires). La plupart des hébergeurs modernes (WordPress, Wix, Squarespace…) fournissent le HTTPS gratuitement.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">L'argent arrive-t-il directement sur mon compte ? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Oui. Les paiements arrivent directement sur votre compte bancaire OSB Polynésie selon le calendrier de virement de votre contrat marchand. HCS n'est pas intermédiaire financier et ne touche pas à vos fonds.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Puis-je annuler à tout moment ? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Oui, sans engagement ni frais de résiliation. En cas d'annulation, votre widget est désactivé à la fin de la période en cours. Vos données de commandes restent accessibles 30 jours supplémentaires.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Fonctionne-t-il sur WordPress, Wix ou Shopify ? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Oui sur WordPress et tout site acceptant du HTML personnalisé. Sur Wix et Squarespace, il faut pouvoir insérer du HTML dans la page (bloc HTML personnalisé). Sur Shopify, une intégration spécifique est disponible sur demande.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<div class="cta-section">
+  <h2>Prêt à encaisser vos <em style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-style:normal">premiers paiements</em> ?</h2>
+  <p>30 jours gratuits. Aucune carte de crédit requise. Opérationnel en moins d'une journée.</p>
+  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+    <button class="btn btn-primary btn-lg" onclick="openModal()">🚀 Démarrer gratuitement</button>
+    <a href="tel:+689" class="btn btn-outline btn-lg">📞 Nous appeler</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-icon">💳</div>
+          <div class="footer-logo-name">HCS Pay</div>
+        </div>
+        <p class="footer-desc">Solution de paiement en ligne clé en main pour les commerçants de Polynésie française. Sécurisé par OSB Polynésie.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="#comment">Comment ça marche</a></li>
+          <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+          <li><a href="#tarifs">Tarifs</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact</div>
+        <ul class="footer-links">
+          <li><a href="#" onclick="openModal()">Démarrer l'essai</a></li>
+          <li><a href="mailto:contact@hcs-tahiti.pf">contact@hcs-tahiti.pf</a></li>
+          <li><a href="tel:+689">+689 —</a></li>
+          <li><a href="#">WhatsApp</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 HCS Tahiti · Tous droits réservés</div>
+      <div class="footer-osb">Paiements sécurisés par 🏦 OSB Polynésie</div>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL CONTACT -->
+<div class="modal-overlay" id="contact-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-form-wrap">
+      <div class="modal-icon">🚀</div>
+      <div class="modal-title">Démarrer votre essai gratuit</div>
+      <div class="modal-sub">30 jours gratuits · Sans engagement · Opérationnel en 24h<br>Remplissez ce formulaire et nous vous contactons sous 2h.</div>
+      <div class="form-field">
+        <label class="form-label">Votre nom *</label>
+        <input class="form-input" id="f-nom" placeholder="Prénom Nom" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Nom de votre boutique *</label>
+        <input class="form-input" id="f-boutique" placeholder="Ma Boutique Tahiti" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Téléphone / WhatsApp *</label>
+        <input class="form-input" id="f-tel" placeholder="87 00 00 00" type="tel" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="f-email" placeholder="vous@email.com" type="email" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Formule souhaitée</label>
+        <select class="form-input form-select" id="f-plan">
+          <option value="Starter">Starter — 3 900 XPF/mois</option>
+          <option value="Pro" selected>Pro — 7 900 XPF/mois</option>
+          <option value="Business">Business — 14 900 XPF/mois</option>
+          <option value="Je ne sais pas encore">Je ne sais pas encore</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Message (optionnel)</label>
+        <textarea class="form-input" id="f-msg" placeholder="Décrivez votre activité, vos besoins…"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="submitForm()">
+        ✅ Envoyer ma demande
+      </button>
+    </div>
+    <div class="modal-success" id="modal-success">
+      <div class="icon">🎉</div>
+      <h3>Demande envoyée !</h3>
+      <p>Merci ! Nous vous contactons sous <strong>2 heures</strong> par WhatsApp ou email pour démarrer votre configuration.<br><br>
+      En attendant, votre essai de 30 jours est prêt.</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // Modal
+  function openModal(plan) {
+    if (plan) document.getElementById('f-plan').value = plan;
+    document.getElementById('contact-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('contact-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('contact-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('contact-modal')) closeModal();
+  });
+
+  // Formulaire
+  const WORKER_URL = 'https://payzen-hcs.highcoffeeshirt.workers.dev';
+
+  async function submitForm() {
+    const nom      = document.getElementById('f-nom').value.trim();
+    const boutique = document.getElementById('f-boutique').value.trim();
+    const tel      = document.getElementById('f-tel').value.trim();
+    const email    = (document.getElementById('f-email')?.value || '').trim();
+    const plan     = (document.getElementById('f-plan')?.value || '').trim();
+    const message  = (document.getElementById('f-message')?.value || '').trim();
+
+    if (!nom || !boutique || !tel) {
+      toast('⚠️ Remplissez les champs obligatoires', 'warn'); return;
+    }
+
+    const btn = event.currentTarget || document.querySelector('[onclick="submitForm()"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
+
+    try {
+      const res = await fetch(WORKER_URL + '/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom, boutique, tel, email, plan, message }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+      document.getElementById('modal-form-wrap').style.display = 'none';
+      document.getElementById('modal-success').style.display = 'block';
+    } catch (e) {
+      toast('❌ ' + e.message, 'warn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Envoyer ma demande →'; }
+    }
+  }
+
+  // FAQ accordion
+  function toggleFaq(el) {
+    el.closest('.faq-item').classList.toggle('open');
+  }
+
+  // Toast
+  function toast(msg, type = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show';
+    if (type === 'warn') el.style.background = 'rgba(246,211,101,.15)';
+    setTimeout(() => el.classList.remove('show'), 3500);
+  }
+
+  // Animation au scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.how-card, .feature-card, .pricing-card, .testimonial-card').forEach(el => {
+    el.style.opacity = '0'; el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity .5s ease, transform .5s ease';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>

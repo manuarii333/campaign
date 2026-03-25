@@ -106,7 +106,13 @@ export default {
       return handleLpDelete(request, pathname, env);
     }
 
-    // Widget JS public
+    // Pages publiques (Assets)
+    if (method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
+      return env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
+    }
+    if (method === 'GET' && (pathname === '/portal' || pathname === '/portal.html')) {
+      return env.ASSETS.fetch(new Request(new URL('/portal.html', request.url), request));
+    }
     if (method === 'GET' && pathname === '/widget.js') {
       return env.ASSETS.fetch(request);
     }
@@ -160,6 +166,20 @@ export default {
     }
     if (method === 'POST' && pathname === '/admin/merchants/migrate') {
       return handleMerchantsMigrate(request, env);
+    }
+
+    // ── Abonnements ───────────────────────────────────────
+    if (method === 'GET' && pathname === '/admin/subscriptions') {
+      return handleAdminListSubs(request, env);
+    }
+    if (method === 'POST' && pathname === '/admin/subscriptions') {
+      return handleAdminCreateSub(request, env);
+    }
+    if (method === 'PATCH' && pathname.startsWith('/admin/subscriptions/')) {
+      return handleAdminUpdateSub(request, pathname, env);
+    }
+    if (method === 'POST' && pathname === '/admin/subscriptions/migrate') {
+      return handleSubsMigrate(request, env);
     }
 
     // ── Leads / Contact (/contact) ─────────────────────────
@@ -1061,4 +1081,111 @@ async function handleAdminUpdateLead(request, pathname, env) {
   await env.HCS_DB.prepare('UPDATE leads SET status = ? WHERE id = ?')
     .bind(status, id).run();
   return json({ success: true }, 200, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// POST /admin/subscriptions/migrate — crée la table subscriptions
+// ─────────────────────────────────────────────────────────
+async function handleSubsMigrate(request, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  try {
+    await env.HCS_DB.prepare(`
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id           TEXT PRIMARY KEY,
+        merchant_id  TEXT NOT NULL,
+        plan         TEXT NOT NULL DEFAULT 'Starter',
+        price_xpf    INTEGER NOT NULL DEFAULT 3900,
+        status       TEXT NOT NULL DEFAULT 'active',
+        start_date   TEXT NOT NULL,
+        next_billing TEXT NOT NULL,
+        last_paid    TEXT,
+        notes        TEXT DEFAULT ''
+      )
+    `).run();
+    return json({ success: true, message: 'Table subscriptions créée' }, 200, request);
+  } catch (e) {
+    return err('Migration échouée: ' + e.message, 500);
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// GET /admin/subscriptions — liste des abonnements
+// ─────────────────────────────────────────────────────────
+async function handleAdminListSubs(request, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  const { results } = await env.HCS_DB.prepare(`
+    SELECT s.*, m.name as merchant_name, m.shop_id
+    FROM subscriptions s
+    LEFT JOIN merchants m ON s.merchant_id = m.id
+    ORDER BY s.next_billing ASC
+  `).all();
+  return json({ subscriptions: results || [] }, 200, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// POST /admin/subscriptions — créer un abonnement
+// ─────────────────────────────────────────────────────────
+async function handleAdminCreateSub(request, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const { merchantId, plan, priceXpf, startDate, notes = '' } = body;
+  if (!merchantId || !plan || !priceXpf) return err('merchantId, plan, priceXpf requis');
+
+  const start = startDate || new Date().toISOString().slice(0, 10);
+  const next  = nextBillingDate(start);
+  const id    = 'sub_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+
+  await env.HCS_DB.prepare(
+    `INSERT INTO subscriptions (id, merchant_id, plan, price_xpf, status, start_date, next_billing, notes)
+     VALUES (?, ?, ?, ?, 'active', ?, ?, ?)`
+  ).bind(id, merchantId, plan, priceXpf, start, next, notes).run();
+
+  return json({ success: true, id }, 201, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// PATCH /admin/subscriptions/:id — mettre à jour un abonnement
+// ─────────────────────────────────────────────────────────
+async function handleAdminUpdateSub(request, pathname, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  const id = pathname.replace('/admin/subscriptions/', '');
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const fields = [];
+  const values = [];
+
+  if (body.plan      !== undefined) { fields.push('plan = ?');       values.push(body.plan); }
+  if (body.priceXpf  !== undefined) { fields.push('price_xpf = ?'); values.push(body.priceXpf); }
+  if (body.status    !== undefined) { fields.push('status = ?');     values.push(body.status); }
+  if (body.lastPaid  !== undefined) {
+    fields.push('last_paid = ?');    values.push(body.lastPaid);
+    fields.push('next_billing = ?'); values.push(nextBillingDate(body.lastPaid));
+  }
+  if (body.notes !== undefined) { fields.push('notes = ?'); values.push(body.notes); }
+
+  if (!fields.length) return err('Aucun champ');
+  values.push(id);
+
+  await env.HCS_DB.prepare(
+    `UPDATE subscriptions SET ${fields.join(', ')} WHERE id = ?`
+  ).bind(...values).run();
+
+  return json({ success: true }, 200, request);
+}
+
+function nextBillingDate(fromDate) {
+  const d = new Date(fromDate);
+  d.setMonth(d.getMonth() + 1);
+  return d.toISOString().slice(0, 10);
 }
