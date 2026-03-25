@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCS · Guide Administrateur</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f1a; --bg2: #1a1a2e; --bg3: #16213e; --bg4: #1e1e3a;
+      --border: #2a2a4a; --text: #e8e8f0; --muted: #9090b0;
+      --accent: #6c63ff; --accent2: #ff6584;
+      --green: #43e97b; --yellow: #f6d365; --red: #ff6b6b;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0d0d1f 100%);
+      border-bottom: 1px solid var(--border); padding: 60px 32px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+      width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(108,99,255,.2) 0%, transparent 70%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 18px; border-radius: 20px; margin-bottom: 22px;
+      background: rgba(108,99,255,.12); border: 1px solid rgba(108,99,255,.35);
+      color: #a29bfe; font-size: .72rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; position: relative;
+    }
+    .hero h1 { font-size: 2.6rem; font-weight: 900; line-height: 1.15; margin-bottom: 16px; position: relative; }
+    .hero h1 em { font-style: normal; background: linear-gradient(135deg,#6c63ff,#ff6584); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero-sub { color: var(--muted); font-size: .95rem; max-width: 520px; margin: 0 auto 28px; position: relative; }
+    .hero-creds {
+      display: inline-flex; gap: 24px; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 24px; position: relative;
+    }
+    .cred-item { text-align: left; }
+    .cred-label { font-size: .6rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+    .cred-val   { font-family: monospace; font-size: .85rem; color: #8be9fd; font-weight: 700; }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,26,.97); border-bottom: 1px solid var(--border);
+      padding: 0 28px; display: flex; overflow-x: auto; backdrop-filter: blur(12px); gap: 0;
+    }
+    .nav a {
+      display: block; padding: 14px 16px; color: var(--muted); text-decoration: none;
+      font-size: .75rem; font-weight: 600; border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: all .2s;
+    }
+    .nav a:hover { color: var(--text); border-bottom-color: var(--accent); }
+
+    /* Layout */
+    .page { max-width: 900px; margin: 0 auto; padding: 56px 24px; }
+
+    .section { margin-bottom: 72px; }
+    .anchor  { display: block; height: 80px; margin-top: -80px; visibility: hidden; }
+
+    h2 {
+      font-size: 1.3rem; font-weight: 900; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .h2-num {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: .82rem; font-weight: 900;
+    }
+    .h2-desc { color: var(--muted); font-size: .82rem; margin-bottom: 28px; }
+    h3 { font-size: .9rem; font-weight: 800; color: #a29bfe; margin: 24px 0 10px; display: flex; align-items: center; gap: 8px; }
+    p  { color: #c0c0d8; font-size: .88rem; margin-bottom: 12px; line-height: 1.7; }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 12px; }
+    .step {
+      display: flex; gap: 16px;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px 20px;
+    }
+    .step.warn { border-color: rgba(246,211,101,.35); }
+    .step.ok   { border-color: rgba(67,233,123,.3); }
+    .step.crit { border-color: rgba(255,107,107,.35); }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .82rem; font-weight: 900; color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+    }
+    .step.warn .step-num { background: linear-gradient(135deg,#f6d365,#fd9644); color: #1a1a2e; }
+    .step.ok   .step-num { background: linear-gradient(135deg,#43e97b,#38f9d7); color: #0f0f1a; }
+    .step.crit .step-num { background: linear-gradient(135deg,#ff6b6b,#ee5a24); }
+    .step-body { flex: 1; }
+    .step-title { font-size: .9rem; font-weight: 800; margin-bottom: 6px; }
+    .step-text  { font-size: .8rem; color: #c0c0d8; line-height: 1.75; }
+
+    /* Screen simulé */
+    .screen {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden; margin: 16px 0; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+    .screen-bar {
+      background: var(--bg3); padding: 10px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .screen-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .screen-url { font-family: monospace; font-size: .72rem; color: var(--muted); margin-left: 8px; flex: 1; text-align: center; }
+    .screen-body { padding: 20px; }
+
+    /* Champ simulé */
+    .sim-field { margin-bottom: 12px; }
+    .sim-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 5px; }
+    .sim-input {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; font-size: .8rem; width: 100%; color: var(--text); font-family: monospace;
+    }
+    .sim-input.filled { border-color: var(--accent); color: #8be9fd; }
+    .sim-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; font-size: .82rem; font-weight: 800; margin-top: 8px; width: 100%; justify-content: center;
+    }
+
+    /* Wizard simulé */
+    .wz-bar { display: flex; background: var(--bg3); border-bottom: 1px solid var(--border); }
+    .wz-step-sim { flex: 1; padding: 10px 8px; text-align: center; border-right: 1px solid var(--border); }
+    .wz-step-sim:last-child { border-right: none; }
+    .wz-dot-sim {
+      width: 24px; height: 24px; border-radius: 50%; margin: 0 auto 4px;
+      display: flex; align-items: center; justify-content: center; font-size: .65rem; font-weight: 800;
+    }
+    .wz-dot-sim.done   { background: var(--green); color: #0f0f1a; }
+    .wz-dot-sim.active { background: var(--accent); color: white; box-shadow: 0 0 10px rgba(108,99,255,.5); }
+    .wz-dot-sim.idle   { background: var(--bg4); border: 2px solid var(--border); color: var(--muted); }
+    .wz-lbl { font-size: .55rem; color: var(--muted); font-weight: 600; }
+
+    /* Success simulé */
+    .sim-success {
+      background: rgba(67,233,123,.06); border: 1px solid rgba(67,233,123,.3);
+      border-radius: 12px; padding: 22px; text-align: center; margin: 12px 0;
+    }
+    .sim-success .icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .sim-success .title { font-size: .95rem; font-weight: 900; color: var(--green); margin-bottom: 8px; }
+    .sim-mid {
+      background: var(--bg3); border: 2px solid rgba(108,99,255,.5); border-radius: 8px;
+      padding: 10px; font-family: monospace; font-size: .9rem; color: #8be9fd; letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    /* Code */
+    pre {
+      background: #0a0a15; border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px 18px; overflow-x: auto; margin: 12px 0; position: relative;
+    }
+    code.b { font-family: 'Cascadia Code','Fira Code',monospace; font-size: .77rem; line-height: 1.9; color: var(--text); }
+    code.i { font-family: monospace; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: .75rem; color: #8be9fd; }
+    .attr { color: #8be9fd; }
+    .val  { color: #f1fa8c; }
+    .tag  { color: #ff79c6; }
+    .cm   { color: #6272a4; font-style: italic; }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--bg4); border: none; color: var(--muted);
+      padding: 4px 10px; border-radius: 6px; font-size: .65rem; cursor: pointer; transition: all .2s;
+    }
+    .copy-btn:hover { background: var(--accent); color: white; }
+
+    /* Table */
+    .tbl { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 14px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    th { background: var(--bg3); padding: 10px 14px; text-align: left; font-size: .62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); border-bottom: 1px solid var(--border); }
+    td { padding: 11px 14px; border-bottom: 1px solid rgba(42,42,74,.5); color: #c0c0d8; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Alert */
+    .alert {
+      border-radius: 10px; padding: 13px 16px; margin: 14px 0;
+      font-size: .8rem; display: flex; gap: 10px; align-items: flex-start; line-height: 1.6;
+    }
+    .alert-warn { background: rgba(246,211,101,.07); border: 1px solid rgba(246,211,101,.3); }
+    .alert-info { background: rgba(108,99,255,.07); border: 1px solid rgba(108,99,255,.3); }
+    .alert-ok   { background: rgba(67,233,123,.07); border: 1px solid rgba(67,233,123,.3); }
+    .alert-icon { font-size: .95rem; flex-shrink: 0; margin-top: 2px; }
+    .alert-body { color: #c0c0d8; }
+    .alert-body strong { color: var(--text); }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: .65rem; font-weight: 700; }
+    .badge-req  { background: rgba(255,107,107,.15); border: 1px solid rgba(255,107,107,.3); color: var(--red); }
+    .badge-auto { background: rgba(67,233,123,.15);  border: 1px solid rgba(67,233,123,.3);  color: var(--green); }
+    .badge-once { background: rgba(246,211,101,.15); border: 1px solid rgba(246,211,101,.3); color: var(--yellow); }
+
+    footer { text-align: center; padding: 40px; border-top: 1px solid var(--border); color: var(--muted); font-size: .72rem; }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🛠️ Guide administrateur — HCS Tahiti</div>
+  <h1>Gérer les marchands<br><em>pas à pas</em></h1>
+  <p class="hero-sub">Guide complet pour installer, configurer et gérer les comptes marchands depuis le tableau de bord HCS.</p>
+  <div class="hero-creds">
+    <div class="cred-item">
+      <div class="cred-label">Dashboard</div>
+      <div class="cred-val">localhost:3000/widget/admin-dashboard.html</div>
+    </div>
+    <div class="cred-item">
+      <div class="cred-label">Admin Secret</div>
+      <div class="cred-val">richesse</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#lancer">Lancer</a>
+  <a href="#connexion">Connexion</a>
+  <a href="#migration">Migration DB</a>
+  <a href="#nouveau">Nouveau marchand</a>
+  <a href="#gestion">Gérer les marchands</a>
+  <a href="#snippet">Code d'intégration</a>
+  <a href="#livraison">Livrer au marchand</a>
+  <a href="#depannage">Dépannage</a>
+</nav>
+
+<div class="page">
+
+  <!-- ── LANCER ─────────────────────────────────────────────── -->
+  <div class="section">
+    <span class="anchor" id="lancer"></span>
+    <h2><span class="h2-num">1</span> Lancer le tableau de bord</h2>
+    <p class="h2-desc">Le dashboard est une page HTML locale — elle nécessite un serveur Python pour fonctionner.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Ouvrir un terminal Windows</div>
+          <div class="step-text">Appuyer sur <strong>Windows + R</strong>, taper <code class="i">cmd</code>, puis Entrée.<br>
+          Ou clic droit sur le Bureau → <strong>Ouvrir dans le terminal</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Se placer dans le bon dossier</div>
+          <div class="step-text">Taper la commande suivante puis Entrée :</div>
+          <pre style="margin-top:8px"><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="b">cd c:\Users\highc\HCS\campaign</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Lancer le serveur Python</div>
+          <pre style="margin-top:8px"><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="b">python -m http.server 3000</code></pre>
+          <div class="step-text" style="margin-top:6px">Le terminal affiche : <code class="i">Serving HTTP on 0.0.0.0 port 3000</code><br>
+          ⚠️ <strong>Ne pas fermer ce terminal</strong> — le laisser ouvert en arrière-plan.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Ouvrir le tableau de bord dans Chrome ou Firefox</div>
+          <pre style="margin-top:8px"><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="b">http://localhost:3000/widget/admin-dashboard.html</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">💡</span>
+      <div class="alert-body">Pour arrêter le serveur : cliquer dans le terminal et appuyer sur <strong>Ctrl + C</strong>.</div>
+    </div>
+  </div>
+
+  <!-- ── CONNEXION ──────────────────────────────────────────── -->
+  <div class="section">
+    <span class="anchor" id="connexion"></span>
+    <h2><span class="h2-num">2</span> Se connecter au dashboard</h2>
+    <p class="h2-desc">La connexion vérifie que votre clé admin est correcte avant d'afficher les données.</p>
+
+    <!-- Screen simulé -->
+    <div class="screen">
+      <div class="screen-bar">
+        <div class="screen-dot" style="background:#ff5f57"></div>
+        <div class="screen-dot" style="background:#febc2e"></div>
+        <div class="screen-dot" style="background:#28c840"></div>
+        <div class="screen-url">localhost:3000/widget/admin-dashboard.html</div>
+      </div>
+      <div class="screen-body" style="max-width:340px;margin:0 auto">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6c63ff,#ff6584);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto 10px">💳</div>
+          <div style="font-weight:800;font-size:.95rem">HCS Marchands</div>
+          <div style="font-size:.72rem;color:var(--muted)">Tableau de bord d'installation</div>
+        </div>
+        <div class="sim-field">
+          <div class="sim-label">URL du Worker</div>
+          <div class="sim-input filled">https://payzen-hcs.highcoffeeshirt.workers.dev</div>
+        </div>
+        <div class="sim-field">
+          <div class="sim-label">Admin Secret</div>
+          <div class="sim-input filled">••••••••</div>
+        </div>
+        <div class="sim-btn">🔑 Connexion</div>
+      </div>
+    </div>
+
+    <div class="steps" style="margin-top:16px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Champ "URL du Worker"</div>
+          <div class="step-text">Laisser la valeur par défaut :<br>
+          <code class="i">https://payzen-hcs.highcoffeeshirt.workers.dev</code></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Champ "Admin Secret"</div>
+          <div class="step-text">Saisir : <code class="i">richesse</code></div>
+        </div>
+      </div>
+      <div class="step ok">
+        <div class="step-num">✓</div>
+        <div class="step-body">
+          <div class="step-title">Cliquer sur "🔑 Connexion"</div>
+          <div class="step-text">Le tableau de bord s'ouvre avec les statistiques et la liste des marchands.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MIGRATION DB ───────────────────────────────────────── -->
+  <div class="section">
+    <span class="anchor" id="migration"></span>
+    <h2><span class="h2-num">3</span> Migration de la base de données <span class="badge badge-once">À faire une seule fois</span></h2>
+    <p class="h2-desc">Crée la table des marchands dans la base de données. Obligatoire avant le premier enregistrement.</p>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body"><strong>À faire une seule fois</strong> lors de la première utilisation. Si déjà fait, cette opération est sans effet.</div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Dans la barre latérale gauche</div>
+          <div class="step-text">Cliquer sur <strong>⚙️ Migration DB</strong></div>
+        </div>
+      </div>
+      <div class="step ok">
+        <div class="step-num">✓</div>
+        <div class="step-body">
+          <div class="step-title">Message de confirmation</div>
+          <div class="step-text">Une notification verte apparaît en bas à droite : <strong>"✅ Migration OK"</strong><br>
+          La base est prête à accueillir des marchands.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NOUVEAU MARCHAND ───────────────────────────────────── -->
+  <div class="section">
+    <span class="anchor" id="nouveau"></span>
+    <h2><span class="h2-num">4</span> Enregistrer un nouveau marchand</h2>
+    <p class="h2-desc">Processus en 4 étapes guidées — environ 3 minutes par marchand.</p>
+
+    <h3>📋 Ce que vous devez avoir en main</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Information</th><th>Exemple</th><th>Où la trouver</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Nom de la boutique</strong></td><td>Boutique Reva Tahiti</td><td>Au marchand</td></tr>
+          <tr><td><strong>Shop ID PayZen</strong></td><td><code class="i">41545085</code></td><td>Back-office OSB → en haut à droite</td></tr>
+          <tr><td><strong>Clé REST TEST</strong></td><td><code class="i">testpassword_xxxx…</code></td><td>Back-office OSB → Paramètres → Clés d'API REST</td></tr>
+          <tr><td><strong>Clé REST PROD</strong></td><td><code class="i">prodpassword_xxxx…</code></td><td>Back-office OSB → Paramètres → Clés d'API REST</td></tr>
+          <tr><td><strong>Clé publique TEST</strong></td><td><code class="i">41545085:testpublickey_…</code></td><td>Back-office OSB → Paramètres → Clés d'API REST</td></tr>
+          <tr><td><strong>Clé publique PROD</strong></td><td><code class="i">41545085:publickey_…</code></td><td>Back-office OSB → Paramètres → Clés d'API REST</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>📺 Étapes du wizard</h3>
+
+    <!-- Étape 1 simulée -->
+    <div class="screen">
+      <div class="screen-bar">
+        <div class="screen-dot" style="background:#ff5f57"></div>
+        <div class="screen-dot" style="background:#febc2e"></div>
+        <div class="screen-dot" style="background:#28c840"></div>
+        <div class="screen-url">Nouveau marchand</div>
+      </div>
+      <div class="wz-bar">
+        <div class="wz-step-sim"><div class="wz-dot-sim active">1</div><div class="wz-lbl">Boutique</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim idle">2</div><div class="wz-lbl">Clés OSB</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim idle">3</div><div class="wz-lbl">Vérification</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim idle">4</div><div class="wz-lbl">Terminé</div></div>
+      </div>
+      <div class="screen-body">
+        <div style="font-weight:800;margin-bottom:4px">Informations de la boutique</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:16px">Renseignez le nom du nouveau marchand</div>
+        <div class="sim-field">
+          <div class="sim-label">Nom de la boutique *</div>
+          <div class="sim-input filled">Boutique Reva Tahiti</div>
+        </div>
+        <div class="sim-btn" style="margin-top:12px">Continuer →</div>
+      </div>
+    </div>
+
+    <div class="steps" style="margin-top:12px;margin-bottom:20px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Cliquer sur "+ Nouveau marchand" dans la barre latérale</div>
+          <div class="step-text">Le wizard s'ouvre à l'étape 1.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Étape 1 — Nom de la boutique</div>
+          <div class="step-text">Saisir le nom commercial du marchand. Cliquer sur <strong>Continuer →</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 2 simulée -->
+    <div class="screen">
+      <div class="screen-bar">
+        <div class="screen-dot" style="background:#ff5f57"></div>
+        <div class="screen-dot" style="background:#febc2e"></div>
+        <div class="screen-dot" style="background:#28c840"></div>
+        <div class="screen-url">Nouveau marchand — Clés OSB</div>
+      </div>
+      <div class="wz-bar">
+        <div class="wz-step-sim"><div class="wz-dot-sim done">✓</div><div class="wz-lbl">Boutique</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim active">2</div><div class="wz-lbl">Clés OSB</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim idle">3</div><div class="wz-lbl">Vérification</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim idle">4</div><div class="wz-lbl">Terminé</div></div>
+      </div>
+      <div class="screen-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="sim-field" style="grid-column:1/-1">
+            <div class="sim-label">Shop ID *</div>
+            <div class="sim-input filled">41545085</div>
+          </div>
+          <div class="sim-field">
+            <div class="sim-label">Clé REST TEST *</div>
+            <div class="sim-input filled">••••••••••••</div>
+          </div>
+          <div class="sim-field">
+            <div class="sim-label">Clé REST PROD *</div>
+            <div class="sim-input filled">••••••••••••</div>
+          </div>
+          <div class="sim-field">
+            <div class="sim-label">Clé publique TEST *</div>
+            <div class="sim-input filled" style="font-size:.65rem">41545085:testpublickey_…</div>
+          </div>
+          <div class="sim-field">
+            <div class="sim-label">Clé publique PROD *</div>
+            <div class="sim-input filled" style="font-size:.65rem">41545085:publickey_…</div>
+          </div>
+        </div>
+        <div class="sim-btn" style="margin-top:12px">Vérifier et créer →</div>
+      </div>
+    </div>
+
+    <div class="steps" style="margin-top:12px;margin-bottom:20px">
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Étape 2 — Saisir les 5 clés OSB</div>
+          <div class="step-text">
+            <strong>Shop ID</strong> : numéro à 8 chiffres (ex: 41545085)<br>
+            <strong>Clé REST TEST</strong> : commence par <code class="i">testpassword_</code><br>
+            <strong>Clé REST PROD</strong> : commence par <code class="i">prodpassword_</code><br>
+            <strong>Clé publique TEST</strong> : format <code class="i">SHOPID:testpublickey_…</code><br>
+            <strong>Clé publique PROD</strong> : format <code class="i">SHOPID:publickey_…</code><br><br>
+            Cliquer sur <strong>Vérifier et créer →</strong>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Étape 3 — Vérifier le récapitulatif</div>
+          <div class="step-text">Un résumé s'affiche. Vérifier que le nom et le Shop ID sont corrects.<br>
+          Cliquer sur <strong>✅ Confirmer et créer</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 4 simulée -->
+    <div class="screen">
+      <div class="screen-bar">
+        <div class="screen-dot" style="background:#ff5f57"></div>
+        <div class="screen-dot" style="background:#febc2e"></div>
+        <div class="screen-dot" style="background:#28c840"></div>
+        <div class="screen-url">Nouveau marchand — Terminé ✓</div>
+      </div>
+      <div class="wz-bar">
+        <div class="wz-step-sim"><div class="wz-dot-sim done">✓</div><div class="wz-lbl">Boutique</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim done">✓</div><div class="wz-lbl">Clés OSB</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim done">✓</div><div class="wz-lbl">Vérification</div></div>
+        <div class="wz-step-sim"><div class="wz-dot-sim active">4</div><div class="wz-lbl">Terminé</div></div>
+      </div>
+      <div class="screen-body">
+        <div class="sim-success">
+          <div class="icon">🎉</div>
+          <div class="title">Marchand créé avec succès !</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:12px">Transmettez ce code au marchand</div>
+          <div class="sim-mid">mrc_aB3xK9pQr</div>
+          <div style="font-size:.65rem;color:var(--muted)">👆 Cliquer pour copier</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="steps" style="margin-top:12px">
+      <div class="step ok">
+        <div class="step-num">✓</div>
+        <div class="step-body">
+          <div class="step-title">Étape 4 — Merchant ID généré</div>
+          <div class="step-text">Un identifiant unique est créé : ex. <code class="i">mrc_aB3xK9pQr</code><br>
+          <strong>Cliquer dessus pour le copier.</strong> C'est ce code que vous transmettez au marchand.<br>
+          Le code HTML d'intégration complet est affiché juste en dessous — prêt à copier-coller.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GESTION ────────────────────────────────────────────── -->
+  <div class="section">
+    <span class="anchor" id="gestion"></span>
+    <h2><span class="h2-num">5</span> Gérer les marchands existants</h2>
+    <p class="h2-desc">Consulter, activer, désactiver ou copier le code d'intégration d'un marchand.</p>
+
+    <h3>📋 Accéder à la liste</h3>
+    <p>Cliquer sur <strong>🏪 Marchands</strong> dans la barre latérale. La liste complète s'affiche avec un champ de recherche.</p>
+
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Bouton</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code class="i">mrc_xxx</code> (tag bleu)</td>
+            <td>Cliquer pour copier le Merchant ID dans le presse-papiers</td>
+          </tr>
+          <tr>
+            <td><strong>👁 Détail</strong></td>
+            <td>Ouvre le détail complet + code d'intégration + options</td>
+          </tr>
+          <tr>
+            <td><strong>💻 Code</strong></td>
+            <td>Ouvre directement le générateur de code pour ce marchand</td>
+          </tr>
+          <tr>
+            <td><strong>⏸ Désactiver</strong></td>
+            <td>Bloque les paiements du marchand immédiatement (sans supprimer)</td>
+          </tr>
+          <tr>
+            <td><strong>▶ Activer</strong></td>
+            <td>Réactive un marchand désactivé</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">💡</span>
+      <div class="alert-body">La désactivation est <strong>instantanée</strong> — le widget du marchand affichera une erreur "Marchand introuvable" dès la prochaine tentative de paiement. Aucun paiement en cours n'est interrompu.</div>
+    </div>
+  </div>
+
+  <!-- ── GÉNÉRATEUR DE CODE ─────────────────────────────────── -->
+  <div class="section">
+    <span class="anchor" id="snippet"></span>
+    <h2><span class="h2-num">6</span> Générer le code d'intégration</h2>
+    <p class="h2-desc">Produire le code HTML prêt à coller sur le site du marchand.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Cliquer sur "💻 Générateur de code" dans la barre latérale</div>
+          <div class="step-text">Ou depuis la liste marchands → bouton <strong>💻 Code</strong> → le Merchant ID est pré-rempli.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Remplir les options</div>
+          <div class="step-text">
+            <strong>Merchant ID</strong> : coller le code <code class="i">mrc_xxx</code> du marchand<br>
+            <strong>Mode</strong> : TEST pour les essais, PRODUCTION pour les vrais paiements<br>
+            <strong>Type</strong> : Montant fixe / Multi-tarifs / Montant libre<br>
+            <strong>Couleur</strong> : couleur principale du bouton (code hexadécimal)<br>
+            <strong>Montant</strong> : prix en XPF (entier, sans virgule)<br>
+            <strong>Nom produit / Boutique / Bouton</strong> : textes affichés au client
+          </div>
+        </div>
+      </div>
+      <div class="step ok">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Copier le code généré</div>
+          <div class="step-text">Cliquer sur <strong>📋 Copier le code</strong>. Le code est prêt à coller dans le fichier HTML du marchand.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIVRAISON AU MARCHAND ──────────────────────────────── -->
+  <div class="section">
+    <span class="anchor" id="livraison"></span>
+    <h2><span class="h2-num">7</span> Ce que vous transmettez au marchand</h2>
+    <p class="h2-desc">Après création, voici ce que le marchand doit recevoir et comment il l'utilise.</p>
+
+    <h3>📦 Ce que vous envoyez</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Élément</th><th>Exemple</th><th>Utilité</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Merchant ID</strong></td>
+            <td><code class="i">mrc_aB3xK9pQr</code></td>
+            <td>Va dans <code class="i">data-merchant-id</code> du HTML</td>
+          </tr>
+          <tr>
+            <td><strong>Code HTML prêt</strong></td>
+            <td>Voir ci-dessous</td>
+            <td>À coller dans la page du site du marchand</td>
+          </tr>
+          <tr>
+            <td><strong>Mode à utiliser</strong></td>
+            <td>TEST ou PRODUCTION</td>
+            <td>TEST pour valider, puis PRODUCTION pour encaisser</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>💻 Code à transmettre au marchand</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="b"><span class="cm">&lt;!-- Widget de paiement — À coller dans votre page HTML --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">id</span>=<span class="val">"hcs-pay"</span>
+  <span class="attr">data-merchant-id</span>=<span class="val">"mrc_VOTRE_ID"</span>
+  <span class="attr">data-amount</span>=<span class="val">"2500"</span>
+  <span class="attr">data-product</span>=<span class="val">"Nom du produit"</span>
+  <span class="attr">data-mode</span>=<span class="val">"TEST"</span>
+  <span class="attr">data-color</span>=<span class="val">"#6c63ff"</span>
+  <span class="attr">data-shop</span>=<span class="val">"Nom de ma boutique"</span><span class="tag">&gt;&lt;/div&gt;</span>
+
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js"</span><span class="tag">&gt;&lt;/script&gt;</span></code></pre>
+
+    <div class="alert alert-ok">
+      <span class="alert-icon">✅</span>
+      <div class="alert-body">Le marchand <strong>n'a jamais besoin de ses clés PayZen</strong> dans son HTML — seulement le <code class="i">data-merchant-id</code>. Les clés restent chiffrées chez HCS.</div>
+    </div>
+
+    <h3>🧪 Cartes de test à donner au marchand</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Résultat</th><th>Numéro</th><th>Expiration</th><th>CVV</th></tr></thead>
+        <tbody>
+          <tr><td><strong style="color:var(--green)">✅ Accepté</strong></td><td><code class="i">4970 1000 0000 0055</code></td><td><code class="i">12/26</code></td><td><code class="i">123</code></td></tr>
+          <tr><td><strong style="color:var(--red)">❌ Refusé</strong></td><td><code class="i">4970 1000 0000 0015</code></td><td><code class="i">12/26</code></td><td><code class="i">123</code></td></tr>
+          <tr><td><strong style="color:var(--yellow)">🔐 3DS</strong></td><td><code class="i">4970 1000 0000 0063</code></td><td><code class="i">12/26</code></td><td><code class="i">123</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── DÉPANNAGE ──────────────────────────────────────────── -->
+  <div class="section">
+    <span class="anchor" id="depannage"></span>
+    <h2><span class="h2-num">8</span> Dépannage</h2>
+
+    <h3>❌ "Secret incorrect ou Worker inaccessible" à la connexion</h3>
+    <div class="steps">
+      <div class="step crit">
+        <div class="step-num">!</div>
+        <div class="step-body">
+          <div class="step-title">Vérifier que le serveur Python est bien lancé</div>
+          <div class="step-text">Le terminal avec <code class="i">python -m http.server 3000</code> doit être ouvert et actif.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Vérifier le secret</div>
+          <div class="step-text">Le secret admin est <code class="i">richesse</code> (tout en minuscules, sans espace).</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Réinitialiser le secret depuis le terminal</div>
+          <pre style="margin-top:8px"><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="b">cd c:\Users\highc\HCS\campaign
+echo richesse | npx wrangler secret put ADMIN_SECRET</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <h3>❌ "Migration DB" ne fonctionne pas</h3>
+    <p>Si la migration échoue, exécuter la commande directement depuis le terminal :</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="b">cd c:\Users\highc\HCS\campaign
+npx wrangler d1 execute hcs-orders-db --file=migrations/002_merchants.sql</code></pre>
+
+    <h3>❌ "Marchand introuvable" côté client</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Cause</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td>Merchant ID incorrect dans le HTML</td><td>Vérifier la valeur de <code class="i">data-merchant-id</code></td></tr>
+          <tr><td>Marchand désactivé</td><td>Dans la liste → bouton <strong>▶ Activer</strong></td></tr>
+          <tr><td>Migration pas encore faite</td><td>Cliquer sur <strong>⚙️ Migration DB</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>❌ Formulaire carte ne s'affiche pas chez le marchand</h3>
+    <p>Le site du marchand doit être en <strong>https://</strong>. Les iframes bancaires OSB sont bloquées sur les sites en <code class="i">http://</code> ou en <code class="i">file://</code>.</p>
+
+    <h3>❌ Paiement TEST accepté mais absent du back-office OSB</h3>
+    <p>En mode TEST, aller dans le back-office OSB → onglet <strong>Transactions TEST</strong> (pas "Transactions réelles").</p>
+  </div>
+
+</div>
+
+<footer>
+  HCS Payment Widget · Guide Administrateur · HCS Tahiti 2026
+</footer>
+
+<script>
+  function copyCode(btn) {
+    const code = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = '✓ Copié';
+      setTimeout(() => btn.textContent = 'Copier', 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
