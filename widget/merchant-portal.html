@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HCS Pay — Mon espace</title>
+<style>
+  :root {
+    --bg:     #0d0d12;
+    --bg2:    #13131a;
+    --bg3:    #1a1a24;
+    --border: rgba(255,255,255,.08);
+    --text:   #f0f0f5;
+    --muted:  #7a7a96;
+    --accent: #6c63ff;
+    --green:  #00d68f;
+    --red:    #ff4d6d;
+    --yellow: #f6d365;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* ── Topbar ────────────────────────────────────── */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo {
+    width: 32px; height: 32px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: .9rem; color: #fff;
+  }
+  .brand-name { font-weight: 700; font-size: 1rem; }
+  .brand-sub  { font-size: .7rem; color: var(--muted); margin-top: 1px; }
+  #mid-display { font-size: .72rem; color: var(--muted); background: var(--bg3); padding: 4px 12px; border-radius: 99px; border: 1px solid var(--border); }
+  .logout-btn { font-size: .75rem; color: var(--muted); cursor: pointer; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: none; transition: .15s; }
+  .logout-btn:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
+
+  /* ── Login screen ──────────────────────────────── */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+  }
+  .login-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 40px; width: 100%; max-width: 400px;
+    text-align: center;
+  }
+  .login-logo {
+    width: 56px; height: 56px; background: var(--accent);
+    border-radius: 14px; margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 1.4rem; color: #fff;
+  }
+  .login-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; }
+  .login-sub   { font-size: .82rem; color: var(--muted); margin-bottom: 28px; }
+  .login-input {
+    width: 100%; padding: 12px 16px; border-radius: 10px;
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-size: .88rem; margin-bottom: 10px;
+    transition: border-color .2s; outline: none;
+    font-family: monospace;
+  }
+  .login-input:focus { border-color: var(--accent); }
+  .login-input::placeholder { color: var(--muted); font-family: 'Segoe UI', sans-serif; }
+  .login-btn {
+    width: 100%; padding: 12px; border-radius: 10px;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: .9rem;
+    border: none; cursor: pointer; margin-top: 4px; transition: .2s;
+  }
+  .login-btn:hover { opacity: .9; transform: translateY(-1px); }
+  .login-err { color: var(--red); font-size: .78rem; margin-top: 10px; display: none; }
+  .login-help { margin-top: 20px; font-size: .74rem; color: var(--muted); line-height: 1.6; }
+  .login-help a { color: var(--accent); text-decoration: none; }
+
+  /* ── App ───────────────────────────────────────── */
+  #app { display: none; }
+
+  /* ── Nav tabs ──────────────────────────────────── */
+  .nav-tabs {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; gap: 4px;
+  }
+  .tab {
+    padding: 14px 16px; font-size: .82rem; font-weight: 600; cursor: pointer;
+    border-bottom: 2px solid transparent; color: var(--muted);
+    transition: .15s; white-space: nowrap;
+  }
+  .tab:hover  { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Content ───────────────────────────────────── */
+  .content { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+  .page    { display: none; }
+  .page.active { display: block; }
+
+  /* ── Cards / stats ─────────────────────────────── */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px;
+  }
+  .stat-value { font-size: 1.8rem; font-weight: 800; }
+  .stat-label { font-size: .72rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .stat-card.green .stat-value { color: var(--green); }
+  .stat-card.accent .stat-value { color: var(--accent); }
+
+  /* ── Card ──────────────────────────────────────── */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; overflow: hidden; }
+  .card-head { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-weight: 700; font-size: .95rem; }
+
+  /* ── Table ─────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 10px 16px; font-size: .68rem; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 700; }
+  td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+
+  /* ── Badges ────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 99px; font-size: .68rem; font-weight: 700;
+  }
+  .badge.paid    { background: rgba(0,214,143,.12); color: var(--green); }
+  .badge.pending { background: rgba(246,211,101,.12); color: var(--yellow); }
+  .badge.failed  { background: rgba(255,77,109,.12); color: var(--red); }
+
+  /* ── Snippet ───────────────────────────────────── */
+  .snippet-box {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; font-family: monospace;
+    font-size: .78rem; line-height: 1.7; color: #a8a8cc;
+    position: relative; overflow: auto; white-space: pre-wrap; word-break: break-all;
+  }
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--accent); color: #fff; border: none; cursor: pointer;
+    border-radius: 8px; padding: 5px 12px; font-size: .72rem; font-weight: 700;
+  }
+  .form-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-size: .85rem; outline: none; transition: .2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  select.form-input { cursor: pointer; appearance: none; }
+  .form-row { margin-bottom: 16px; }
+
+  /* ── Empty state ───────────────────────────────── */
+  .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-text { font-size: .85rem; }
+
+  /* ── Refresh btn ───────────────────────────────── */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: .78rem; font-weight: 600; cursor: pointer; transition: .15s; }
+  .btn:hover { border-color: rgba(255,255,255,.2); }
+  .btn-accent { background: var(--accent); border-color: transparent; color: #fff; }
+  .btn-accent:hover { opacity: .9; }
+
+  /* ── Toast ─────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: rgba(30,30,45,.95); border: 1px solid var(--border);
+    backdrop-filter: blur(10px); color: var(--text);
+    padding: 12px 20px; border-radius: 12px; font-size: .82rem; font-weight: 600;
+    transform: translateY(80px); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); }
+
+  /* ── Responsive ────────────────────────────────── */
+  @media (max-width: 600px) {
+    .content { padding: 16px; }
+    .topbar  { padding: 0 16px; }
+    .nav-tabs { padding: 0 12px; }
+    .tab { padding: 12px 10px; font-size: .76rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── LOGIN ─────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">H</div>
+    <div class="login-title">Mon espace marchand</div>
+    <div class="login-sub">Connectez-vous avec votre identifiant HCS Pay</div>
+
+    <input class="login-input" id="login-mid" placeholder="mrc_xxxxxxxxxx"
+      onkeydown="if(event.key==='Enter') doLogin()" autocomplete="off" autocorrect="off" spellcheck="false" />
+
+    <button class="login-btn" onclick="doLogin()">Accéder à mon espace →</button>
+    <div class="login-err" id="login-err">Identifiant introuvable ou inactif.</div>
+
+    <div class="login-help">
+      Votre identifiant commence par <strong>mrc_</strong><br>
+      Il vous a été fourni par <a href="mailto:contact@hcs-tahiti.pf">HCS Tahiti</a>.<br>
+      <a href="mailto:contact@hcs-tahiti.pf?subject=Je n'ai pas mon identifiant HCS Pay">Je n'ai pas mon identifiant →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── APP ───────────────────────────────────────────── -->
+<div id="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo">H</div>
+      <div>
+        <div class="brand-name">HCS Pay</div>
+        <div class="brand-sub">Espace marchand</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="mid-display"></span>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="nav-tabs">
+    <div class="tab active" onclick="showTab('dashboard')">📊 Tableau de bord</div>
+    <div class="tab" onclick="showTab('orders')">📦 Mes commandes</div>
+    <div class="tab" onclick="showTab('integration')">💻 Intégration</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ── DASHBOARD ──────────────────────────────── -->
+    <div id="page-dashboard" class="page active">
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="s-total">—</div>
+          <div class="stat-label">Commandes total</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-value" id="s-paid">—</div>
+          <div class="stat-label">Commandes payées</div>
+        </div>
+        <div class="stat-card accent">
+          <div class="stat-value" id="s-revenue">—</div>
+          <div class="stat-label">Chiffre d'affaires XPF</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📦 Dernières commandes</div>
+          <button class="btn" onclick="loadOrders()">↻ Actualiser</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Produit</th><th>Client</th><th>Montant</th><th>Statut</th></tr>
+            </thead>
+            <tbody id="recent-orders">
+              <tr><td colspan="5"><div class="empty"><div class="empty-icon">⏳</div><div class="empty-text">Chargement…</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COMMANDES ──────────────────────────────── -->
+    <div id="page-orders" class="page">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📦 Toutes mes commandes</div>
+          <button class="btn" onclick="loadOrders()">↻ Actualiser</button>
+        </div>
+        <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="of-all"  onclick="filterOrders('all')"  style="background:var(--accent);border-color:transparent;color:#fff">Toutes</button>
+          <button class="btn" id="of-paid"    onclick="filterOrders('paid')">✅ Payées</button>
+          <button class="btn" id="of-pending" onclick="filterOrders('pending')">⏳ En attente</button>
+          <button class="btn" id="of-failed"  onclick="filterOrders('failed')">❌ Échouées</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Réf.</th><th>Produit</th><th>Client</th><th>Livraison</th><th>Montant</th><th>Statut</th></tr>
+            </thead>
+            <tbody id="all-orders-body">
+              <tr><td colspan="7"><div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Chargement…</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INTÉGRATION ─────────────────────────────── -->
+    <div id="page-integration" class="page">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><div class="card-title">🔑 Votre identifiant marchand</div></div>
+        <div style="padding:20px 24px">
+          <p style="color:var(--muted);font-size:.82rem;margin-bottom:12px">Votre identifiant unique HCS Pay — ne le partagez pas publiquement.</p>
+          <div style="position:relative">
+            <div class="snippet-box" id="mid-snippet" style="padding-right:90px"></div>
+            <button class="copy-btn" onclick="copyText(MERCHANT_ID)">📋 Copier</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">💻 Code à coller sur votre site</div></div>
+        <div style="padding:20px 24px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+            <div class="form-row">
+              <label class="form-label">Montant (XPF)</label>
+              <input class="form-input" id="ig-amount" value="2500" oninput="updateSnippet()" placeholder="Ex: 2500" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Nom du produit</label>
+              <input class="form-input" id="ig-product" value="Mon produit" oninput="updateSnippet()" placeholder="Ex: T-Shirt, Formation…" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Couleur principale</label>
+              <input class="form-input" id="ig-color" value="#6c63ff" oninput="updateSnippet()" type="color" style="padding:4px 8px;height:42px;cursor:pointer" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Mode</label>
+              <select class="form-input" id="ig-mode" onchange="updateSnippet()">
+                <option value="TEST">TEST (paiements fictifs)</option>
+                <option value="PRODUCTION">PRODUCTION (vrais paiements)</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="form-label" style="margin-bottom:8px">Code HTML à coller dans votre page</label>
+          <div style="position:relative">
+            <pre class="snippet-box" id="ig-output"></pre>
+            <button class="copy-btn" onclick="copySnippet()">📋 Copier</button>
+          </div>
+
+          <div style="margin-top:20px;padding:16px;background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.2);border-radius:12px;font-size:.8rem;line-height:1.7;color:var(--muted)">
+            📌 <strong style="color:var(--text)">Comment installer ?</strong><br>
+            Collez ce code dans votre page HTML, là où vous souhaitez afficher le bouton de paiement.<br>
+            Besoin d'aide ? <a href="mailto:contact@hcs-tahiti.pf" style="color:var(--accent)">contact@hcs-tahiti.pf</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WORKER = 'https://payzen-hcs.highcoffeeshirt.workers.dev';
+let MERCHANT_ID = '';
+let allOrders = [];
+let ordersFilter = 'all';
+
+// ── LOGIN ─────────────────────────────────────────────
+async function doLogin() {
+  const mid = document.getElementById('login-mid').value.trim();
+  if (!mid) return;
+  document.querySelector('.login-btn').disabled = true;
+  document.querySelector('.login-btn').textContent = 'Connexion…';
+  document.getElementById('login-err').style.display = 'none';
+
+  try {
+    const res = await fetch(WORKER + '/m/me?id=' + encodeURIComponent(mid));
+    if (!res.ok) throw new Error('not found');
+    const data = await res.json();
+    MERCHANT_ID = mid;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('mid-display').textContent = mid;
+    document.getElementById('mid-snippet').textContent = mid;
+    updateSnippet();
+    loadOrders();
+  } catch {
+    document.getElementById('login-err').style.display = 'block';
+    document.querySelector('.login-btn').disabled = false;
+    document.querySelector('.login-btn').textContent = 'Accéder à mon espace →';
+  }
+}
+
+function logout() {
+  MERCHANT_ID = '';
+  allOrders = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-mid').value = '';
+  document.getElementById('login-err').style.display = 'none';
+}
+
+// ── TABS ──────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['dashboard','orders','integration'];
+    t.classList.toggle('active', names[i] === id);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (id === 'orders') renderOrders();
+}
+
+// ── ORDERS ────────────────────────────────────────────
+async function loadOrders() {
+  try {
+    const res = await fetch(WORKER + '/m/orders?id=' + encodeURIComponent(MERCHANT_ID));
+    if (!res.ok) throw new Error('Erreur ' + res.status);
+    const data = await res.json();
+    allOrders = data.orders || [];
+
+    // Stats
+    const s = data.stats || {};
+    document.getElementById('s-total').textContent   = s.total ?? allOrders.length;
+    document.getElementById('s-paid').textContent    = s.paid  ?? 0;
+    document.getElementById('s-revenue').textContent = (s.revenue ?? 0).toLocaleString('fr-FR') + ' ';
+
+    renderRecent();
+    renderOrders();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+function renderRecent() {
+  const list = allOrders.slice(0, 5);
+  const tbody = document.getElementById('recent-orders');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucune commande pour l\'instant</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(o => orderRow(o, false)).join('');
+}
+
+function filterOrders(f) {
+  ordersFilter = f;
+  ['all','paid','pending','failed'].forEach(k => {
+    const el = document.getElementById('of-' + k);
+    if (el) { el.style.background = k === f ? 'var(--accent)' : ''; el.style.borderColor = k === f ? 'transparent' : ''; el.style.color = k === f ? '#fff' : ''; }
+  });
+  renderOrders();
+}
+
+function renderOrders() {
+  const list = ordersFilter === 'all' ? allOrders : allOrders.filter(o => o.status === ordersFilter);
+  const tbody = document.getElementById('all-orders-body');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucune commande</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(o => orderRow(o, true)).join('');
+}
+
+function orderRow(o, full) {
+  const statusMap = {
+    paid:    '<span class="badge paid">✅ Payée</span>',
+    pending: '<span class="badge pending">⏳ En attente</span>',
+    failed:  '<span class="badge failed">❌ Échouée</span>',
+  };
+  const badge = statusMap[o.status] || o.status;
+  const date  = o.created_at ? o.created_at.slice(0,10) : '—';
+  const ref   = o.id ? '<span style="font-family:monospace;font-size:.72rem;color:var(--muted)">' + o.id.slice(0,12) + '…</span>' : '—';
+  const delivery = o.delivery_type === 'delivery' ? '🚚 Livraison' : '🏪 Retrait';
+  if (full) {
+    return `<tr>
+      <td style="white-space:nowrap;color:var(--muted);font-size:.78rem">${date}</td>
+      <td>${ref}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product || '—'}</td>
+      <td style="font-size:.8rem">${o.client_name || '—'}${o.client_phone ? '<br><span style="color:var(--muted)">' + o.client_phone + '</span>' : ''}</td>
+      <td style="font-size:.78rem;color:var(--muted)">${delivery}</td>
+      <td style="font-weight:700;white-space:nowrap">${(o.amount||0).toLocaleString('fr-FR')} XPF</td>
+      <td>${badge}</td>
+    </tr>`;
+  } else {
+    return `<tr>
+      <td style="white-space:nowrap;color:var(--muted);font-size:.78rem">${date}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product || '—'}</td>
+      <td style="font-size:.8rem">${o.client_name || '—'}</td>
+      <td style="font-weight:700;white-space:nowrap">${(o.amount||0).toLocaleString('fr-FR')} XPF</td>
+      <td>${badge}</td>
+    </tr>`;
+  }
+}
+
+// ── SNIPPET ───────────────────────────────────────────
+function updateSnippet() {
+  const amount  = document.getElementById('ig-amount')?.value  || '2500';
+  const product = document.getElementById('ig-product')?.value || 'Mon produit';
+  const color   = document.getElementById('ig-color')?.value   || '#6c63ff';
+  const mode    = document.getElementById('ig-mode')?.value    || 'TEST';
+  const mid     = MERCHANT_ID || 'mrc_votre_id';
+
+  const snippet = `<!-- Widget de paiement HCS Pay -->
+<div id="hcs-pay"
+  data-merchant-id="${mid}"
+  data-amount="${amount}"
+  data-product="${escapeHtml(product)}"
+  data-color="${color}"
+  data-mode="${mode}"
+  data-shop="Ma Boutique">
+</div>
+<script src="${WORKER}/widget.js"><\/script>`;
+
+  const out = document.getElementById('ig-output');
+  if (out) out.textContent = snippet;
+}
+
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function copySnippet() {
+  const text = document.getElementById('ig-output')?.textContent || '';
+  navigator.clipboard.writeText(text).then(() => toast('📋 Code copié !'));
+}
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast('📋 Copié : ' + text));
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Enter sur login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+});
+</script>
+</body>
+</html>

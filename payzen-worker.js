@@ -140,6 +140,12 @@ export default {
     if (method === 'POST' && pathname === '/m/order/save') {
       return handleMerchantOrderSave(request, env);
     }
+    if (method === 'GET' && pathname === '/m/orders') {
+      return handleMerchantOrders(request, url, env);
+    }
+    if (method === 'GET' && pathname === '/m/me') {
+      return handleMerchantMe(request, env);
+    }
     if (method === 'GET' && pathname === '/admin/merchants') {
       return handleAdminListMerchants(request, env);
     }
@@ -774,6 +780,58 @@ async function handleMerchantOrderSave(request, env) {
   } catch (e) {
     return err('Erreur sauvegarde: ' + e.message, 500);
   }
+}
+
+// ─────────────────────────────────────────────────────────
+// GET /m/me — infos publiques du marchand (via merchantId param)
+// ─────────────────────────────────────────────────────────
+async function handleMerchantMe(request, env) {
+  const mid = new URL(request.url).searchParams.get('id');
+  if (!mid) return err('id requis');
+  const merchant = await env.HCS_DB
+    .prepare('SELECT id, name, shop_id, public_test_key, public_prod_key, active, created_at FROM merchants WHERE id = ? AND active = 1')
+    .bind(mid).first();
+  if (!merchant) return err('Marchand introuvable', 404);
+  return json({ merchant }, 200, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// GET /m/orders — commandes d'un marchand (via merchantId param)
+// ─────────────────────────────────────────────────────────
+async function handleMerchantOrders(request, url, env) {
+  const mid = url.searchParams.get('id');
+  if (!mid) return err('id requis');
+
+  // Vérifier que le marchand existe
+  const merchant = await env.HCS_DB
+    .prepare('SELECT id, name FROM merchants WHERE id = ? AND active = 1')
+    .bind(mid).first();
+  if (!merchant) return err('Marchand introuvable', 404);
+
+  const limit  = parseInt(url.searchParams.get('limit') || '50');
+  const offset = parseInt(url.searchParams.get('offset') || '0');
+
+  const { results } = await env.HCS_DB
+    .prepare(`SELECT id, created_at, status, amount, currency, product,
+                     client_name, client_email, client_phone,
+                     delivery_type, delivery_address, pickup_date, note, archived
+              FROM orders WHERE merchant_id = ? AND archived = 0
+              ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .bind(mid, limit, offset).all();
+
+  const total = await env.HCS_DB
+    .prepare('SELECT COUNT(*) as n FROM orders WHERE merchant_id = ? AND archived = 0')
+    .bind(mid).first();
+
+  const stats = await env.HCS_DB
+    .prepare(`SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
+        SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as revenue
+      FROM orders WHERE merchant_id = ? AND archived = 0`)
+    .bind(mid).first();
+
+  return json({ merchant: { id: merchant.id, name: merchant.name }, orders: results || [], total: total?.n || 0, stats }, 200, request);
 }
 
 // ─────────────────────────────────────────────────────────
