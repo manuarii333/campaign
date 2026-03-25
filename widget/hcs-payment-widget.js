@@ -207,19 +207,34 @@
   function fmt(n) { return Number(n).toLocaleString('fr-FR') + ' XPF'; }
   function uid() { return 'HCS-' + Date.now() + '-' + Math.random().toString(36).slice(2,6).toUpperCase(); }
 
+  const WORKER_BASE = WORKER_DEFAULT.replace('/payzen-token', '');
+
   // ── Classe Widget ───────────────────────────────────────────
   class HCSPaymentWidget {
     constructor(container) {
       this.container  = container;
       this.color      = container.dataset.color      || '#6c63ff';
-      this.workerUrl  = container.dataset.worker     || WORKER_DEFAULT;
-      this.secret     = container.dataset.secret     || SECRET_DEFAULT;
       this.mode       = container.dataset.mode       || 'TEST';
       this.label      = container.dataset.label      || 'Payer par carte';
       this.shop       = container.dataset.shop       || 'HCS Tahiti';
       this.freeAmount = container.dataset.freeAmount === 'true';
       this.minAmount  = parseInt(container.dataset.min)  || 100;
       this.maxAmount  = parseInt(container.dataset.max)  || 999999;
+
+      // ── Mode multi-marchand (data-merchant-id) ─────────────
+      this.merchantId = container.dataset.merchantId || null;
+      const base = (container.dataset.worker || WORKER_BASE).replace(/\/payzen-token$/, '');
+      if (this.merchantId) {
+        // Multi-marchand : pas de secret côté client, authentification via merchantId
+        this.workerUrl  = base + '/m/token';
+        this.orderUrl   = base + '/m/order/save';
+        this.secret     = null;
+      } else {
+        // Mode HCS natif (rétrocompatible)
+        this.workerUrl  = container.dataset.worker || WORKER_DEFAULT;
+        this.orderUrl   = base + '/order/save';
+        this.secret     = container.dataset.secret || SECRET_DEFAULT;
+      }
 
       // Produits
       if (container.dataset.products) {
@@ -588,10 +603,17 @@
       if (oldSdk) oldSdk.remove();
 
       try {
+        // Construit le body selon le mode (HCS natif vs multi-marchand)
+        const tokenBody = this.merchantId
+          ? { merchantId: this.merchantId, amount: total, currency:'XPF', orderId: this.orderId, mode: this.mode, customerEmail: c.email }
+          : { amount: total, currency:'XPF', orderId: this.orderId, mode: this.mode, customerEmail: c.email };
+        const tokenHeaders = { 'Content-Type':'application/json' };
+        if (this.secret) tokenHeaders['X-Worker-Secret'] = this.secret;
+
         const res = await fetch(this.workerUrl, {
           method: 'POST',
-          headers: { 'Content-Type':'application/json', 'X-Worker-Secret': this.secret },
-          body: JSON.stringify({ amount: total, currency:'XPF', orderId: this.orderId, mode: this.mode, customerEmail: c.email })
+          headers: tokenHeaders,
+          body: JSON.stringify(tokenBody)
         });
         if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Erreur serveur'); }
         const { formToken, publicKey } = await res.json();
@@ -625,17 +647,17 @@
           if (okEl)    okEl.style.display    = 'block';
           if (backEl)  backEl.style.display  = 'none';
           // Sauvegarder commande
-          fetch(this.workerUrl.replace('/payzen-token', '/order/save'), {
-            method: 'POST',
-            headers: { 'Content-Type':'application/json', 'X-Worker-Secret': this.secret },
-            body: JSON.stringify({
-              orderId: this.orderId, status:'paid', amount: total, currency:'XPF',
-              campaignName: this.shop, product: p.name,
-              client: { name: c.name, email: c.email, phone: c.phone||'' },
-              delivery: { type: d.type, address: d.address||'', pickupDate: d.pickupDate||'', deliveryDelay:3 },
-              note: c.note||''
-            })
-          }).catch(() => {});
+          const orderBody = {
+            orderId: this.orderId, status:'paid', amount: total, currency:'XPF',
+            campaignName: this.shop, product: p.name,
+            client: { name: c.name, email: c.email, phone: c.phone||'' },
+            delivery: { type: d.type, address: d.address||'', pickupDate: d.pickupDate||'', deliveryDelay:3 },
+            note: c.note||''
+          };
+          if (this.merchantId) orderBody.merchantId = this.merchantId;
+          const orderHeaders = { 'Content-Type':'application/json' };
+          if (this.secret) orderHeaders['X-Worker-Secret'] = this.secret;
+          fetch(this.orderUrl, { method:'POST', headers: orderHeaders, body: JSON.stringify(orderBody) }).catch(() => {});
           // Émettre l'event
           this.container.dispatchEvent(new CustomEvent('hcs:success', {
             bubbles: true,

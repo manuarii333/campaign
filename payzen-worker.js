@@ -133,6 +133,29 @@ export default {
       return handleDbMigrateFromKV(request, env);
     }
 
+    // ── Multi-marchands (/m/) ──────────────────────────────────
+    if (method === 'POST' && pathname === '/m/token') {
+      return handleMerchantToken(request, env);
+    }
+    if (method === 'POST' && pathname === '/m/order/save') {
+      return handleMerchantOrderSave(request, env);
+    }
+    if (method === 'GET' && pathname === '/admin/merchants') {
+      return handleAdminListMerchants(request, env);
+    }
+    if (method === 'POST' && pathname === '/admin/merchants') {
+      return handleAdminCreateMerchant(request, env);
+    }
+    if (method === 'PATCH' && pathname.startsWith('/admin/merchants/')) {
+      return handleAdminUpdateMerchant(request, pathname, env);
+    }
+    if (method === 'DELETE' && pathname.startsWith('/admin/merchants/')) {
+      return handleAdminDeleteMerchant(request, pathname, env);
+    }
+    if (method === 'POST' && pathname === '/admin/merchants/migrate') {
+      return handleMerchantsMigrate(request, env);
+    }
+
     return err('Not found', 404);
   },
 };
@@ -612,4 +635,255 @@ function getDefaultSettings() {
       pickupHours:         '08h00 – 17h00',
     })),
   };
+}
+
+// ═════════════════════════════════════════════════════════════
+// MULTI-MARCHANDS — Chiffrement AES-GCM (Web Crypto)
+// ═════════════════════════════════════════════════════════════
+
+function hexToBytes(hex) {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2)
+    bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  return bytes;
+}
+
+function bytesToHex(bytes) {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function getMasterKey(env) {
+  if (!env.MERCHANT_ENCRYPTION_KEY) throw new Error('MERCHANT_ENCRYPTION_KEY manquant');
+  const raw = hexToBytes(env.MERCHANT_ENCRYPTION_KEY);
+  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+
+async function encryptKey(plaintext, env) {
+  const key = await getMasterKey(env);
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+  return bytesToHex(iv) + ':' + bytesToHex(new Uint8Array(enc));
+}
+
+async function decryptKey(encrypted, env) {
+  const [ivHex, cipherHex] = encrypted.split(':');
+  const key = await getMasterKey(env);
+  const dec = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: hexToBytes(ivHex) },
+    key,
+    hexToBytes(cipherHex)
+  );
+  return new TextDecoder().decode(dec);
+}
+
+function generateMerchantId() {
+  const bytes = crypto.getRandomValues(new Uint8Array(9));
+  return 'mrc_' + btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+// ─────────────────────────────────────────────────────────
+// POST /m/token — formToken pour un marchand tiers
+// ─────────────────────────────────────────────────────────
+async function handleMerchantToken(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const { merchantId, amount, currency = 'XPF', orderId, customerEmail, mode = 'TEST' } = body;
+  if (!merchantId) return err('merchantId requis');
+  if (!amount || amount <= 0) return err('Montant invalide');
+
+  const merchant = await env.HCS_DB
+    .prepare('SELECT * FROM merchants WHERE id = ? AND active = 1')
+    .bind(merchantId).first();
+  if (!merchant) return err('Marchand introuvable', 404);
+
+  let apiKey;
+  try {
+    apiKey = await decryptKey(mode === 'PRODUCTION' ? merchant.enc_prod_key : merchant.enc_test_key, env);
+  } catch { return err('Erreur déchiffrement credentials', 500); }
+
+  const authHeader = 'Basic ' + btoa(merchant.shop_id + ':' + apiKey);
+  const payload = {
+    amount: Math.round(amount),
+    currency,
+    orderId: orderId || ('M-' + Date.now()),
+    customer: { email: customerEmail || '' },
+  };
+
+  const res = await fetch(PAYZEN_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: authHeader },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.answer?.formToken)
+    return json({ error: data.answer?.errorMessage || 'Erreur OSB' }, 502, request);
+
+  const publicKey = mode === 'PRODUCTION' ? merchant.public_prod_key : merchant.public_test_key;
+  return json({ formToken: data.answer.formToken, publicKey }, 200, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// POST /m/order/save — sauvegarde commande marchand tiers
+// ─────────────────────────────────────────────────────────
+async function handleMerchantOrderSave(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const { merchantId } = body;
+  if (!merchantId) return err('merchantId requis');
+
+  const merchant = await env.HCS_DB
+    .prepare('SELECT id FROM merchants WHERE id = ? AND active = 1')
+    .bind(merchantId).first();
+  if (!merchant) return err('Marchand introuvable', 404);
+
+  const o = body;
+  const now = new Date().toISOString();
+  try {
+    await env.HCS_DB.prepare(
+      `INSERT OR IGNORE INTO orders
+       (id,created_at,status,amount,currency,campaign_name,product,
+        client_name,client_email,client_phone,
+        delivery_type,delivery_address,pickup_date,delivery_delay,note,archived,merchant_id)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    ).bind(
+      o.orderId, now, o.status || 'paid', o.amount || 0, o.currency || 'XPF',
+      o.campaignName || merchant.id, o.product || '',
+      o.client?.name || '', o.client?.email || '', o.client?.phone || '',
+      o.delivery?.type || 'pickup', o.delivery?.address || '',
+      o.delivery?.pickupDate || '', o.delivery?.deliveryDelay || 3,
+      o.note || '', 0, merchantId
+    ).run();
+    return json({ success: true, orderId: o.orderId }, 200, request);
+  } catch (e) {
+    return err('Erreur sauvegarde: ' + e.message, 500);
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// GET /admin/merchants — liste des marchands
+// ─────────────────────────────────────────────────────────
+async function handleAdminListMerchants(request, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  const { results } = await env.HCS_DB
+    .prepare('SELECT id, name, shop_id, public_test_key, public_prod_key, active, created_at FROM merchants ORDER BY created_at DESC')
+    .all();
+  return json({ merchants: results || [] }, 200, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// POST /admin/merchants — créer un marchand
+// ─────────────────────────────────────────────────────────
+async function handleAdminCreateMerchant(request, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const { name, shopId, testKey, prodKey, publicTestKey, publicProdKey } = body;
+  if (!name || !shopId || !testKey || !prodKey || !publicTestKey || !publicProdKey)
+    return err('Champs requis: name, shopId, testKey, prodKey, publicTestKey, publicProdKey');
+
+  let encTestKey, encProdKey;
+  try {
+    encTestKey = await encryptKey(testKey, env);
+    encProdKey = await encryptKey(prodKey, env);
+  } catch (e) { return err('Erreur chiffrement: ' + e.message, 500); }
+
+  const id = generateMerchantId();
+  const now = new Date().toISOString();
+
+  await env.HCS_DB.prepare(
+    `INSERT INTO merchants (id, name, shop_id, enc_test_key, enc_prod_key, public_test_key, public_prod_key, active, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`
+  ).bind(id, name, shopId, encTestKey, encProdKey, publicTestKey, publicProdKey, now).run();
+
+  return json({ success: true, merchantId: id }, 201, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// PATCH /admin/merchants/:id — modifier un marchand
+// ─────────────────────────────────────────────────────────
+async function handleAdminUpdateMerchant(request, pathname, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  const id = pathname.replace('/admin/merchants/', '');
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const fields = [];
+  const values = [];
+
+  if (body.name !== undefined)   { fields.push('name = ?');   values.push(body.name); }
+  if (body.active !== undefined) { fields.push('active = ?'); values.push(body.active ? 1 : 0); }
+  if (body.testKey)  { fields.push('enc_test_key = ?'); values.push(await encryptKey(body.testKey, env)); }
+  if (body.prodKey)  { fields.push('enc_prod_key = ?'); values.push(await encryptKey(body.prodKey, env)); }
+  if (body.publicTestKey) { fields.push('public_test_key = ?'); values.push(body.publicTestKey); }
+  if (body.publicProdKey) { fields.push('public_prod_key = ?'); values.push(body.publicProdKey); }
+
+  if (!fields.length) return err('Aucun champ à modifier');
+  fields.push('updated_at = ?');
+  values.push(new Date().toISOString());
+  values.push(id);
+
+  await env.HCS_DB.prepare(
+    `UPDATE merchants SET ${fields.join(', ')} WHERE id = ?`
+  ).bind(...values).run();
+
+  return json({ success: true }, 200, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// DELETE /admin/merchants/:id — désactiver un marchand
+// ─────────────────────────────────────────────────────────
+async function handleAdminDeleteMerchant(request, pathname, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  const id = pathname.replace('/admin/merchants/', '');
+  await env.HCS_DB.prepare(
+    'UPDATE merchants SET active = 0, updated_at = ? WHERE id = ?'
+  ).bind(new Date().toISOString(), id).run();
+
+  return json({ success: true }, 200, request);
+}
+
+// ─────────────────────────────────────────────────────────
+// POST /admin/merchants/migrate — crée la table merchants
+// ─────────────────────────────────────────────────────────
+async function handleMerchantsMigrate(request, env) {
+  const secret = request.headers.get('X-Admin-Secret');
+  if (secret !== env.ADMIN_SECRET) return err('Unauthorized', 401);
+
+  try {
+    await env.HCS_DB.prepare(`
+      CREATE TABLE IF NOT EXISTS merchants (
+        id              TEXT PRIMARY KEY,
+        name            TEXT NOT NULL,
+        shop_id         TEXT NOT NULL,
+        enc_test_key    TEXT NOT NULL,
+        enc_prod_key    TEXT NOT NULL,
+        public_test_key TEXT NOT NULL,
+        public_prod_key TEXT NOT NULL,
+        active          INTEGER NOT NULL DEFAULT 1,
+        created_at      TEXT NOT NULL,
+        updated_at      TEXT
+      )
+    `).run();
+
+    // ALTER TABLE est idempotent avec la vérification d'existence
+    try {
+      await env.HCS_DB.prepare('ALTER TABLE orders ADD COLUMN merchant_id TEXT DEFAULT NULL').run();
+    } catch (_) { /* colonne déjà existante */ }
+
+    return json({ success: true, message: 'Migration OK' }, 200, request);
+  } catch (e) {
+    return err('Migration échouée: ' + e.message, 500);
+  }
 }

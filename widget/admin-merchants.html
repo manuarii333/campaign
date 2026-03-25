@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCS — Admin Marchands</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f1a; color: #e8e8f0; min-height: 100vh; }
+
+    .header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-bottom: 1px solid #2a2a4a; padding: 16px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-title { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .header-title span { background: linear-gradient(135deg,#6c63ff,#ff6584); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    .auth-bar {
+      background: #1a1a2e; border-bottom: 1px solid #2a2a4a;
+      padding: 12px 28px; display: flex; align-items: center; gap: 12px;
+    }
+    .auth-input {
+      padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a4a;
+      background: #16213e; color: #e8e8f0; font-size: .82rem; width: 240px; outline: none;
+    }
+    .auth-input:focus { border-color: #6c63ff; }
+    .btn {
+      padding: 7px 16px; border-radius: 8px; border: none;
+      font-size: .8rem; font-weight: 700; cursor: pointer; transition: all .2s;
+    }
+    .btn-primary { background: linear-gradient(135deg,#6c63ff,#ff6584); color: white; }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-secondary { background: #1e1e3a; border: 1px solid #2a2a4a; color: #9090b0; }
+    .btn-secondary:hover { border-color: #6c63ff; color: #a29bfe; }
+    .btn-danger { background: rgba(255,107,107,.15); border: 1px solid rgba(255,107,107,.3); color: #ff6b6b; }
+    .btn-danger:hover { background: rgba(255,107,107,.25); }
+    .btn-sm { padding: 5px 10px; font-size: .72rem; }
+
+    .container { max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+
+    /* Alert */
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: .8rem; margin-bottom: 16px; display: none; }
+    .alert.show { display: block; }
+    .alert-ok   { background: rgba(67,233,123,.1); border: 1px solid rgba(67,233,123,.3); color: #43e97b; }
+    .alert-err  { background: rgba(255,107,107,.1); border: 1px solid rgba(255,107,107,.3); color: #ff6b6b; }
+
+    /* Section titre */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #2a2a4a;
+    }
+    .section-title { font-size: .88rem; font-weight: 800; }
+
+    /* Table marchands */
+    .table-wrap { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; overflow: hidden; margin-bottom: 32px; }
+    table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    th { background: #16213e; padding: 10px 14px; text-align: left; font-size: .65rem; text-transform: uppercase; letter-spacing: 1px; color: #9090b0; border-bottom: 1px solid #2a2a4a; }
+    td { padding: 12px 14px; border-bottom: 1px solid #1e1e3a; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(108,99,255,.04); }
+    .empty-row td { text-align: center; color: #9090b0; padding: 32px; }
+
+    .badge-active { background: rgba(67,233,123,.15); border: 1px solid rgba(67,233,123,.3); color: #43e97b; padding: 2px 8px; border-radius: 12px; font-size: .65rem; font-weight: 700; }
+    .badge-inactive { background: rgba(255,107,107,.15); border: 1px solid rgba(255,107,107,.3); color: #ff6b6b; padding: 2px 8px; border-radius: 12px; font-size: .65rem; font-weight: 700; }
+
+    code.mid { font-family: monospace; background: #16213e; border: 1px solid #2a2a4a; padding: 3px 8px; border-radius: 4px; font-size: .72rem; color: #8be9fd; cursor: pointer; }
+    code.mid:hover { border-color: #6c63ff; }
+
+    /* Formulaire création */
+    .form-card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 24px; margin-bottom: 32px; display: none; }
+    .form-card.open { display: block; }
+    .form-title { font-size: .85rem; font-weight: 800; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { font-size: .68rem; font-weight: 600; color: #9090b0; text-transform: uppercase; letter-spacing: .5px; }
+    .form-input {
+      padding: 9px 12px; border-radius: 8px; border: 1px solid #2a2a4a;
+      background: #16213e; color: #e8e8f0; font-size: .82rem; outline: none; font-family: inherit;
+    }
+    .form-input:focus { border-color: #6c63ff; }
+    .form-input::placeholder { color: #9090b0; }
+    .form-foot { margin-top: 18px; display: flex; gap: 8px; }
+
+    /* Modal snippet */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; padding: 28px; max-width: 580px; width: 90%; }
+    .modal-title { font-size: .9rem; font-weight: 800; margin-bottom: 16px; }
+    .modal-code { background: #111122; border: 1px solid #2a2a4a; border-radius: 8px; padding: 16px; font-family: monospace; font-size: .75rem; color: #8be9fd; overflow-x: auto; white-space: pre; line-height: 1.7; }
+    .modal-foot { margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* Setup guide */
+    .setup-card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 20px; }
+    .setup-title { font-size: .82rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .setup-step { display: flex; gap: 12px; margin-bottom: 12px; font-size: .78rem; }
+    .setup-num { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg,#6c63ff,#ff6584); display: flex; align-items: center; justify-content: center; font-size: .65rem; font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+    .setup-text { color: #c0c0d8; line-height: 1.6; }
+    .setup-text code { font-family: monospace; background: #16213e; border: 1px solid #2a2a4a; padding: 1px 6px; border-radius: 4px; font-size: .72rem; color: #f6d365; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">💳 HCS · Admin <span>Marchands</span></div>
+  <div style="font-size:.72rem;color:#9090b0">Multi-marchands OSB Polynésie</div>
+</div>
+
+<!-- Auth -->
+<div class="auth-bar">
+  <input type="password" class="auth-input" id="admin-secret" placeholder="Admin secret (X-Admin-Secret)" />
+  <input type="text" class="auth-input" id="worker-url" placeholder="Worker URL" value="https://payzen-hcs.highcoffeeshirt.workers.dev" style="width:340px" />
+  <button class="btn btn-primary" onclick="loadMerchants()">🔑 Connexion</button>
+  <button class="btn btn-secondary" onclick="runMigration()">⚙️ Migration DB</button>
+</div>
+
+<div class="container">
+
+  <div id="alert" class="alert"></div>
+
+  <!-- Liste marchands -->
+  <div class="section-head">
+    <div class="section-title">Marchands enregistrés</div>
+    <button class="btn btn-primary" onclick="toggleForm()">+ Nouveau marchand</button>
+  </div>
+
+  <!-- Formulaire création -->
+  <div class="form-card" id="form-card">
+    <div class="form-title">Enregistrer un nouveau marchand</div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Nom de la boutique *</label>
+        <input class="form-input" id="f-name" placeholder="Boutique XYZ Tahiti" />
+      </div>
+      <div class="form-field">
+        <label>Shop ID PayZen *</label>
+        <input class="form-input" id="f-shopid" placeholder="41545085" />
+      </div>
+      <div class="form-field">
+        <label>Clé REST TEST * <small style="color:#ff6b6b;font-weight:400">(secrète — jamais dans le HTML)</small></label>
+        <input class="form-input" id="f-testkey" type="password" placeholder="testpassword_xxxx..." />
+      </div>
+      <div class="form-field">
+        <label>Clé REST PROD * <small style="color:#ff6b6b;font-weight:400">(secrète)</small></label>
+        <input class="form-input" id="f-prodkey" type="password" placeholder="prodpassword_xxxx..." />
+      </div>
+      <div class="form-field">
+        <label>Clé publique TEST *</label>
+        <input class="form-input" id="f-pubtestkey" placeholder="41545085:testpublickey_..." />
+      </div>
+      <div class="form-field">
+        <label>Clé publique PROD *</label>
+        <input class="form-input" id="f-pubprodkey" placeholder="41545085:publickey_..." />
+      </div>
+    </div>
+    <div class="form-foot">
+      <button class="btn btn-primary" onclick="createMerchant()">✅ Enregistrer le marchand</button>
+      <button class="btn btn-secondary" onclick="toggleForm()">Annuler</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Merchant ID</th>
+          <th>Boutique</th>
+          <th>Shop ID</th>
+          <th>Statut</th>
+          <th>Créé le</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="merchants-tbody">
+        <tr class="empty-row"><td colspan="6">— Connectez-vous pour voir les marchands —</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Setup guide -->
+  <div class="setup-card">
+    <div class="setup-title">🚀 Guide de mise en place</div>
+    <div class="setup-step">
+      <div class="setup-num">1</div>
+      <div class="setup-text">Ajouter le secret <code>MERCHANT_ENCRYPTION_KEY</code> dans Cloudflare Dashboard → Workers → payzen-hcs → Settings → Variables and Secrets (64 caractères hex — générer avec <code>openssl rand -hex 32</code>)</div>
+    </div>
+    <div class="setup-step">
+      <div class="setup-num">2</div>
+      <div class="setup-text">Cliquer sur <strong>⚙️ Migration DB</strong> ci-dessus pour créer la table <code>merchants</code> en base D1</div>
+    </div>
+    <div class="setup-step">
+      <div class="setup-num">3</div>
+      <div class="setup-text">Cliquer sur <strong>+ Nouveau marchand</strong> et renseigner les clés PayZen du marchand — elles sont chiffrées AES-256 avant stockage</div>
+    </div>
+    <div class="setup-step">
+      <div class="setup-num">4</div>
+      <div class="setup-text">Copier le <code>Merchant ID</code> généré (ex: <code>mrc_abc123</code>) et l'intégrer dans le widget HTML du marchand avec <code>data-merchant-id</code></div>
+    </div>
+    <div class="setup-step">
+      <div class="setup-num">5</div>
+      <div class="setup-text">Le marchand n'a jamais accès aux clés secrètes — seul le Worker y accède via D1 chiffré</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal snippet d'intégration -->
+<div class="modal-overlay" id="snippet-modal">
+  <div class="modal">
+    <div class="modal-title">💻 Code d'intégration</div>
+    <pre class="modal-code" id="snippet-code"></pre>
+    <div class="modal-foot">
+      <button class="btn btn-primary btn-sm" onclick="copySnippet()">📋 Copier</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const WORKER_URL = () => document.getElementById('worker-url').value.trim().replace(/\/$/, '');
+  const ADMIN_SECRET = () => document.getElementById('admin-secret').value.trim();
+
+  function showAlert(msg, type = 'ok') {
+    const el = document.getElementById('alert');
+    el.className = 'alert show alert-' + type;
+    el.textContent = msg;
+    setTimeout(() => el.classList.remove('show'), 5000);
+  }
+
+  // ── Migration DB ─────────────────────────────────────────────
+  async function runMigration() {
+    if (!ADMIN_SECRET()) { showAlert('Entrez le Admin secret', 'err'); return; }
+    try {
+      const res = await fetch(WORKER_URL() + '/admin/merchants/migrate', {
+        method: 'POST',
+        headers: { 'X-Admin-Secret': ADMIN_SECRET() }
+      });
+      const d = await res.json();
+      if (d.success) showAlert('✅ ' + d.message);
+      else showAlert('❌ ' + (d.error || 'Erreur'), 'err');
+    } catch(e) { showAlert('❌ ' + e.message, 'err'); }
+  }
+
+  // ── Charger marchands ────────────────────────────────────────
+  async function loadMerchants() {
+    if (!ADMIN_SECRET()) { showAlert('Entrez le Admin secret', 'err'); return; }
+    try {
+      const res = await fetch(WORKER_URL() + '/admin/merchants', {
+        headers: { 'X-Admin-Secret': ADMIN_SECRET() }
+      });
+      if (!res.ok) { showAlert('❌ Unauthorized', 'err'); return; }
+      const { merchants } = await res.json();
+      renderTable(merchants);
+    } catch(e) { showAlert('❌ ' + e.message, 'err'); }
+  }
+
+  function renderTable(merchants) {
+    const tbody = document.getElementById('merchants-tbody');
+    if (!merchants.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Aucun marchand enregistré</td></tr>';
+      return;
+    }
+    tbody.innerHTML = merchants.map(m => `
+      <tr>
+        <td><code class="mid" onclick="showSnippet('${m.id}')" title="Cliquer pour voir le code d'intégration">${m.id}</code></td>
+        <td style="font-weight:700">${m.name}</td>
+        <td style="font-family:monospace;font-size:.72rem;color:#9090b0">${m.shop_id}</td>
+        <td><span class="${m.active ? 'badge-active' : 'badge-inactive'}">${m.active ? '✅ Actif' : '⏸ Inactif'}</span></td>
+        <td style="color:#9090b0;font-size:.72rem">${m.created_at?.slice(0,10) || '—'}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="showSnippet('${m.id}')">💻 Code</button>
+          ${m.active
+            ? `<button class="btn btn-danger btn-sm" onclick="toggleActive('${m.id}', 0)">⏸ Désactiver</button>`
+            : `<button class="btn btn-secondary btn-sm" onclick="toggleActive('${m.id}', 1)">▶ Activer</button>`}
+        </td>
+      </tr>`).join('');
+  }
+
+  // ── Créer marchand ───────────────────────────────────────────
+  function toggleForm() {
+    document.getElementById('form-card').classList.toggle('open');
+  }
+
+  async function createMerchant() {
+    const name        = document.getElementById('f-name').value.trim();
+    const shopId      = document.getElementById('f-shopid').value.trim();
+    const testKey     = document.getElementById('f-testkey').value.trim();
+    const prodKey     = document.getElementById('f-prodkey').value.trim();
+    const publicTestKey = document.getElementById('f-pubtestkey').value.trim();
+    const publicProdKey = document.getElementById('f-pubprodkey').value.trim();
+
+    if (!name || !shopId || !testKey || !prodKey || !publicTestKey || !publicProdKey) {
+      showAlert('❌ Tous les champs sont obligatoires', 'err'); return;
+    }
+
+    try {
+      const res = await fetch(WORKER_URL() + '/admin/merchants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': ADMIN_SECRET() },
+        body: JSON.stringify({ name, shopId, testKey, prodKey, publicTestKey, publicProdKey })
+      });
+      const d = await res.json();
+      if (d.success) {
+        showAlert('✅ Marchand créé — ID : ' + d.merchantId);
+        document.getElementById('form-card').classList.remove('open');
+        ['f-name','f-shopid','f-testkey','f-prodkey','f-pubtestkey','f-pubprodkey'].forEach(id => document.getElementById(id).value = '');
+        loadMerchants();
+        showSnippet(d.merchantId);
+      } else {
+        showAlert('❌ ' + (d.error || 'Erreur création'), 'err');
+      }
+    } catch(e) { showAlert('❌ ' + e.message, 'err'); }
+  }
+
+  // ── Activer / Désactiver ─────────────────────────────────────
+  async function toggleActive(id, active) {
+    try {
+      await fetch(WORKER_URL() + '/admin/merchants/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': ADMIN_SECRET() },
+        body: JSON.stringify({ active })
+      });
+      loadMerchants();
+    } catch(e) { showAlert('❌ ' + e.message, 'err'); }
+  }
+
+  // ── Snippet d'intégration ────────────────────────────────────
+  function showSnippet(merchantId) {
+    const code = `<!-- Widget HCS · Marchand ${merchantId} -->
+<div id="hcs-pay"
+  data-merchant-id="${merchantId}"
+  data-amount="2500"
+  data-product="Mon produit"
+  data-mode="TEST"
+  data-color="#6c63ff"
+  data-shop="Ma Boutique">
+</div>
+<script src="${WORKER_URL()}/widget.js"><\/script>
+
+<!-- Multi-tarifs -->
+<div id="hcs-pay"
+  data-merchant-id="${merchantId}"
+  data-products='[
+    {"name":"Formule 1","price":1500},
+    {"name":"Formule 2","price":3000}
+  ]'
+  data-mode="TEST">
+</div>
+<script src="${WORKER_URL()}/widget.js"><\/script>`;
+
+    document.getElementById('snippet-code').textContent = code;
+    document.getElementById('snippet-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('snippet-modal').classList.remove('open');
+  }
+
+  function copySnippet() {
+    navigator.clipboard.writeText(document.getElementById('snippet-code').textContent);
+    showAlert('✅ Code copié dans le presse-papiers');
+  }
+
+  document.getElementById('snippet-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('snippet-modal')) closeModal();
+  });
+</script>
+
+</body>
+</html>
