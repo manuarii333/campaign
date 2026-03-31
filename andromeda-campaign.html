@@ -2301,14 +2301,20 @@ async function testPayzen(id) {
     const { formToken, publicKey } = await res.json();
 
     await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.id = 'pz-sdk-live';
-      s.src = 'https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
-      s.setAttribute('kr-public-key', publicKey);
-      s.setAttribute('kr-language', 'fr-FR');
-      s.onload = () => KR.setFormToken(formToken).then(resolve);
-      s.onerror = () => reject(new Error('Impossible de charger le SDK OSB'));
-      document.head.appendChild(s);
+      if (window.KR) {
+        KR.setFormConfig({'kr-public-key': publicKey, 'kr-language': 'fr-FR'})
+          .then(() => KR.setFormToken(formToken))
+          .then(resolve).catch(reject);
+      } else {
+        const s = document.createElement('script');
+        s.id = 'pz-sdk-live';
+        s.src = 'https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
+        s.setAttribute('kr-public-key', publicKey);
+        s.setAttribute('kr-language', 'fr-FR');
+        s.onload = () => KR.setFormToken(formToken).then(resolve);
+        s.onerror = () => reject(new Error('Impossible de charger le SDK OSB'));
+        document.head.appendChild(s);
+      }
     });
 
     loadingEl.style.display = 'none';
@@ -2647,12 +2653,18 @@ async function renderStep4() {
     const { formToken, publicKey } = await res.json();
 
     await new Promise((resolve,reject)=>{
-      const s=document.createElement('script'); s.id='pz-sdk-cart';
-      s.src='https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
-      s.setAttribute('kr-public-key',publicKey); s.setAttribute('kr-language','fr-FR');
-      s.onload=()=>KR.setFormToken(formToken).then(resolve);
-      s.onerror=()=>reject(new Error('SDK OSB indisponible'));
-      document.head.appendChild(s);
+      if (window.KR) {
+        KR.setFormConfig({'kr-public-key': publicKey, 'kr-language': 'fr-FR'})
+          .then(() => KR.setFormToken(formToken))
+          .then(resolve).catch(reject);
+      } else {
+        const s=document.createElement('script'); s.id='pz-sdk-cart';
+        s.src='https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
+        s.setAttribute('kr-public-key',publicKey); s.setAttribute('kr-language','fr-FR');
+        s.onload=()=>KR.setFormToken(formToken).then(resolve);
+        s.onerror=()=>reject(new Error('SDK OSB indisponible'));
+        document.head.appendChild(s);
+      }
     });
 
     document.getElementById('pz-loading').style.display='none';
