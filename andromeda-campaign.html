@@ -478,6 +478,7 @@ function render(id) {
       <div style="display:flex;gap:8px">
         <button class="btn btn-outline" onclick="exportLP(${id})">💾 Exporter LP</button>
         <button class="btn btn-primary" onclick="exportAd(${id})">📤 Exporter tout</button>
+        <button class="btn" style="background:linear-gradient(135deg,#43e97b,#00b4d8);color:#0f0f1a;font-weight:800" onclick="publishLP(${id})">🌐 Publier en ligne</button>
       </div>
     </div>
 
@@ -1183,6 +1184,103 @@ ${pzBlock}
 </body></html>`;
 
   dl(`andromeda-ad-${c.id}-${c.name.replace(/[^\w]/g,'-').toLowerCase()}.html`, html);
+}
+
+async function publishLP(id) {
+  const c = CAMPS[id];
+
+  // Récupérer ou demander le secret admin
+  let adminSecret = localStorage.getItem('hcs_admin_secret') || '';
+  if (!adminSecret) {
+    adminSecret = prompt('Clé admin Cloudflare (ADMIN_SECRET) :');
+    if (!adminSecret) return;
+    localStorage.setItem('hcs_admin_secret', adminSecret);
+  }
+
+  const workerBase = (document.getElementById('pz-worker-'+id)?.value || PZ_DEFAULTS.worker)
+    .replace(/\/payzen-token$/, '').replace(/\/m\/token$/, '');
+
+  // Générer le HTML de la LP (copie de exportLP sans le download)
+  const g = el => document.getElementById(el);
+  const headline  = g('hl-'+id)?.textContent || c.headline;
+  const subline   = g('sl-'+id)?.textContent || c.subline;
+  const badge     = g('bd-'+id)?.textContent || c.badge;
+  const cta       = g('ct-'+id)?.textContent || c.cta;
+  const cv = g('cv-'+id);
+  const cvBg = cv?.style.background || '';
+  const heroBg = cvBg.includes('url(') ? cvBg : (cvBg || c.heroGrad);
+  const ov = g('ov-'+id);
+  const ovColor = ov?.style.background || c.colors.overlay;
+  const logoEl = cv?.querySelector('.logo-overlay');
+  const logoHtml = logoEl ? `<img src="${logoEl.src}" style="position:absolute;bottom:24px;right:24px;width:80px;height:80px;object-fit:contain;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.6);z-index:5">` : '';
+  const prodImgs = c.products.map((_,i) => { const cell=g('lpimg-'+id+'-'+i); const img=cell?.querySelector('img'); return img?img.src:''; });
+
+  // Générer slug depuis le nom de la campagne
+  const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+
+  // Construire le HTML minimal de la LP
+  const prodRows = c.products.map((p,i) => `
+    <div style="background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)">
+      ${prodImgs[i] ? `<img src="${prodImgs[i]}" style="width:100%;aspect-ratio:1;object-fit:cover">` : `<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:3rem;background:rgba(255,255,255,0.05)">${p.e||'📦'}</div>`}
+      <div style="padding:14px"><div style="font-weight:700;margin-bottom:4px">${p.n}</div><div style="font-size:1.1rem;font-weight:900;color:${c.colors.primary}">${p.p}</div></div>
+    </div>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${headline} — HCS Tahiti</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f1a;color:#e8e8f0}
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:${heroBg};background-size:cover;background-position:center;position:relative;overflow:hidden}
+.hero-overlay{position:absolute;inset:0;background:${ovColor}}.hero-content{max-width:600px;position:relative;z-index:2}
+h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;margin-bottom:14px;line-height:1.1;color:white}
+.sub{font-size:1rem;opacity:.9;margin-bottom:20px;color:rgba(255,255,255,.85)}
+.badge-hp{display:inline-block;background:${c.colors.badge};color:white;padding:8px 24px;border-radius:24px;font-weight:700;margin-bottom:20px}
+.cta-btn{display:inline-block;background:white;color:${c.colors.primary};padding:14px 36px;border-radius:30px;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.section{padding:40px 20px;max-width:900px;margin:0 auto}
+.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+</style></head><body>
+<div class="hero"><div class="hero-overlay"></div>${logoHtml}
+<div class="hero-content"><span class="badge-hp">${badge}</span><h1>${headline}</h1><p class="sub">${subline}</p><a href="#produits" class="cta-btn">${cta}</a></div></div>
+<div class="section" id="produits"><h2 style="text-align:center;margin-bottom:24px;font-size:1.5rem">Nos produits</h2><div class="prods">${prodRows}</div></div>
+<div style="text-align:center;padding:40px 20px">
+  <p style="margin-bottom:16px;opacity:.7">HCS Tahiti — Paiement sécurisé OSB Polynésie</p>
+</div>
+</body></html>`;
+
+  // Afficher la modal de publication
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `<div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:14px;padding:32px;max-width:420px;width:90%;text-align:center">
+    <div style="font-size:2rem;margin-bottom:12px">🌐</div>
+    <div style="font-weight:800;font-size:1.1rem;margin-bottom:8px">Publication en cours…</div>
+    <div style="color:#9090b0;font-size:0.82rem" id="pub-status">Envoi vers Cloudflare…</div>
+    <button onclick="this.closest('[style]').remove()" style="margin-top:20px;padding:8px 24px;background:#2a2a4a;border:none;border-radius:8px;color:#e8e8f0;cursor:pointer;font-size:0.82rem">Fermer</button>
+  </div>`;
+  document.body.appendChild(modal);
+
+  try {
+    const res = await fetch(`${workerBase}/lp/publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
+      body: JSON.stringify({ slug, html, campaignName: c.name })
+    });
+    const data = await res.json();
+    if (data.success) {
+      modal.querySelector('#pub-status').innerHTML = `
+        <div style="color:#43e97b;font-weight:700;font-size:1rem;margin-bottom:12px">✅ Publiée avec succès !</div>
+        <div style="background:#0a0a14;border-radius:8px;padding:12px;margin-bottom:12px;word-break:break-all">
+          <a href="${data.url}" target="_blank" style="color:#6c63ff;text-decoration:none;font-size:0.82rem">${data.url}</a>
+        </div>
+        <button onclick="navigator.clipboard.writeText('${data.url}');this.textContent='✅ Copié !'" style="padding:7px 18px;background:#6c63ff;border:none;border-radius:8px;color:white;cursor:pointer;font-size:0.78rem;font-weight:700">📋 Copier l'URL</button>`;
+    } else {
+      modal.querySelector('#pub-status').innerHTML = `<span style="color:#ff6584">Erreur : ${data.error || 'Échec publication'}</span>`;
+      if (res.status === 401) {
+        localStorage.removeItem('hcs_admin_secret');
+        modal.querySelector('#pub-status').innerHTML += '<br><span style="font-size:0.75rem;color:#9090b0">Clé admin effacée — réessaie</span>';
+      }
+    }
+  } catch(e) {
+    modal.querySelector('#pub-status').innerHTML = `<span style="color:#ff6584">Erreur réseau : ${e.message}</span>`;
+  }
 }
 
 function exportAll() {
