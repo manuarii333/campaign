@@ -1175,8 +1175,6 @@ function exportLP(id) {
 <html lang="fr"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${headline} — HCS Tahiti</title>
-<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css">
-<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f1a;color:#e8e8f0}
@@ -1612,6 +1610,15 @@ async function renderStep4() {
     if (!res.ok) { const e=await res.json(); throw new Error(e.error||'Erreur serveur'); }
     const { formToken, publicKey } = await res.json();
 
+    // Charger CSS si absent
+    if (!document.getElementById('pz-css1')) {
+      const c1=document.createElement('link'); c1.id='pz-css1'; c1.rel='stylesheet';
+      c1.href='https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css';
+      document.head.appendChild(c1);
+      const c2=document.createElement('link'); c2.id='pz-css2'; c2.rel='stylesheet';
+      c2.href='https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css';
+      document.head.appendChild(c2);
+    }
     await new Promise((resolve,reject) => {
       if (window.KR) {
         KR.setFormConfig({'kr-public-key': publicKey, 'kr-language': 'fr-FR'})
@@ -1738,8 +1745,6 @@ function exportAd(id) {
 <html lang="fr"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${headline} — HCS Tahiti</title>
-<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css">
-<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#1c1e21}
@@ -2169,6 +2174,15 @@ async function renderStep4() {
     if (!res.ok) { const e=await res.json(); throw new Error(e.error||'Erreur serveur'); }
     const { formToken, publicKey } = await res.json();
 
+    // Charger CSS si absent
+    if (!document.getElementById('pz-css1')) {
+      const c1=document.createElement('link'); c1.id='pz-css1'; c1.rel='stylesheet';
+      c1.href='https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css';
+      document.head.appendChild(c1);
+      const c2=document.createElement('link'); c2.id='pz-css2'; c2.rel='stylesheet';
+      c2.href='https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css';
+      document.head.appendChild(c2);
+    }
     await new Promise((resolve,reject) => {
       if (window.KR) {
         KR.setFormConfig({'kr-public-key': publicKey, 'kr-language': 'fr-FR'})
