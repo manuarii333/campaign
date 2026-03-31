@@ -2846,15 +2846,34 @@ function renderLPs(pages) {
   const cards = pages.map(p => {
     const thumbUrl = `${WORKER_BASE}/thumb/${p.slug}?t=${Date.now()}`;
     const date = p.publishedAt ? new Date(p.publishedAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+
+    // Trouver la campagne correspondante pour afficher la vignette FB
+    const camp = CAMPS.find(c => {
+      const s = c.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      return s === p.slug || (p.campaignName && p.campaignName === c.name);
+    });
+    const vignette = camp ? `
+      <div style="position:relative;height:110px;background:${camp.heroGrad};overflow:hidden;border-bottom:1px solid #2a2a4a;flex-shrink:0">
+        <div style="position:absolute;inset:0;background:${camp.colors.overlay}"></div>
+        <div style="position:relative;z-index:2;padding:10px;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+          <div style="font-size:0.62rem;font-weight:900;color:white;line-height:1.2;text-shadow:0 1px 4px rgba(0,0,0,.7)">${camp.headline}</div>
+          <div style="display:inline-block;margin-top:5px;background:${camp.colors.badge};color:white;padding:2px 8px;border-radius:10px;font-size:0.52rem;font-weight:700">${camp.badge}</div>
+        </div>
+        <div style="position:absolute;top:5px;right:6px;background:rgba(0,0,0,.5);border-radius:4px;padding:2px 5px;font-size:0.52rem;color:#fff;font-weight:700">FB AD</div>
+      </div>` : `
+      <div style="height:110px;background:#0f0f1a;display:flex;align-items:center;justify-content:center;font-size:2rem;border-bottom:1px solid #2a2a4a">🌐</div>`;
+
     return `<div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
-      <div style="position:relative;height:160px;background:#0f0f1a;overflow:hidden">
+      ${vignette}
+      <div style="position:relative;height:120px;background:#0f0f1a;overflow:hidden">
         <img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div style="display:none;align-items:center;justify-content:center;height:100%;font-size:2rem">🌐</div>
+        <div style="display:none;align-items:center;justify-content:center;height:100%;font-size:0.7rem;color:#9090b0">Aperçu LP</div>
+        <div style="position:absolute;bottom:4px;left:6px;background:rgba(0,0,0,.6);border-radius:4px;padding:2px 6px;font-size:0.52rem;color:#fff">LP</div>
       </div>
-      <div style="padding:14px;flex:1;display:flex;flex-direction:column;gap:8px">
-        <div style="font-weight:700;font-size:0.88rem">${p.campaignName || p.slug}</div>
-        <div style="font-size:0.68rem;color:var(--text-secondary)">Publié : ${date}</div>
-        <code style="font-size:0.6rem;color:#43e97b;word-break:break-all">${p.url || ''}</code>
+      <div style="padding:12px;flex:1;display:flex;flex-direction:column;gap:6px">
+        <div style="font-weight:700;font-size:0.85rem">${p.campaignName || p.slug}</div>
+        <div style="font-size:0.65rem;color:var(--text-secondary)">Publié : ${date}</div>
+        <code style="font-size:0.58rem;color:#43e97b;word-break:break-all">${p.url || ''}</code>
         <div style="display:flex;gap:6px;margin-top:auto">
           <a href="${p.url}" target="_blank" style="flex:1;text-align:center;padding:6px;background:#6c63ff;color:white;border-radius:6px;font-size:0.7rem;font-weight:700;text-decoration:none">🌐 Ouvrir</a>
           <button onclick="navigator.clipboard.writeText('${p.url}');showToast('✅ Copié !')" style="flex:1;padding:6px;background:#1e1e3a;border:1px solid #2a2a4a;color:#ccc;border-radius:6px;font-size:0.7rem;cursor:pointer">📋 Copier</button>
