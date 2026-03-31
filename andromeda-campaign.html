@@ -127,11 +127,26 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-prim
 .lp-hero-content p { font-size: 0.8rem; color: rgba(255,255,255,0.85); margin-bottom: 14px; }
 .lp-cta { display: inline-block; padding: 10px 24px; border-radius: 22px; background: white; font-weight: 700; font-size: 0.82rem; cursor: pointer; border: none; }
 .lp-prods { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 12px; }
-.lp-prod { background: var(--bg-panel); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.lp-prod { background: var(--bg-panel); border-radius: var(--radius-sm); overflow: hidden; border: 2px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; }
+.lp-prod:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108,99,255,0.2); }
+.lp-prod.selected { border-color: var(--accent); background: rgba(108,99,255,0.08); box-shadow: 0 0 0 3px rgba(108,99,255,0.25); }
+.lp-prod .prod-check { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); display: none; align-items: center; justify-content: center; font-size: 0.65rem; color: white; font-weight: 900; }
+.lp-prod.selected .prod-check { display: flex; }
 .lp-prod-img { aspect-ratio: 1; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 26px; }
 .lp-prod-info { padding: 7px; }
 .lp-prod-name { font-size: 0.68rem; font-weight: 600; }
 .lp-prod-price { font-size: 0.68rem; font-weight: 700; }
+
+/* CTA paiement après sélection */
+.prod-cta-bar { margin-top: 12px; border-radius: var(--radius-sm); overflow: hidden; display: none; animation: slideUp 0.25s ease; }
+.prod-cta-bar.visible { display: block; }
+@keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.prod-selected-recap { background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.3); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.prod-selected-name { font-size: 0.75rem; font-weight: 700; }
+.prod-selected-price { font-size: 0.9rem; font-weight: 900; }
+.btn-add-cart { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border: none; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 800; cursor: pointer; letter-spacing: 0.5px; transition: all 0.2s; box-shadow: 0 4px 16px rgba(108,99,255,0.4); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-add-cart:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.5); }
+.btn-add-cart:active { transform: translateY(0); }
 .lp-feats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
 .lp-feat { background: var(--bg-panel); padding: 10px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border); }
 .lp-feat-icon { font-size: 18px; margin-bottom: 5px; }
@@ -155,9 +170,181 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-prim
 ::-webkit-scrollbar-track { background: var(--bg-secondary); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* CART BUTTON */
+.cart-btn { position: relative; background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.4); color: var(--accent); border-radius: var(--radius-sm); padding: 7px 14px; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: all 0.2s; }
+.cart-btn:hover { background: rgba(108,99,255,0.3); }
+.cart-badge { position: absolute; top: -6px; right: -6px; background: var(--accent-2); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.6rem; font-weight: 800; display: flex; align-items: center; justify-content: center; display: none; }
+
+/* CHECKOUT DRAWER */
+.cart-drawer { position: fixed; top: 0; right: -500px; width: 460px; height: 100vh; background: var(--bg-secondary); border-left: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: -12px 0 48px rgba(0,0,0,0.5); }
+.cart-drawer.open { right: 0; }
+.cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 999; display: none; backdrop-filter: blur(2px); }
+.cart-overlay.open { display: block; }
+.cart-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.cart-head-title { font-size: 0.88rem; font-weight: 800; }
+.cart-close { background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.cart-close:hover { color: var(--text-primary); background: var(--bg-card); }
+
+/* Steps */
+.checkout-steps { display: flex; padding: 12px 18px; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.ck-step { flex: 1; text-align: center; position: relative; }
+.ck-step::after { content:''; position:absolute; top:14px; left:50%; width:100%; height:2px; background:var(--border); z-index:0; }
+.ck-step:last-child::after { display:none; }
+.ck-dot { width:28px; height:28px; border-radius:50%; border:2px solid var(--border); background:var(--bg-panel); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; margin:0 auto 4px; position:relative; z-index:1; transition:all 0.2s; color:var(--text-secondary); }
+.ck-step.done .ck-dot { background:var(--accent-3); border-color:var(--accent-3); color:#0f0f1a; }
+.ck-step.done::after { background:var(--accent-3); }
+.ck-step.active .ck-dot { background:var(--accent); border-color:var(--accent); color:white; box-shadow:0 0 12px rgba(108,99,255,0.5); }
+.ck-label { font-size:0.58rem; color:var(--text-secondary); font-weight:600; }
+.ck-step.active .ck-label { color:var(--accent); }
+.ck-step.done .ck-label { color:var(--accent-3); }
+
+.cart-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
+.cart-empty { text-align: center; color: var(--text-secondary); padding: 40px 20px; font-size: 0.85rem; }
+
+/* Items */
+.cart-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 8px; }
+.cart-item-icon { font-size: 22px; flex-shrink: 0; width: 36px; text-align: center; }
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name { font-size: 0.75rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-item-camp { font-size: 0.62rem; color: var(--text-secondary); }
+.cart-item-price { font-size: 0.78rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.cart-item-qty { display: flex; align-items: center; gap: 6px; }
+.qty-btn { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+.qty-val { font-size: 0.8rem; font-weight: 700; min-width: 18px; text-align: center; }
+.cart-rm { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; padding: 4px; border-radius: 4px; }
+.cart-rm:hover { color: var(--accent-2); }
+
+/* Cart total bar */
+.cart-total-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; }
+.cart-total-label { font-size: 0.78rem; color: var(--text-secondary); }
+.cart-total-val { font-size: 1.1rem; font-weight: 900; color: var(--accent); }
+
+/* Section titles in form */
+.ck-section-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); margin-bottom: 10px; }
+.ck-field { margin-bottom: 10px; }
+.ck-field label { display: block; font-size: 0.68rem; color: var(--text-secondary); margin-bottom: 4px; }
+.ck-finput { width: 100%; padding: 9px 11px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-primary); font-size: 0.8rem; outline: none; transition: border-color 0.2s; font-family: inherit; }
+.ck-finput:focus { border-color: var(--accent); }
+.ck-finput::placeholder { color: var(--text-secondary); }
+.ck-textarea { resize: vertical; min-height: 64px; }
+
+/* Delivery toggle */
+.delivery-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+.dlv-opt { flex: 1; padding: 12px 8px; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-panel); cursor: pointer; text-align: center; transition: all 0.2s; }
+.dlv-opt:hover { border-color: var(--accent); }
+.dlv-opt.selected { border-color: var(--accent); background: rgba(108,99,255,0.12); }
+.dlv-icon { font-size: 22px; margin-bottom: 5px; }
+.dlv-label { font-size: 0.72rem; font-weight: 700; }
+.dlv-sub { font-size: 0.62rem; color: var(--text-secondary); margin-top: 2px; }
+
+/* Footer nav */
+.cart-foot { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+.btn-checkout { flex: 1; padding: 11px; background: linear-gradient(135deg,var(--accent),var(--accent-2)); color: white; border: none; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+.btn-checkout:hover { opacity: 0.9; }
+.btn-checkout:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-back { padding: 11px 16px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-secondary); border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Payment step */
+.pz-loading { text-align: center; color: var(--text-secondary); font-size: 0.8rem; padding: 20px; }
+.pz-error { background: rgba(255,80,80,0.12); border: 1px solid rgba(255,80,80,0.3); border-radius: 8px; padding: 10px 14px; color: #ff6b6b; font-size: 0.78rem; margin-top: 10px; display: none; }
+.pz-ok { background: rgba(67,233,123,0.12); border: 1px solid rgba(67,233,123,0.3); border-radius: 12px; padding: 24px; text-align: center; color: #43e97b; }
+.pz-ok h3 { font-size: 1.1rem; margin-bottom: 6px; }
+.pz-ok p { font-size: 0.8rem; color: var(--text-secondary); }
+.order-recap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; }
+.order-recap-row { display: flex; justify-content: space-between; font-size: 0.75rem; padding: 3px 0; }
+.order-recap-row span:first-child { color: var(--text-secondary); }
+.order-recap-row span:last-child { font-weight: 600; }
+
+/* ORDERS VIEW */
+.orders-view { padding: 16px; }
+.orders-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: gap; gap: 10px; }
+.orders-title { font-size: 1.1rem; font-weight: 800; }
+.orders-login { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; max-width: 400px; margin: 60px auto; text-align: center; }
+.orders-login h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+.orders-login p { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 20px; }
+.orders-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.filter-btn { padding: 5px 12px; border-radius: 16px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.filter-btn.active, .filter-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.order-table { width: 100%; border-collapse: collapse; }
+.order-table th { text-align: left; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.order-table td { padding: 10px; border-bottom: 1px solid rgba(42,42,74,0.5); font-size: 0.78rem; vertical-align: middle; }
+.order-table tr:hover td { background: var(--bg-card); }
+.status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; }
+.s-paid { background: rgba(67,233,123,0.15); color: #43e97b; border: 1px solid rgba(67,233,123,0.3); }
+.s-pending { background: rgba(246,211,101,0.15); color: #f6d365; border: 1px solid rgba(246,211,101,0.3); }
+.s-processing { background: rgba(79,172,254,0.15); color: #4facfe; border: 1px solid rgba(79,172,254,0.3); }
+.s-delivered { background: rgba(108,99,255,0.15); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+.s-cancelled { background: rgba(255,101,132,0.15); color: var(--accent-2); border: 1px solid rgba(255,101,132,0.3); }
+.order-detail-btn { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 6px; padding: 4px 10px; font-size: 0.68rem; cursor: pointer; }
+.order-detail-btn:hover { border-color: var(--accent); color: var(--accent); }
+.order-detail-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; display: none; }
+.order-detail-panel.open { display: block; }
+.status-select { background: var(--bg-panel); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 0.72rem; cursor: pointer; }
+
+/* TRACKING VIEW */
+.tracking-view { max-width: 520px; margin: 40px auto; padding: 0 16px; }
+.tracking-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.tracking-card h3 { font-size: 1rem; font-weight: 800; margin-bottom: 14px; }
+.track-result { margin-top: 16px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; display: none; }
+.track-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(42,42,74,0.5); font-size: 0.8rem; }
+.track-row:last-child { border-bottom: none; }
+.track-label { color: var(--text-secondary); }
+.track-val { font-weight: 600; }
+
+/* SIDEBAR extras */
+.sidebar-sep { height: 1px; background: var(--border); margin: 8px 4px; }
+.sidebar-action { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; margin-bottom: 2px; border: 1px solid transparent; }
+.sidebar-action:hover { background: var(--bg-card); }
+.sidebar-action.active { background: var(--bg-card); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.sidebar-action .sa-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.sidebar-action .sa-label { font-size: 0.76rem; font-weight: 600; }
+.sa-badge { background: var(--accent-2); color: white; border-radius: 10px; font-size: 0.58rem; font-weight: 800; padding: 1px 6px; margin-left: auto; }
+
+/* PLANNING VIEW */
+.planning-view { padding: 16px; }
+.planning-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 18px; }
+.pstat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+.pstat-val { font-size: 1.4rem; font-weight: 900; }
+.pstat-label { font-size: 0.62rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.planning-day { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
+.planning-day-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; }
+.planning-day-head:hover { background: var(--bg-panel); }
+.planning-day-date { font-weight: 800; font-size: 0.88rem; }
+.planning-day-date.today { color: var(--accent); }
+.planning-day-date.overdue { color: var(--accent-2); }
+.planning-day-meta { display: flex; gap: 10px; align-items: center; font-size: 0.72rem; color: var(--text-secondary); }
+.planning-day-body { border-top: 1px solid var(--border); }
+.planning-order-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid rgba(42,42,74,0.4); font-size: 0.76rem; flex-wrap: wrap; }
+.planning-order-row:last-child { border-bottom: none; }
+.planning-order-row .po-ref { color: var(--accent); font-family: monospace; font-size: 0.7rem; flex-shrink: 0; }
+.planning-order-row .po-client { font-weight: 600; flex: 1; min-width: 80px; }
+.planning-order-row .po-product { color: var(--text-secondary); flex: 2; min-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.planning-order-row .po-amount { color: var(--accent-3); font-weight: 700; flex-shrink: 0; }
+.planning-day-empty { padding: 20px; text-align: center; color: var(--text-secondary); font-size: 0.78rem; }
+
+/* TOAST NOTIFICATION */
+#hcs-toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.hcs-toast { background: var(--bg-card); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 18px; font-size: 0.82rem; font-weight: 600; color: var(--text-primary); box-shadow: 0 4px 20px rgba(0,0,0,0.5); animation: toastIn 0.3s ease; max-width: 320px; pointer-events: auto; }
+.hcs-toast.alert { border-color: var(--accent-2); }
+@keyframes toastIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 </style>
 </head>
 <body>
+
+<!-- Modal PayZen Test -->
+<div id="pz-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center">
+  <div style="background:#1a1a2e;border-radius:16px;padding:28px;width:420px;max-width:95vw;box-shadow:0 8px 48px rgba(0,0,0,0.6);position:relative">
+    <button onclick="closePzModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:#aaa;font-size:1.4rem;cursor:pointer">✕</button>
+    <div style="font-size:0.9rem;color:#ccc;margin-bottom:16px;text-align:center;font-weight:600">🧪 Test Paiement OSB</div>
+    <div id="pz-modal-loading" style="text-align:center;color:#aaa;font-size:0.8rem;padding:16px">Connexion à OSB…</div>
+    <div id="pz-modal-error" style="display:none;background:rgba(255,80,80,0.12);border:1px solid rgba(255,80,80,0.3);border-radius:8px;padding:10px;color:#ff6b6b;font-size:0.8rem;text-align:center"></div>
+    <div class="kr-embedded" id="pz-modal-form" style="display:none"></div>
+    <div id="pz-modal-ok" style="display:none;background:rgba(67,233,123,0.12);border:1px solid rgba(67,233,123,0.3);border-radius:8px;padding:18px;text-align:center;color:#43e97b;font-size:0.9rem">✅ Paiement TEST accepté !</div>
+  </div>
+</div>
 
 <header class="app-header">
   <div class="logo-icon">🌌</div>
@@ -170,8 +357,26 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-prim
   <div class="header-actions">
     <button class="btn btn-outline" onclick="exportAll()">⬇️ Exporter tout</button>
     <button class="btn btn-primary" onclick="alert('Templates prêts ! Importez dans Facebook Ads Manager.')">🚀 Lancer campagne</button>
+    <button class="cart-btn" onclick="openCart()" title="Voir le panier">🛒 Panier <span class="cart-badge" id="cart-badge">0</span></button>
   </div>
 </header>
+
+<!-- CHECKOUT DRAWER -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-head">
+    <span class="cart-head-title" id="ck-head-title">🛒 Commande</span>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="checkout-steps" id="ck-steps">
+    <div class="ck-step active" id="ck-s1"><div class="ck-dot">1</div><div class="ck-label">Panier</div></div>
+    <div class="ck-step" id="ck-s2"><div class="ck-dot">2</div><div class="ck-label">Contact</div></div>
+    <div class="ck-step" id="ck-s3"><div class="ck-dot">3</div><div class="ck-label">Livraison</div></div>
+    <div class="ck-step" id="ck-s4"><div class="ck-dot">4</div><div class="ck-label">Paiement</div></div>
+  </div>
+  <div class="cart-body" id="cart-body"></div>
+  <div class="cart-foot" id="cart-foot"></div>
+</div>
 
 <div class="app-body">
   <aside class="sidebar">
@@ -299,150 +504,6 @@ const CAMPS = [
 
 let current = 0;
 
-// ============================================================
-// STATE — Persistance de l'état édité par campagne
-// ============================================================
-const STATE = {};
-
-function saveState(id) {
-  const g = el => document.getElementById(el);
-  const cv = g('cv-'+id);
-  if (!cv) return; // workspace pas encore rendu, rien à sauver
-
-  // Textes → mise à jour de CAMPS[] pour que render() les réutilise
-  const txt = t => g(t+'-'+id)?.textContent;
-  if (txt('hl')) CAMPS[id].headline   = txt('hl');
-  if (txt('sl')) CAMPS[id].subline    = txt('sl');
-  if (txt('bd')) CAMPS[id].badge      = txt('bd');
-  if (txt('ct')) CAMPS[id].cta        = txt('ct');
-  if (txt('dm')) CAMPS[id].domain     = txt('dm');
-  if (txt('lt')) CAMPS[id].linktitle  = txt('lt');
-
-  // Image de fond (data URL ou dégradé)
-  const bgStyle = cv.style.background || '';
-  const bgUrl = bgStyle.includes('url(') ? bgStyle : null;
-
-  // Logo sur la vignette
-  const logoEl = cv.querySelector('.logo-overlay');
-
-  // Overlay couleur/opacité
-  const ovBg = g('ov-'+id)?.style.background || null;
-
-  // Images produits (data URLs depuis lpimg-id-i)
-  const prodImgs = [0,1,2].map(i => {
-    const cell = g('lpimg-'+id+'-'+i);
-    return cell?.querySelector('img')?.src || null;
-  });
-
-  STATE[id] = {
-    bgUrl,
-    logoUrl:    logoEl ? logoEl.src : null,
-    logoLeft:   logoEl ? logoEl.style.left   : null,
-    logoTop:    logoEl ? logoEl.style.top    : null,
-    logoBottom: logoEl ? logoEl.style.bottom : null,
-    logoRight:  logoEl ? logoEl.style.right  : null,
-    ovBg,
-    url:        g('url-'+id)?.value       || '',
-    pzAmount:   g('pz-amount-'+id)?.value || '',
-    pzWorker:   g('pz-worker-'+id)?.value || '',
-    pzSecret:   g('pz-secret-'+id)?.value || '',
-    pzMode:     g('pz-mode-'+id)?.value   || 'TEST',
-    prodImgs,
-  };
-}
-
-function restoreState(id) {
-  const s = STATE[id];
-  const g = el => document.getElementById(el);
-  const cv = g('cv-'+id);
-  if (!cv || !s) return;
-
-  // --- Image de fond ---
-  if (s.bgUrl) {
-    cv.style.background = s.bgUrl;
-    const match = s.bgUrl.match(/url\(["']?([^"')]+)["']?\)/);
-    const dataUrl = match ? match[1] : null;
-    if (dataUrl) {
-      const thumb = g('bg-thumb-'+id);
-      const preview = g('bg-preview-'+id);
-      if (thumb)   thumb.src = dataUrl;
-      if (preview) preview.style.display = 'block';
-    }
-    const ov = g('ov-'+id);
-    if (ov) ov.style.display = 'block';
-    const lpHeroDiv = g('lp-hero-'+id);
-    if (lpHeroDiv) {
-      lpHeroDiv.style.background = s.bgUrl;
-      const lpHeroBg = g('lp-hero-bg-'+id);
-      if (lpHeroBg) lpHeroBg.style.opacity = '0';
-    }
-  }
-
-  // --- Overlay ---
-  if (s.ovBg) {
-    const ov = g('ov-'+id);
-    if (ov) ov.style.background = s.ovBg;
-  }
-
-  // --- Logo ---
-  if (s.logoUrl) {
-    const img = document.createElement('img');
-    img.src = s.logoUrl;
-    img.className = 'logo-overlay';
-    img.style.cssText = 'position:absolute;bottom:10px;right:10px;width:64px;height:64px;object-fit:contain;z-index:5;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.5);cursor:move;';
-    if (s.logoLeft)   { img.style.left = s.logoLeft;   img.style.right  = 'auto'; }
-    if (s.logoTop)    { img.style.top  = s.logoTop;    img.style.bottom = 'auto'; }
-    if (s.logoBottom) img.style.bottom = s.logoBottom;
-    if (s.logoRight)  img.style.right  = s.logoRight;
-    cv.appendChild(img);
-    // Drag & drop du logo restauré
-    let dx=0,dy=0,x=0,y=0;
-    img.addEventListener('mousedown', ev2 => {
-      ev2.stopPropagation();
-      x=ev2.clientX; y=ev2.clientY;
-      document.onmousemove=em=>{dx=x-em.clientX;dy=y-em.clientY;x=em.clientX;y=em.clientY;img.style.left=(img.offsetLeft-dx)+'px';img.style.top=(img.offsetTop-dy)+'px';img.style.bottom='auto';img.style.right='auto';};
-      document.onmouseup=()=>{document.onmousemove=null;document.onmouseup=null;};
-    });
-    const logoThumb = g('logo-thumb-'+id);
-    const logoPreview = g('logo-preview-'+id);
-    if (logoThumb)   logoThumb.src = s.logoUrl;
-    if (logoPreview) logoPreview.style.display = 'flex';
-    const lpHero = g('lp-hero-'+id);
-    if (lpHero) {
-      const lpLogo = document.createElement('img');
-      lpLogo.src = s.logoUrl;
-      lpLogo.className = 'lp-logo-overlay';
-      lpLogo.style.cssText = 'position:absolute;bottom:12px;right:12px;width:72px;height:72px;object-fit:contain;z-index:5;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.6);';
-      lpHero.appendChild(lpLogo);
-    }
-  }
-
-  // --- Champs PayZen ---
-  if (g('pz-amount-'+id)) g('pz-amount-'+id).value = s.pzAmount;
-  if (g('pz-worker-'+id)) g('pz-worker-'+id).value = s.pzWorker;
-  if (g('pz-secret-'+id)) g('pz-secret-'+id).value = s.pzSecret;
-  if (g('pz-mode-'+id))   g('pz-mode-'+id).value   = s.pzMode;
-  if (g('url-'+id))       g('url-'+id).value        = s.url;
-
-  // --- Images produits ---
-  if (s.prodImgs) {
-    s.prodImgs.forEach((src, i) => {
-      if (!src) return;
-      const cell = document.querySelector(`#pg-${id} .logo-cell:nth-child(${i+1})`);
-      if (cell) cell.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:contain"><input type="file" id="pi-${id}-${i}" accept="image/*" style="display:none" onchange="loadProdImg(event,${id},${i})">`;
-      const lpImg = g('lpimg-'+id+'-'+i);
-      if (lpImg) lpImg.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover">`;
-    });
-  }
-}
-
-// Config PayZen par défaut (partagée toutes campagnes)
-const PZ_DEFAULTS = {
-  worker: 'https://payzen-hcs.highcoffeeshirt.workers.dev',
-  secret: 'hcs-payzen-2026',
-  mode: 'TEST'
-};
-
 // Build sidebar
 function buildSidebar() {
   const el = document.getElementById('sidebarList');
@@ -455,15 +516,39 @@ function buildSidebar() {
       </div>
       <div class="item-dot ${c.active?'dot-on':'dot-off'}"></div>
     </div>
-  `).join('');
+  `).join('') + `
+  <div class="sidebar-sep"></div>
+  <div class="sidebar-label">Gestion</div>
+  <div class="sidebar-action" id="nav-orders" onclick="showOrders()">
+    <div class="sa-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7)">📦</div>
+    <div><div class="sa-label">Commandes</div><div class="item-tag">Admin · Suivi</div></div>
+    <span class="sa-badge" id="orders-badge" style="display:none">0</span>
+  </div>
+  <div class="sidebar-action" id="nav-planning" onclick="showPlanning()">
+    <div class="sa-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c)">📅</div>
+    <div><div class="sa-label">Planning</div><div class="item-tag">Retrait · Livraison</div></div>
+  </div>
+  <div class="sidebar-action" id="nav-track" onclick="showTracking()">
+    <div class="sa-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">🔍</div>
+    <div><div class="sa-label">Suivi commande</div><div class="item-tag">Espace client</div></div>
+  </div>
+  <div class="sidebar-action" id="nav-archive" onclick="showArchive()">
+    <div class="sa-icon" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)">🗃️</div>
+    <div><div class="sa-label">Archivées</div><div class="item-tag">Historique</div></div>
+  </div>
+  <div class="sidebar-action" id="nav-lps" onclick="showLPs()">
+    <div class="sa-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7)">🌐</div>
+    <div><div class="sa-label">LPs publiées</div><div class="item-tag">Pages en ligne</div></div>
+  </div>`;
 }
 
 function select(id) {
-  saveState(current); // ← sauver l'état de la campagne actuelle avant de changer
+  saveState(current); // sauvegarder l'état du template actuel avant de changer
   document.querySelectorAll('.camp-item').forEach(el => el.classList.remove('active'));
   document.getElementById('si-'+id).classList.add('active');
   current = id;
   render(id);
+  restoreState(id);
 }
 
 function render(id) {
@@ -477,8 +562,9 @@ function render(id) {
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-outline" onclick="exportLP(${id})">💾 Exporter LP</button>
+        <button class="btn btn-outline" style="background:rgba(167,139,250,.15);border-color:#a78bfa;color:#a78bfa" onclick="previewLP(${id})">👁️ Prévisualiser</button>
+        <button class="btn btn-outline" style="background:rgba(67,233,123,.12);border-color:#43e97b;color:#43e97b" onclick="publishLP(${id})">🚀 Publier</button>
         <button class="btn btn-primary" onclick="exportAd(${id})">📤 Exporter tout</button>
-        <button class="btn" style="background:linear-gradient(135deg,#43e97b,#00b4d8);color:#0f0f1a;font-weight:800" onclick="publishLP(${id})">🌐 Publier en ligne</button>
       </div>
     </div>
 
@@ -487,10 +573,13 @@ function render(id) {
       <div class="ad-wrap">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span style="font-size:0.8rem;font-weight:700">Vignette Facebook Ads</span>
-          <div class="preview-tabs">
-            <button class="ptab active" onclick="fmtSwitch(this,'1/1',${id})">1:1</button>
-            <button class="ptab" onclick="fmtSwitch(this,'1.91/1',${id})">Paysage</button>
-            <button class="ptab" onclick="fmtSwitch(this,'9/16',${id})">Story</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="preview-tabs">
+              <button class="ptab active" onclick="fmtSwitch(this,'1/1',${id})">1:1</button>
+              <button class="ptab" onclick="fmtSwitch(this,'1.91/1',${id})">Paysage</button>
+              <button class="ptab" onclick="fmtSwitch(this,'9/16',${id})">Story</button>
+            </div>
+            <button id="btn-png-${id}" class="btn btn-outline" style="font-size:0.68rem;padding:4px 10px;background:rgba(246,211,101,.15);border-color:#f6d365;color:#f6d365" onclick="exportVignettePNG(${id})">🖼️ PNG</button>
           </div>
         </div>
         <div class="fb-mock">
@@ -583,8 +672,9 @@ function render(id) {
           ${c.products.map((p,i)=>`
             <div class="prod-row">
               <span>${p.e}</span>
-              <input class="finput" style="flex:1" value="${p.n}" placeholder="Nom" oninput="CAMPS[${id}].products[${i}].n=this.value">
-              <input class="finput" style="width:95px" value="${p.p}" placeholder="Prix" oninput="CAMPS[${id}].products[${i}].p=this.value">
+              <input class="finput" style="flex:1" value="${p.n}" placeholder="Nom" oninput="CAMPS[${id}].products[${i}].n=this.value; const _n=document.querySelector('#lprod-${id}-${i} .lp-prod-name'); if(_n)_n.textContent=this.value; const _sn=document.getElementById('prod-sel-name-${id}'); if(_sn&&document.getElementById('lprod-${id}-${i}')?.classList.contains('selected'))_sn.textContent=this.value;">
+              <input class="finput" style="width:95px" value="${p.p}" placeholder="Prix" oninput="CAMPS[${id}].products[${i}].p=this.value; const _p=document.querySelector('#lprod-${id}-${i} .lp-prod-price'); if(_p)_p.textContent=this.value; const _sp=document.getElementById('prod-sel-price-${id}'); if(_sp&&document.getElementById('lprod-${id}-${i}')?.classList.contains('selected'))_sp.textContent=this.value;">
+              <button onclick="addToCart(${id},${i})" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;color:white;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;white-space:nowrap" title="Ajouter au panier">🛒 +</button>
             </div>
           `).join('')}
         </div>
@@ -622,15 +712,20 @@ function render(id) {
           <div class="frow"><label class="flabel">Montant (XPF)</label>
             <input class="finput" type="number" min="0" placeholder="ex: 2500" id="pz-amount-${id}"></div>
           <div class="frow"><label class="flabel">URL Worker PayZen</label>
-            <input class="finput" placeholder="https://worker.workers.dev/payzen-token" id="pz-worker-${id}" value="${PZ_DEFAULTS.worker}"></div>
+            <input class="finput" placeholder="https://worker.workers.dev/payzen-token" value="https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token" id="pz-worker-${id}"></div>
           <div class="frow"><label class="flabel">Secret Worker</label>
-            <input class="finput" type="password" placeholder="votre_secret" id="pz-secret-${id}" value="${PZ_DEFAULTS.secret}"></div>
+            <input class="finput" type="password" placeholder="votre_secret" value="richesse" id="pz-secret-${id}"></div>
           <div class="frow"><label class="flabel">Mode</label>
             <select class="finput" id="pz-mode-${id}" style="background:var(--bg-panel);color:var(--text)">
-              <option value="TEST" ${PZ_DEFAULTS.mode==='TEST'?'selected':''}>TEST</option>
-              <option value="PRODUCTION" ${PZ_DEFAULTS.mode==='PRODUCTION'?'selected':''}>PRODUCTION</option>
+              <option value="TEST">TEST</option>
+              <option value="PRODUCTION">PRODUCTION</option>
             </select></div>
           <div style="font-size:0.62rem;color:var(--text-secondary);margin-top:4px">Laissez vide pour ne pas inclure le paiement dans l'export</div>
+          <button class="btn btn-primary" style="width:100%;margin-top:10px;font-size:0.75rem" onclick="testPayzen(${id})">🧪 Tester le paiement</button>
+          <div id="pz-live-${id}" style="margin-top:12px;display:none">
+            <div id="pz-live-loading-${id}" style="text-align:center;color:var(--text-secondary);font-size:0.78rem;padding:12px">Connexion à OSB…</div>
+            <div id="pz-live-error-${id}" style="display:none;background:rgba(255,80,80,0.12);border:1px solid rgba(255,80,80,0.3);border-radius:8px;padding:10px;color:#ff6b6b;font-size:0.75rem;text-align:center"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -640,15 +735,14 @@ function render(id) {
       <div class="lp-head">
         <span>🌐 Landing Page — ${c.name}</span>
         <div style="display:flex;gap:7px">
-          <button class="btn btn-outline" style="font-size:0.7rem;padding:5px 10px" onclick="alert('Ouvre le mode plein écran éditeur')">↗️ Plein écran</button>
+          <button class="btn btn-outline" style="font-size:0.7rem;padding:5px 10px;background:rgba(167,139,250,.15);border-color:#a78bfa;color:#a78bfa" onclick="previewLP(${id})">👁️ Prévisualiser</button>
+          <button class="btn btn-outline" style="font-size:0.7rem;padding:5px 10px;background:rgba(246,211,101,.15);border-color:#f6d365;color:#f6d365" onclick="exportLPImage(${id})">🖼️ Exporter PNG</button>
           <button class="btn btn-primary" style="font-size:0.7rem;padding:5px 10px" onclick="exportLP(${id})">📤 Exporter HTML</button>
         </div>
       </div>
       <div class="lp-body">${renderLP(c)}</div>
     </div>
   `;
-
-  restoreState(id);
 
   // Drag & drop
   const cv = document.getElementById('cv-'+id);
@@ -683,16 +777,29 @@ function renderLP(c) {
     </div>`;
 
   const prods = `
-    <div class="lp-prods">
-      ${c.products.map(p=>`
-        <div class="lp-prod">
-          <div class="lp-prod-img" id="lpimg-${c.id}-${c.products.indexOf(p)}">${p.e}</div>
+    <div class="lp-prods" id="prods-grid-${c.id}">
+      ${c.products.map((p,i)=>`
+        <div class="lp-prod" id="lprod-${c.id}-${i}" onclick="selectProd(${c.id},${i})">
+          <div class="prod-check">✓</div>
+          <div class="lp-prod-img" id="lpimg-${c.id}-${i}">${p.e}</div>
           <div class="lp-prod-info">
             <div class="lp-prod-name">${p.n}</div>
             <div class="lp-prod-price" style="color:${c.colors.primary}">${p.p}</div>
           </div>
         </div>
       `).join('')}
+    </div>
+    <div class="prod-cta-bar" id="prod-cta-${c.id}">
+      <div class="prod-selected-recap">
+        <div>
+          <div style="font-size:0.62rem;color:var(--text-secondary);margin-bottom:2px">Produit sélectionné</div>
+          <div class="prod-selected-name" id="prod-sel-name-${c.id}">—</div>
+        </div>
+        <div class="prod-selected-price" style="color:${c.colors.primary}" id="prod-sel-price-${c.id}">—</div>
+      </div>
+      <button class="btn-add-cart" onclick="goToCheckout(${c.id})">
+        🛒 Commander &amp; Payer par carte
+      </button>
     </div>`;
 
   if (c.ltype === 'subscription') {
@@ -760,12 +867,26 @@ function applyGrad(g, id) {
 }
 
 function loadBg(e, id) { const f = e.target.files[0]; if (f) applyBg(f, id); }
+function compressImage(dataUrl, maxW, maxH, quality, cb) {
+  const img = new Image();
+  img.onload = () => {
+    let w = img.width, h = img.height;
+    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+    if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    cb(c.toDataURL('image/jpeg', quality));
+  };
+  img.src = dataUrl;
+}
+
 function applyBg(file, id) {
   const r = new FileReader();
   r.onload = ev => {
+    const raw = ev.target.result;
     const cv = document.getElementById('cv-'+id);
-    // Une seule propriété background shorthand — écrase le dégradé inline sans conflit
-    cv.style.background = `url(${ev.target.result}) center/cover no-repeat`;
+    cv.style.background = `url(${raw}) center/cover no-repeat`;
     const ov = document.getElementById('ov-'+id);
     if (ov) ov.style.display = 'block';
     const hint = cv.querySelector('.upload-hint');
@@ -778,10 +899,15 @@ function applyBg(file, id) {
     // Synchroniser le hero de la landing page
     const lpHeroDiv = document.getElementById('lp-hero-'+id);
     if (lpHeroDiv) {
-      lpHeroDiv.style.background = `url(${ev.target.result}) center/cover no-repeat`;
+      lpHeroDiv.style.background = `url(${raw}) center/cover no-repeat`;
       const lpHeroBg = document.getElementById('lp-hero-bg-'+id);
       if (lpHeroBg) lpHeroBg.style.opacity = '0';
     }
+    // Compresser avant de stocker (max 900px, 70% qualité → ~150KB)
+    compressImage(raw, 900, 900, 0.7, compressed => {
+      saveBg(id, compressed);
+    });
+    saveState(id);
   };
   r.readAsDataURL(file);
 }
@@ -792,13 +918,18 @@ function clearBg(id) {
   if (cv) cv.style.background = c.heroGrad;
   const preview = document.getElementById('bg-preview-'+id);
   if (preview) preview.style.display = 'none';
-  // Remettre le dégradé sur la LP
   const lpHeroDiv = document.getElementById('lp-hero-'+id);
   if (lpHeroDiv) {
     lpHeroDiv.style.background = '';
     const lpHeroBg = document.getElementById('lp-hero-bg-'+id);
     if (lpHeroBg) { lpHeroBg.style.opacity = '1'; lpHeroBg.style.background = c.heroGrad; }
   }
+  // Effacer bgDataUrl du storage
+  try {
+    const all = JSON.parse(localStorage.getItem(IMG_STORE) || '{}');
+    if (all[id]) { delete all[id].bgDataUrl; localStorage.setItem(IMG_STORE, JSON.stringify(all)); }
+  } catch(_) {}
+  saveState(id);
 }
 
 function loadLogo(e, id) {
@@ -848,6 +979,7 @@ function loadLogo(e, id) {
       lpLogo.style.cssText = 'position:absolute;bottom:12px;right:12px;width:72px;height:72px;object-fit:contain;z-index:5;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.6);';
       lpHero.appendChild(lpLogo);
     }
+    saveState(id);
   };
   r.readAsDataURL(f);
 }
@@ -857,9 +989,9 @@ function clearLogo(id) {
   if (cv) { const old = cv.querySelector('.logo-overlay'); if (old) old.remove(); }
   const logoPreview = document.getElementById('logo-preview-'+id);
   if (logoPreview) logoPreview.style.display = 'none';
-  // Retirer aussi depuis la LP
   const lpHero = document.getElementById('lp-hero-'+id);
   if (lpHero) { const old = lpHero.querySelector('.lp-logo-overlay'); if (old) old.remove(); }
+  saveState(id);
 }
 
 function loadProdImg(e, id, idx) {
@@ -867,10 +999,21 @@ function loadProdImg(e, id, idx) {
   if (!f) return;
   const r = new FileReader();
   r.onload = ev => {
+    const raw = ev.target.result;
     const cell = document.querySelector(`#pg-${id} .logo-cell:nth-child(${idx+1})`);
-    if (cell) cell.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:contain"><input type="file" id="pi-${id}-${idx}" accept="image/*" style="display:none" onchange="loadProdImg(event,${id},${idx})">`;
+    if (cell) cell.innerHTML = `<img src="${raw}" style="width:100%;height:100%;object-fit:contain"><input type="file" id="pi-${id}-${idx}" accept="image/*" style="display:none" onchange="loadProdImg(event,${id},${idx})">`;
     const lpImg = document.getElementById(`lpimg-${id}-${idx}`);
-    if (lpImg) lpImg.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    if (lpImg) lpImg.innerHTML = `<img src="${raw}" style="width:100%;height:100%;object-fit:cover">`;
+    // Compresser avant stockage
+    compressImage(raw, 600, 600, 0.7, compressed => {
+      try {
+        const all = JSON.parse(localStorage.getItem(IMG_STORE) || '{}');
+        if (!all[id]) all[id] = {};
+        if (!all[id].prods) all[id].prods = [];
+        all[id].prods[idx] = compressed;
+        localStorage.setItem(IMG_STORE, JSON.stringify(all));
+      } catch(e2) { console.warn('⚠️ localStorage plein (prod):', e2.message); }
+    });
   };
   r.readAsDataURL(f);
 }
@@ -886,87 +1029,279 @@ function loadLogoCell(e, campId, cellIdx) {
   r.readAsDataURL(f);
 }
 
+async function publishLP(id) {
+  if (!adminSecret) {
+    showToast('🔐 Connecte-toi en admin pour publier (section Commandes)', true);
+    return;
+  }
+  const c = CAMPS[id];
+  showToast('⏳ Génération et publication en cours…');
+
+  // Génère le HTML via le même mécanisme que previewLP
+  let generatedHtml = null;
+  const _orig = window._dl_override;
+  window._dl_override = (name, content) => { generatedHtml = content; };
+  exportLP(id);
+  window._dl_override = _orig;
+
+  if (!generatedHtml) { showToast('❌ Erreur génération HTML', true); return; }
+
+  const slug = `${c.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${id}`;
+
+  try {
+    const res = await fetch(`${WORKER_BASE}/lp/publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
+      body: JSON.stringify({ slug, html: generatedHtml, campaignName: c.name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+
+    // Sauvegarde l'URL publiée pour cette campagne
+    const urls = JSON.parse(localStorage.getItem('hcs_published_urls') || '{}');
+    urls[id] = data.url;
+    localStorage.setItem('hcs_published_urls', JSON.stringify(urls));
+
+    showToast(`✅ Publié ! ${data.url}`);
+
+    // Génère et sauvegarde la vignette depuis le canvas de prévisualisation
+    try {
+      const cv = document.getElementById('cv-' + id);
+      if (cv) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 300; canvas.height = 300;
+        const ctx = canvas.getContext('2d');
+        // Copie le style background du canvas source
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        const bg = cv.style.background;
+        // Dessine un fond coloré + nom campagne comme fallback
+        ctx.fillStyle = c.colors?.primary || '#1a1a2e';
+        ctx.fillRect(0, 0, 300, 300);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.name, 150, 140);
+        ctx.font = '14px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillText(c.badge || '', 150, 175);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        await fetch(`${WORKER_BASE}/admin/thumb`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
+          body: JSON.stringify({ slug, dataUrl, campaignName: c.name }),
+        });
+      }
+    } catch(_) { /* non-bloquant */ }
+
+    showPublishSuccess(c.name, data.url);
+  } catch(e) {
+    showToast('❌ Erreur publication : ' + e.message, true);
+  }
+}
+
+function showPublishSuccess(name, url) {
+  const existing = document.getElementById('publish-modal');
+  if (existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'publish-modal';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+  div.innerHTML = `
+    <div style="background:#1a1a2e;border:1px solid #43e97b;border-radius:16px;padding:32px;max-width:480px;width:90%;text-align:center">
+      <div style="font-size:2rem;margin-bottom:12px">🚀</div>
+      <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:8px">${name} — Publiée !</h3>
+      <p style="font-size:0.78rem;color:#9090b0;margin-bottom:20px">Ta landing page est en ligne et accessible via HTTPS. Le paiement PayZen fonctionne.</p>
+      <div style="background:#0f0f1a;border:1px solid #2a2a4a;border-radius:8px;padding:12px;font-size:0.75rem;font-family:monospace;color:#43e97b;word-break:break-all;margin-bottom:20px">${url}</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="navigator.clipboard.writeText('${url}');showToast('✅ Lien copié !')" style="padding:9px 18px;background:#43e97b;color:#0f0f1a;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.82rem">📋 Copier le lien</button>
+        <a href="${url}" target="_blank" style="padding:9px 18px;background:#6c63ff;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.82rem;text-decoration:none">🌐 Ouvrir</a>
+        <button onclick="document.getElementById('publish-modal').remove()" style="padding:9px 18px;background:#1e1e3a;color:#9090b0;border:1px solid #2a2a4a;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.82rem">Fermer</button>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+  div.addEventListener('click', e => { if (e.target === div) div.remove(); });
+}
+
+function previewLP(id) {
+  // Génère le même HTML que exportLP mais l'ouvre dans preview.html
+  const c = CAMPS[id];
+  // Réutilise exportLP pour générer le HTML, puis intercepte dl()
+  const _dl = window._dl_override;
+  window._dl_override = (name, html) => {
+    localStorage.setItem('hcs_lp_preview', JSON.stringify({ name: c.name, html }));
+    window._dl_override = _dl;
+    window.open('preview.html', '_blank');
+  };
+  exportLP(id);
+}
+
 function exportLP(id) {
   const c = CAMPS[id];
-
-  // --- Lire les valeurs ACTUELLES du DOM (modifiées par l'éditeur) ---
   const g = el => document.getElementById(el);
+
   const headline  = g('hl-'+id)?.textContent || c.headline;
   const subline   = g('sl-'+id)?.textContent || c.subline;
   const badge     = g('bd-'+id)?.textContent || c.badge;
   const cta       = g('ct-'+id)?.textContent || c.cta;
   const domain    = g('dm-'+id)?.textContent || c.domain;
   const linktitle = g('lt-'+id)?.textContent || c.linktitle;
-  const url       = g('url-'+id)?.value?.trim() || '';
-  // Bouton CTA : lien externe si URL saisie, sinon ancre vers les produits
-  const ctaTag = url
-    ? `<a href="${url}" target="_blank" rel="noopener" class="cta-btn">${cta}</a>`
-    : `<a href="#produits" class="cta-btn">${cta}</a>`;
-  // Prix premier produit (chiffres seulement)
-  const firstPrice = (c.products[0]?.p || '2500').replace(/[^\d]/g,'') || '2500';
-  const checkoutUrl = `https://manuarii333.github.io/campaign/checkout.html?product=${encodeURIComponent(c.products[0]?.n||c.name)}&price=${firstPrice}&campaign=${encodeURIComponent(c.name)}&mode=TEST`;
-  const orderBtnTag = `<a href="${checkoutUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:14px;padding:16px 40px;background:linear-gradient(135deg,#6c63ff,#ff6584);color:white;border-radius:30px;font-weight:800;font-size:1rem;text-decoration:none;box-shadow:0 8px 30px rgba(108,99,255,0.4)">🛒 Commander maintenant</a>`;
 
-  // Image de fond (canvas ou dégradé original)
-  const cv = g('cv-'+id);
-  const cvBg = cv?.style.background || '';
-  const heroBg = cvBg.includes('url(') ? cvBg : (cvBg || c.heroGrad);
-
-  // Couleur de la superposition (opacité modifiée via slider)
-  const ov = g('ov-'+id);
+  const cv      = g('cv-'+id);
+  const cvBg    = cv?.style.background || '';
+  const heroBg  = cvBg.includes('url(') ? cvBg : (cvBg || c.heroGrad);
+  const ov      = g('ov-'+id);
   const ovColor = ov?.style.background || c.colors.overlay;
+  const logoEl  = cv?.querySelector('.logo-overlay');
+  const logoHtml = logoEl ? `<img src="${logoEl.src}" style="position:absolute;bottom:24px;right:24px;width:80px;height:80px;object-fit:contain;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.6);z-index:5">` : '';
 
-  // Logo overlay éventuel
-  const logoEl = cv?.querySelector('.logo-overlay');
-  const logoHtml = logoEl
-    ? `<img src="${logoEl.src}" style="position:absolute;bottom:24px;right:24px;width:80px;height:80px;object-fit:contain;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.6);z-index:5">`
-    : '';
-
-  // Images produits uploadées
   const prodImgs = c.products.map((_,i) => {
-    const cell = g('lpimg-'+id+'-'+i);
-    const img = cell?.querySelector('img');
+    const img = g('lpimg-'+id+'-'+i)?.querySelector('img');
     return img ? img.src : '';
   });
 
+  const workerUrl = g('pz-worker-'+id)?.value?.trim() || 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token';
+  const workerSecret = g('pz-secret-'+id)?.value?.trim() || 'richesse';
+  const workerMode   = g('pz-mode-'+id)?.value || 'TEST';
+  const primary  = c.colors.primary;
+  const badge2   = c.colors.badge;
+
+  const prodsJson = JSON.stringify(c.products.map((p,i)=>({
+    e:p.e, n:p.n, p:p.p,
+    price: parseInt(p.p.replace(/[^\d]/g,''))||0,
+    img: prodImgs[i]||''
+  })));
+
   const html = `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${headline} — HCS Tahiti</title>
+<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css">
+<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f1a;color:#e8e8f0}
+/* HERO */
 .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:${heroBg};background-size:cover;background-position:center;position:relative;overflow:hidden}
 .hero-overlay{position:absolute;inset:0;background:${ovColor}}
 .hero-content{max-width:600px;position:relative;z-index:2}
 h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;margin-bottom:14px;line-height:1.1;color:white}
-.sub{font-size:1rem;opacity:0.9;margin-bottom:20px;color:rgba(255,255,255,0.85)}
-.badge-hp{display:inline-block;background:${c.colors.badge};color:white;padding:8px 24px;border-radius:24px;font-weight:700;margin-bottom:20px}
-.cta-btn{display:inline-block;background:white;color:${c.colors.primary};padding:14px 36px;border-radius:30px;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,0.3);cursor:pointer;border:none;transition:transform 0.15s,box-shadow 0.15s}
-.cta-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
-.section{padding:40px 20px;max-width:900px;margin:0 auto}
-.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-.prod{background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)}
-.prod-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:48px;background:rgba(255,255,255,0.05)}
+.sub{font-size:1rem;opacity:.9;margin-bottom:20px;color:rgba(255,255,255,.85)}
+.badge-hp{display:inline-block;background:${badge2};color:white;padding:8px 24px;border-radius:24px;font-weight:700;margin-bottom:20px}
+.cta-hero{display:inline-block;background:white;color:${primary};padding:14px 36px;border-radius:30px;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,.3);cursor:pointer;border:none;transition:transform .15s}
+.cta-hero:hover{transform:translateY(-2px)}
+/* SECTION */
+.section{padding:40px 20px;max-width:960px;margin:0 auto}
+.section-title{font-size:1.1rem;font-weight:800;margin-bottom:20px;text-align:center}
+/* PRODUITS */
+.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:12px}
+.prod{background:rgba(255,255,255,.05);border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.1);cursor:pointer;transition:all .2s;position:relative}
+.prod:hover{border-color:${primary};transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.prod.selected{border-color:${primary};background:rgba(108,99,255,.1);box-shadow:0 0 0 4px ${primary}33}
+.prod-check{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:${primary};display:none;align-items:center;justify-content:center;font-size:.7rem;color:white;font-weight:900}
+.prod.selected .prod-check{display:flex}
+.prod-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:48px;background:rgba(255,255,255,.04)}
 .prod-img img{width:100%;height:100%;object-fit:cover}
 .prod-info{padding:14px}
-.prod-name{font-weight:600;margin-bottom:6px}
-.prod-price{color:${c.colors.primary};font-weight:700;font-size:1.1rem}
-.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:24px}
-.feat{background:rgba(255,255,255,0.05);border-radius:10px;padding:18px;text-align:center;border:1px solid rgba(255,255,255,0.1)}
-.feat-icon{font-size:30px;margin-bottom:8px}
-.feat-txt{font-size:0.82rem;color:rgba(255,255,255,0.7)}
+.prod-name{font-weight:600;margin-bottom:6px;font-size:.9rem}
+.prod-price{color:${primary};font-weight:800;font-size:1.1rem}
+/* CTA AFTER SELECTION */
+.cta-bar{margin-top:14px;display:none;animation:slideUp .25s ease}
+.cta-bar.show{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.cta-recap{background:rgba(255,255,255,.05);border:1px solid ${primary}55;border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.cta-recap-name{font-size:.85rem;font-weight:700}
+.cta-recap-price{font-size:1.1rem;font-weight:900;color:${primary}}
+.btn-order{width:100%;padding:16px;background:linear-gradient(135deg,${primary},#ff6584);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.5px;box-shadow:0 6px 20px ${primary}66;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-order:hover{transform:translateY(-2px);box-shadow:0 10px 30px ${primary}88}
+/* FEATURES */
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:28px}
+.feat{background:rgba(255,255,255,.05);border-radius:10px;padding:18px;text-align:center;border:1px solid rgba(255,255,255,.1)}
+.feat-icon{font-size:28px;margin-bottom:8px}
+.feat-txt{font-size:.82rem;color:rgba(255,255,255,.7)}
+/* PLANS */
 .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:20px}
-.plan{background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.1)}
-.plan.feat{border-color:${c.colors.primary};background:rgba(108,99,255,0.1)}
-.plan-name{font-weight:700;color:${c.colors.primary};margin-bottom:8px}
+.plan{background:rgba(255,255,255,.05);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .2s}
+.plan:hover,.plan.selected{border-color:${primary};background:${primary}1a;transform:translateY(-2px)}
+.plan-name{font-weight:700;color:${primary};margin-bottom:8px}
 .plan-price{font-size:1.4rem;font-weight:900;margin-bottom:4px}
-.plan-per{font-size:0.72rem;color:rgba(255,255,255,0.5);margin-bottom:12px}
-.plan ul{list-style:none;font-size:0.75rem;color:rgba(255,255,255,0.6);text-align:left}
+.plan-per{font-size:.72rem;color:rgba(255,255,255,.5);margin-bottom:12px}
+.plan ul{list-style:none;font-size:.75rem;color:rgba(255,255,255,.6);text-align:left}
 .plan ul li::before{content:'✓ ';color:#43e97b}
 .plan ul li{padding:3px 0}
-footer{text-align:center;padding:28px;color:rgba(255,255,255,0.4);font-size:0.82rem;border-top:1px solid rgba(255,255,255,0.1)}
+footer{text-align:center;padding:28px;color:rgba(255,255,255,.4);font-size:.82rem;border-top:1px solid rgba(255,255,255,.1)}
+/* CHECKOUT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:900;display:none;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:600px){.modal-overlay.open{align-items:center}}
+.checkout-modal{background:#1a1a2e;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 48px rgba(0,0,0,.6)}
+@media(min-width:600px){.checkout-modal{border-radius:20px;max-height:88vh}}
+.modal-head{padding:16px 20px;border-bottom:1px solid #2a2a4a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:.95rem;font-weight:800}
+.modal-close{background:none;border:none;color:#9090b0;font-size:1.3rem;cursor:pointer;padding:4px 8px;border-radius:6px}
+.modal-close:hover{color:#e8e8f0;background:#16213e}
+/* Steps */
+.ck-steps{display:flex;padding:12px 20px;border-bottom:1px solid #2a2a4a;flex-shrink:0}
+.ck-step{flex:1;text-align:center;position:relative}
+.ck-step::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:2px;background:#2a2a4a;z-index:0}
+.ck-step:last-child::after{display:none}
+.ck-dot{width:26px;height:26px;border-radius:50%;border:2px solid #2a2a4a;background:#1e1e3a;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;margin:0 auto 4px;position:relative;z-index:1;transition:all .2s;color:#9090b0}
+.ck-step.done .ck-dot{background:#43e97b;border-color:#43e97b;color:#0f0f1a}
+.ck-step.done::after{background:#43e97b}
+.ck-step.active .ck-dot{background:${primary};border-color:${primary};color:white;box-shadow:0 0 12px ${primary}66}
+.ck-lbl{font-size:.58rem;color:#9090b0;font-weight:600}
+.ck-step.active .ck-lbl{color:${primary}}
+.ck-step.done .ck-lbl{color:#43e97b}
+.modal-body{flex:1;overflow-y:auto;padding:20px}
+.modal-foot{padding:14px 20px;border-top:1px solid #2a2a4a;display:flex;gap:8px;flex-shrink:0}
+/* Form elements */
+.ck-section{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9090b0;margin-bottom:10px}
+.ck-field{margin-bottom:12px}
+.ck-field label{display:block;font-size:.7rem;color:#9090b0;margin-bottom:4px}
+.ck-input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #2a2a4a;background:#1e1e3a;color:#e8e8f0;font-size:.85rem;outline:none;font-family:inherit;transition:border-color .2s}
+.ck-input:focus{border-color:${primary}}
+.ck-input::placeholder{color:#9090b0}
+.ck-textarea{resize:vertical;min-height:72px}
+/* Delivery */
+.dlv-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.dlv-opt{padding:14px 10px;border-radius:10px;border:2px solid #2a2a4a;background:#1e1e3a;cursor:pointer;text-align:center;transition:all .2s}
+.dlv-opt:hover{border-color:${primary}}
+.dlv-opt.sel{border-color:${primary};background:${primary}1a}
+.dlv-icon{font-size:24px;margin-bottom:6px}
+.dlv-label{font-size:.78rem;font-weight:700}
+.dlv-sub{font-size:.62rem;color:#9090b0;margin-top:2px}
+/* Recap */
+.recap-box{background:#16213e;border:1px solid #2a2a4a;border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.recap-row{display:flex;justify-content:space-between;font-size:.78rem;padding:4px 0;border-bottom:1px solid #2a2a4a22}
+.recap-row:last-child{border:none;padding-top:8px;margin-top:4px;border-top:1px solid #2a2a4a}
+.recap-row span:first-child{color:#9090b0}
+.recap-row span:last-child{font-weight:600}
+/* Buttons */
+.btn-next{flex:1;padding:12px;background:linear-gradient(135deg,${primary},#ff6584);color:white;border:none;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .2s}
+.btn-next:hover{opacity:.9}
+.btn-next:disabled{opacity:.4;cursor:not-allowed}
+.btn-prev{padding:12px 16px;background:#1e1e3a;border:1px solid #2a2a4a;color:#9090b0;border-radius:8px;font-size:.85rem;cursor:pointer}
+.btn-prev:hover{border-color:${primary};color:${primary}}
+/* Payment */
+.pz-loading{text-align:center;color:#9090b0;font-size:.85rem;padding:24px}
+.pz-error{background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.3);border-radius:8px;padding:12px;color:#ff6b6b;font-size:.8rem;margin-top:10px;display:none}
+.pz-ok{background:rgba(67,233,123,.12);border:1px solid rgba(67,233,123,.3);border-radius:12px;padding:28px;text-align:center;color:#43e97b;display:none}
+.pz-ok h3{font-size:1.2rem;margin-bottom:8px}
+.pz-ok p{font-size:.82rem;color:#9090b0;line-height:1.6}
+/* ── Formulaire paiement OSB ── */
+.kr-embedded{background:#fff!important;border-radius:14px!important;padding:16px 14px!important;margin-top:4px!important;box-shadow:0 2px 16px rgba(0,0,0,.18)!important}
+.kr-embedded .kr-field{margin-bottom:12px!important}
+.kr-embedded .kr-label{color:#333!important;font-size:.75rem!important;font-weight:600!important;margin-bottom:4px!important;display:block!important}
+.kr-embedded .kr-field-element{background:#f8f9fa!important;border:1.5px solid #dee2e6!important;border-radius:8px!important;padding:10px 12px!important;color:#1a1a1a!important;font-size:.9rem!important;width:100%!important;box-sizing:border-box!important}
+.kr-embedded .kr-field-element:focus,.kr-embedded .kr-field-element.kr-focus{border-color:${primary}!important;box-shadow:0 0 0 3px ${primary}22!important;outline:none!important}
+.kr-embedded .kr-field-element.kr-error{border-color:#dc3545!important}
+.kr-embedded .kr-error-message{color:#dc3545!important;font-size:.72rem!important;margin-top:3px!important}
+.kr-embedded .kr-payment-button{background:linear-gradient(135deg,${primary},#ff6584)!important;border-radius:10px!important;font-weight:800!important;font-size:.9rem!important;padding:13px!important;width:100%!important;border:none!important;color:#fff!important;cursor:pointer!important;margin-top:4px!important;letter-spacing:.5px!important;box-shadow:0 4px 16px ${primary}55!important}
+.kr-embedded .kr-payment-button:hover{opacity:.92!important;transform:translateY(-1px)!important}
+.kr-embedded .kr-form-error{background:#fff5f5!important;border:1px solid #ffc9c9!important;border-radius:8px!important;padding:10px 12px!important;color:#c92a2a!important;font-size:.78rem!important;margin-top:8px!important}
 </style></head>
 <body>
+
+<!-- HERO -->
 <div class="hero">
   <div class="hero-overlay"></div>
   ${logoHtml}
@@ -974,24 +1309,380 @@ footer{text-align:center;padding:28px;color:rgba(255,255,255,0.4);font-size:0.82
     <div class="badge-hp">${badge}</div>
     <h1>${headline}</h1>
     <p class="sub">${subline}</p>
-    ${ctaTag}
-    ${orderBtnTag}
+    <a href="#produits" class="cta-hero">${cta}</a>
   </div>
 </div>
+
+<!-- PRODUITS -->
 <div class="section" id="produits">
-  <div class="prods">
-    ${c.products.map((p,i)=>`<div class="prod"><div class="prod-img">${prodImgs[i]?`<img src="${prodImgs[i]}">`:(p.e||'')}</div><div class="prod-info"><div class="prod-name">${p.n}</div><div class="prod-price">${p.p}</div></div></div>`).join('')}
+  <div class="section-title">Choisissez votre produit</div>
+  <div class="prods" id="prods-grid">
+    ${c.products.map((p,i)=>`
+    <div class="prod" id="prod-${i}" onclick="selectProd(${i})">
+      <div class="prod-check">✓</div>
+      <div class="prod-img">${prodImgs[i]?`<img src="${prodImgs[i]}">`:(p.e||'')}</div>
+      <div class="prod-info">
+        <div class="prod-name">${p.n}</div>
+        <div class="prod-price">${p.p}</div>
+      </div>
+    </div>`).join('')}
   </div>
+
+  <div class="cta-bar" id="cta-bar">
+    <div class="cta-recap">
+      <div>
+        <div style="font-size:.7rem;color:#9090b0;margin-bottom:3px">Produit sélectionné</div>
+        <div class="cta-recap-name" id="sel-name"></div>
+      </div>
+      <div class="cta-recap-price" id="sel-price"></div>
+    </div>
+    <button class="btn-order" onclick="openCheckout()">
+      🛒 Commander &amp; Payer par carte
+    </button>
+  </div>
+
   <div class="feats">
     ${c.features.map(f=>`<div class="feat"><div class="feat-icon">${f.i}</div><div class="feat-txt">${f.t}</div></div>`).join('')}
   </div>
-  ${c.ltype==='subscription'?`<div class="plans">
-    <div class="plan"><div class="plan-name">STARTER</div><div class="plan-price">1 800 XPF</div><div class="plan-per">/mois</div><ul><li>Services de base</li><li>Points bonus x1</li><li>Newsletter exclusive</li></ul></div>
-    <div class="plan feat"><div class="plan-name">PRO ⭐</div><div class="plan-price">3 500 XPF</div><div class="plan-per">/mois</div><ul><li>Tous services inclus</li><li>Points bonus x2</li><li>1 logo offert/mois</li><li>Avant-première offres</li></ul></div>
-    <div class="plan"><div class="plan-name">PREMIUM 👑</div><div class="plan-price">5 500 XPF</div><div class="plan-per">/mois</div><ul><li>Accès illimité</li><li>Points bonus x4</li><li>3 logos/mois</li><li>Conseiller dédié</li></ul></div>
+  ${c.ltype==='subscription'?`
+  <div class="plans" id="plans-grid">
+    <div class="plan" onclick="selectPlan(0,1800,'STARTER')"><div class="plan-name">STARTER</div><div class="plan-price">1 800 XPF</div><div class="plan-per">/mois</div><ul><li>Services de base</li><li>Points bonus x1</li><li>Newsletter exclusive</li></ul></div>
+    <div class="plan" onclick="selectPlan(1,3500,'PRO ⭐')"><div class="plan-name">PRO ⭐</div><div class="plan-price">3 500 XPF</div><div class="plan-per">/mois</div><ul><li>Tous services inclus</li><li>Points bonus x2</li><li>1 logo offert/mois</li><li>Avant-première offres</li></ul></div>
+    <div class="plan" onclick="selectPlan(2,5500,'PREMIUM 👑')"><div class="plan-name">PREMIUM 👑</div><div class="plan-price">5 500 XPF</div><div class="plan-per">/mois</div><ul><li>Accès illimité</li><li>Points bonus x4</li><li>3 logos/mois</li><li>Conseiller dédié</li></ul></div>
   </div>`:''}
 </div>
+
 <footer>© 2026 HCS Tahiti — ${domain} | ${linktitle}</footer>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="checkout-modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-title">🛒 Commande</span>
+      <button class="modal-close" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="ck-steps">
+      <div class="ck-step active" id="s1"><div class="ck-dot">1</div><div class="ck-lbl">Panier</div></div>
+      <div class="ck-step" id="s2"><div class="ck-dot">2</div><div class="ck-lbl">Contact</div></div>
+      <div class="ck-step" id="s3"><div class="ck-dot">3</div><div class="ck-lbl">Livraison</div></div>
+      <div class="ck-step" id="s4"><div class="ck-dot">4</div><div class="ck-lbl">Paiement</div></div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS = ${prodsJson};
+const WORKER_URL    = '${workerUrl}';
+const WORKER_SECRET = '${workerSecret}';
+const WORKER_MODE   = '${workerMode}';
+const ACCENT        = '${primary}';
+
+let selProdIdx = null;
+let ckStep     = 1;
+let ckContact  = {};
+let ckDelivery = { type:'pickup' };
+
+// ── Sélection produit ────────────────────────────────────
+function selectProd(idx) {
+  document.querySelectorAll('.prod').forEach(el => el.classList.remove('selected'));
+  document.getElementById('prod-'+idx)?.classList.add('selected');
+  selProdIdx = idx;
+  const p = PRODUCTS[idx];
+  document.getElementById('sel-name').textContent  = p.n;
+  document.getElementById('sel-price').textContent = p.p;
+  const bar = document.getElementById('cta-bar');
+  bar.classList.add('show');
+  bar.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function selectPlan(idx, price, name) {
+  document.querySelectorAll('.plan').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.plan')[idx]?.classList.add('selected');
+  selProdIdx = null;
+  // Créer un produit virtuel
+  PRODUCTS.push({ e:'⭐', n:name, p:price+' XPF', price, img:'' });
+  selProdIdx = PRODUCTS.length - 1;
+  document.getElementById('sel-name').textContent  = name;
+  document.getElementById('sel-price').textContent = price+' XPF';
+  const bar = document.getElementById('cta-bar');
+  bar.classList.add('show');
+  bar.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function openCheckout() {
+  if (selProdIdx === null) return;
+  ckStep = 1;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderCkStep();
+}
+
+function closeCheckout() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Step UI ──────────────────────────────────────────────
+function setStepUI(n) {
+  const titles = {1:'🛒 Mon panier', 2:'👤 Vos coordonnées', 3:'🚚 Livraison', 4:'💳 Paiement sécurisé'};
+  document.getElementById('modal-title').textContent = titles[n];
+  for (let i=1;i<=4;i++){
+    const el=document.getElementById('s'+i);
+    el.className='ck-step'+(i<n?' done':(i===n?' active':''));
+  }
+}
+
+function renderCkStep() {
+  setStepUI(ckStep);
+  if (ckStep===1) renderStep1();
+  else if (ckStep===2) renderStep2();
+  else if (ckStep===3) renderStep3();
+  else renderStep4();
+}
+
+// ── Étape 1 : Panier ────────────────────────────────────
+function renderStep1() {
+  const p = PRODUCTS[selProdIdx];
+  document.getElementById('modal-body').innerHTML = \`
+    <div style="background:#16213e;border:2px solid \${ACCENT}44;border-radius:12px;overflow:hidden;margin-bottom:16px">
+      <div style="aspect-ratio:2/1;background:#0f0f1a;display:flex;align-items:center;justify-content:center;font-size:48px">
+        \${p.img ? \`<img src="\${p.img}" style="width:100%;height:100%;object-fit:cover">\` : p.e}
+      </div>
+      <div style="padding:16px">
+        <div style="font-size:1rem;font-weight:700;margin-bottom:6px">\${p.n}</div>
+        <div style="font-size:1.4rem;font-weight:900;color:\${ACCENT}">\${p.p}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:#1e1e3a;border:1px solid #2a2a4a;border-radius:10px;padding:12px 16px">
+      <span style="font-size:.8rem;color:#9090b0;flex:1">Quantité</span>
+      <button onclick="changeQ(-1)" style="width:32px;height:32px;border-radius:6px;border:1px solid #2a2a4a;background:#16213e;color:#e8e8f0;font-size:1rem;cursor:pointer">−</button>
+      <span id="qty-val" style="font-size:.9rem;font-weight:700;min-width:20px;text-align:center">1</span>
+      <button onclick="changeQ(1)" style="width:32px;height:32px;border-radius:6px;border:1px solid #2a2a4a;background:#16213e;color:#e8e8f0;font-size:1rem;cursor:pointer">+</button>
+    </div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;font-size:.8rem">
+      <span style="color:#9090b0">Sous-total</span>
+      <span id="subtotal-val" style="font-weight:800;color:\${ACCENT}">\${p.price} XPF</span>
+    </div>\`;
+  window._qty = 1;
+  document.getElementById('modal-foot').innerHTML = \`
+    <button class="btn-next" onclick="ckStep=2;renderCkStep()">Continuer — Coordonnées →</button>\`;
+}
+
+function changeQ(d) {
+  window._qty = Math.max(1, (window._qty||1)+d);
+  document.getElementById('qty-val').textContent = window._qty;
+  const p = PRODUCTS[selProdIdx];
+  document.getElementById('subtotal-val').textContent = (p.price * window._qty).toLocaleString('fr-FR')+' XPF';
+}
+
+// ── Étape 2 : Contact ────────────────────────────────────
+function renderStep2() {
+  document.getElementById('modal-body').innerHTML = \`
+    <div class="ck-section">Vos coordonnées</div>
+    <div class="ck-field"><label>Prénom & Nom *</label>
+      <input class="ck-input" id="ck-name" placeholder="Jean Dupont" value="\${ckContact.name||''}"></div>
+    <div class="ck-field"><label>Email *</label>
+      <input class="ck-input" id="ck-email" type="email" placeholder="jean@mail.com" value="\${ckContact.email||''}"></div>
+    <div class="ck-field"><label>Téléphone</label>
+      <input class="ck-input" id="ck-phone" type="tel" placeholder="87 00 00 00" value="\${ckContact.phone||''}"></div>
+    <div class="ck-field"><label>Note / instructions</label>
+      <textarea class="ck-input ck-textarea" id="ck-note" placeholder="Taille, couleur, instructions…">\${ckContact.note||''}</textarea></div>\`;
+  document.getElementById('modal-foot').innerHTML = \`
+    <button class="btn-prev" onclick="ckStep=1;renderCkStep()">← Retour</button>
+    <button class="btn-next" onclick="saveContact()">Continuer — Livraison →</button>\`;
+}
+
+function saveContact() {
+  const name  = document.getElementById('ck-name')?.value.trim();
+  const email = document.getElementById('ck-email')?.value.trim();
+  if (!name)  { alert('Veuillez saisir votre nom.'); return; }
+  if (!email || !email.includes('@')) { alert('Email invalide.'); return; }
+  ckContact = { name, email, phone:document.getElementById('ck-phone')?.value.trim(), note:document.getElementById('ck-note')?.value.trim() };
+  ckStep=3; renderCkStep();
+}
+
+// ── Étape 3 : Livraison ──────────────────────────────────
+function renderStep3() {
+  const d = ckDelivery;
+  document.getElementById('modal-body').innerHTML = \`
+    <div class="ck-section">Mode de réception</div>
+    <div class="dlv-opts">
+      <div class="dlv-opt \${d.type==='pickup'?'sel':''}" id="opt-pickup" onclick="switchDlv('pickup')">
+        <div class="dlv-icon">🏪</div>
+        <div class="dlv-label">Retrait boutique</div>
+        <div class="dlv-sub">HCS — Papeete</div>
+      </div>
+      <div class="dlv-opt \${d.type==='delivery'?'sel':''}" id="opt-delivery" onclick="switchDlv('delivery')">
+        <div class="dlv-icon">🚚</div>
+        <div class="dlv-label">Livraison</div>
+        <div class="dlv-sub">3–5 jours ouvrés</div>
+      </div>
+    </div>
+    <div id="fields-pickup" style="\${d.type==='pickup'?'':'display:none'}">
+      <div class="ck-field"><label>Date de retrait souhaitée</label>
+        <input class="ck-input" id="ck-date" type="date" value="\${d.pickupDate||''}" min="\${new Date().toISOString().slice(0,10)}"></div>
+      <div class="ck-field"><label>Créneau</label>
+        <select class="ck-input" id="ck-slot">
+          <option value="08-12" \${d.slot==='08-12'?'selected':''}>08h00 – 12h00</option>
+          <option value="13-17" \${d.slot==='13-17'?'selected':''}>13h00 – 17h00</option>
+        </select></div>
+    </div>
+    <div id="fields-delivery" style="\${d.type==='delivery'?'':'display:none'}">
+      <div class="ck-field"><label>Adresse *</label>
+        <input class="ck-input" id="ck-addr" placeholder="Rue, quartier, commune" value="\${d.address||''}"></div>
+      <div class="ck-field"><label>Île / Commune</label>
+        <select class="ck-input" id="ck-island">
+          <option value="tahiti" \${d.island==='tahiti'?'selected':''}>Tahiti</option>
+          <option value="moorea" \${d.island==='moorea'?'selected':''}>Moorea</option>
+          <option value="autre"  \${d.island==='autre'?'selected':''}>Autre île</option>
+        </select></div>
+    </div>\`;
+  document.getElementById('modal-foot').innerHTML = \`
+    <button class="btn-prev" onclick="ckStep=2;renderCkStep()">← Retour</button>
+    <button class="btn-next" onclick="saveDelivery()">Continuer — Paiement →</button>\`;
+}
+
+function switchDlv(type) {
+  document.getElementById('opt-pickup').classList.toggle('sel', type==='pickup');
+  document.getElementById('opt-delivery').classList.toggle('sel', type==='delivery');
+  document.getElementById('fields-pickup').style.display   = type==='pickup'?'':'none';
+  document.getElementById('fields-delivery').style.display = type==='delivery'?'':'none';
+}
+
+function saveDelivery() {
+  const isPick = document.getElementById('opt-pickup').classList.contains('sel');
+  if (!isPick) {
+    const addr = document.getElementById('ck-addr')?.value.trim();
+    if (!addr) { alert('Saisissez votre adresse.'); return; }
+    ckDelivery = { type:'delivery', address:addr, island:document.getElementById('ck-island')?.value };
+  } else {
+    ckDelivery = { type:'pickup', pickupDate:document.getElementById('ck-date')?.value, slot:document.getElementById('ck-slot')?.value };
+  }
+  ckStep=4; renderCkStep();
+}
+
+// ── Étape 4 : Paiement ──────────────────────────────────
+async function renderStep4() {
+  const p       = PRODUCTS[selProdIdx];
+  const qty     = window._qty || 1;
+  const total   = p.price * qty;
+  const orderId = 'HCS-' + Date.now();
+
+  document.getElementById('modal-body').innerHTML = \`
+    <div class="recap-box">
+      <div class="recap-row"><span>Produit</span><span>\${p.n}</span></div>
+      <div class="recap-row"><span>Quantité</span><span>\${qty}</span></div>
+      <div class="recap-row"><span>Client</span><span>\${ckContact.name}</span></div>
+      <div class="recap-row"><span>Email</span><span>\${ckContact.email}</span></div>
+      <div class="recap-row"><span>Livraison</span><span>\${ckDelivery.type==='pickup'?'🏪 Retrait boutique':'🚚 Domicile'}</span></div>
+      \${ckDelivery.pickupDate ? \`<div class="recap-row"><span>Date retrait</span><span>\${ckDelivery.pickupDate}</span></div>\` : ''}
+      \${ckDelivery.address   ? \`<div class="recap-row"><span>Adresse</span><span>\${ckDelivery.address}</span></div>\` : ''}
+      <div class="recap-row"><span style="font-weight:700">Total</span><span style="font-weight:900;color:\${ACCENT};font-size:1.1rem">\${total.toLocaleString('fr-FR')} XPF</span></div>
+    </div>
+    \${location.protocol==='file:' ? \`
+    <div style="background:rgba(246,211,101,.12);border:2px solid #f6d365;border-radius:12px;padding:20px 16px;text-align:center;margin-top:8px">
+      <div style="font-size:1.8rem;margin-bottom:8px">⚠️</div>
+      <div style="font-weight:800;font-size:.9rem;color:#f6d365;margin-bottom:10px">Fichier ouvert en local</div>
+      <div style="font-size:.8rem;color:rgba(255,255,255,.85);line-height:1.8">Le formulaire de paiement OSB nécessite<br>une URL <strong style="color:#fff">https://</strong> ou <strong style="color:#fff">http://</strong>.<br><br>
+      Publie cette LP via le bouton<br><strong style="color:#43e97b">🌐 Publier</strong> dans Andromeda.</div>
+    </div>\` : \`
+    <div id="pz-loading" class="pz-loading">🔒 Connexion sécurisée à OSB Polynésie…</div>
+    <div class="kr-embedded" id="pz-kr-form" style="display:none"></div>
+    <div class="pz-error" id="pz-error"></div>
+    <div class="pz-ok" id="pz-ok" style="display:none">
+      <h3>✅ Paiement accepté !</h3>
+      <p>Merci <strong>\${ckContact.name}</strong>.<br>Votre commande <strong>\${orderId}</strong> est confirmée.<br>Un email de confirmation sera envoyé à <strong>\${ckContact.email}</strong>.</p>
+    </div>\`}\`;
+
+  document.getElementById('modal-foot').innerHTML = \`
+    <button class="btn-prev" id="pz-back" onclick="ckStep=3;renderCkStep()">← Retour</button>\`;
+
+  const oldSdk = document.getElementById('pz-sdk');
+  if (oldSdk) oldSdk.remove();
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Worker-Secret':WORKER_SECRET},
+      body:JSON.stringify({ amount:total, currency:'XPF', orderId, mode:WORKER_MODE, customerEmail:ckContact.email })
+    });
+    if (!res.ok) { const e=await res.json(); throw new Error(e.error||'Erreur serveur'); }
+    const { formToken, publicKey } = await res.json();
+
+    await new Promise((resolve,reject) => {
+      const s = document.createElement('script'); s.id='pz-sdk';
+      s.src='https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
+      s.setAttribute('kr-public-key', publicKey);
+      s.setAttribute('kr-language','fr-FR');
+      s.onload = () => KR.setFormToken(formToken).then(resolve);
+      s.onerror = () => reject(new Error('SDK OSB indisponible'));
+      document.head.appendChild(s);
+    });
+
+    document.getElementById('pz-loading').style.display = 'none';
+    document.getElementById('pz-kr-form').style.display = 'block';
+
+    function showPzSuccess() {
+      document.getElementById('pz-kr-form').style.display = 'none';
+      const okEl = document.getElementById('pz-ok');
+      if (okEl) { okEl.removeAttribute('style'); okEl.style.cssText = 'display:block!important'; }
+      const backEl = document.getElementById('pz-back');
+      if (backEl) backEl.style.display = 'none';
+      fetch(WORKER_URL.replace('/payzen-token','/order/save'), {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Worker-Secret':WORKER_SECRET},
+        body:JSON.stringify({
+          orderId, status:'paid', amount:total, currency:'XPF',
+          campaignName:'${c.name}', product:p.n,
+          client:{ name:ckContact.name, email:ckContact.email, phone:ckContact.phone||'' },
+          delivery:{ type:ckDelivery.type, address:ckDelivery.address||'', pickupDate:ckDelivery.pickupDate||'', deliveryDelay:3 },
+          note:ckContact.note||''
+        })
+      }).catch(e => console.warn('Ordre non sauvegardé:',e));
+    }
+
+    // Méthode 1 : callback SDK
+    KR.onSubmit(d => {
+      const status = d?.clientAnswer?.orderStatus;
+      if (['PAID','RUNNING','AUTHORISED'].includes(status)) {
+        const formEl = document.getElementById('pz-kr-form');
+        const okEl   = document.getElementById('pz-ok');
+        const backEl = document.getElementById('pz-back');
+        if (formEl) formEl.style.display = 'none';
+        if (okEl) okEl.style.setProperty('display','block','important');
+        if (backEl) backEl.style.display = 'none';
+        showPzSuccess();
+      }
+      return false;
+    });
+
+    // Méthode 2 : MutationObserver sur le formulaire SDK (fallback)
+    const krForm = document.querySelector('.kr-embedded');
+    if (krForm) {
+      let pzDone = false;
+      new MutationObserver(() => {
+        if (pzDone) return;
+        if (document.querySelector('.kr-payment-success') || krForm.classList.contains('kr-payment-success')) {
+          pzDone = true;
+          showPzSuccess();
+        }
+      }).observe(document.body, { subtree:true, childList:true, attributes:true, attributeFilter:['class'] });
+    }
+
+  } catch(e) {
+    document.getElementById('pz-loading').style.display = 'none';
+    const err = document.getElementById('pz-error');
+    err.style.display = 'block'; err.textContent = '❌ ' + e.message;
+  }
+}
+
+// Fermer avec Escape
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeCheckout(); });
+// Fermer en cliquant l'overlay
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target===e.currentTarget) closeCheckout(); });
+<\/script>
 </body></html>`;
   dl(`andromeda-lp-${c.id}-${c.name.replace(/[^\w]/g,'-').toLowerCase()}.html`, html);
 }
@@ -999,7 +1690,6 @@ footer{text-align:center;padding:28px;color:rgba(255,255,255,0.4);font-size:0.82
 function exportAd(id) {
   const c = CAMPS[id];
 
-  // Valeurs actuelles du DOM
   const g = el => document.getElementById(el);
   const headline  = g('hl-'+id)?.textContent || c.headline;
   const subline   = g('sl-'+id)?.textContent || c.subline;
@@ -1007,132 +1697,164 @@ function exportAd(id) {
   const cta       = g('ct-'+id)?.textContent || c.cta;
   const domain    = g('dm-'+id)?.textContent || c.domain;
   const linktitle = g('lt-'+id)?.textContent || c.linktitle;
-  const url       = g('url-'+id)?.value?.trim() || '';
-  const ctaTag    = url
-    ? `<a href="${url}" target="_blank" rel="noopener" class="cta-btn">${cta}</a>`
-    : `<a href="#produits" class="cta-btn">${cta}</a>`;
-  const ctaFbBtn  = url
-    ? `<a href="${url}" target="_blank" rel="noopener" class="fb-cta">${cta}</a>`
-    : `<button class="fb-cta" onclick="document.getElementById('produits').scrollIntoView({behavior:'smooth'})">${cta}</button>`;
 
-  // PayZen / Lyra
-  const pzAmount = parseInt(g('pz-amount-'+id)?.value) || 0;
-  const pzWorker = g('pz-worker-'+id)?.value?.trim() || '';
-  const pzSecret = g('pz-secret-'+id)?.value?.trim() || '';
-  const pzMode   = g('pz-mode-'+id)?.value || 'TEST';
-  const pzBlock  = pzAmount > 0 && pzWorker ? `
-<!-- CSP : autoriser eval() requis par le SDK PayZen/OSB -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-eval' 'unsafe-inline' https: data: blob:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https: data: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https: blob:; connect-src 'self' https:; font-src 'self' https: data:;">
-<!-- SDK PayZen OSB Polynésie -->
-<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css">
-<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css">
-<style>
-.payment-section{max-width:500px;margin:40px auto;padding:32px 24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:16px}
-.payment-title{font-size:1.1rem;font-weight:700;color:white;margin-bottom:6px;text-align:center}
-.payment-amount{text-align:center;font-size:2rem;font-weight:900;color:${c.colors.primary};margin-bottom:20px}
-.payment-amount span{font-size:1rem;color:rgba(255,255,255,0.5);font-weight:400}
-#pay-loading{text-align:center;color:rgba(255,255,255,0.6);font-size:0.85rem;padding:20px}
-#pay-error{display:none;background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.3);border-radius:8px;padding:12px 16px;color:#ff6b6b;font-size:0.85rem;margin-bottom:14px;text-align:center}
-#pay-success{display:none;background:rgba(67,233,123,0.15);border:1px solid rgba(67,233,123,0.3);border-radius:12px;padding:24px;text-align:center;color:#43e97b}
-.kr-embedded .kr-payment-button{background:${c.colors.primary}!important;border-radius:30px!important;font-weight:700!important}
-</style>
-<div class="payment-section">
-  <div class="payment-title">🔒 Paiement sécurisé</div>
-  <div class="payment-amount">${pzAmount} <span>XPF</span></div>
-  <div id="pay-error"></div>
-  <div id="pay-loading">Chargement du formulaire de paiement…</div>
-  <div class="kr-embedded" id="payzen-form" style="display:none"></div>
-  <div id="pay-success"><h3>✅ Paiement accepté !</h3><p>Merci pour votre commande. Vous recevrez une confirmation par email.</p></div>
-</div>
-<script>
-(async function(){
-  const WORKER_URL='${pzWorker}',WORKER_SECRET='${pzSecret}',MONTANT=${pzAmount},MODE='${pzMode}';
-  const loadEl=document.getElementById('pay-loading'),formEl=document.getElementById('payzen-form'),errEl=document.getElementById('pay-error'),okEl=document.getElementById('pay-success');
-  try{
-    const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Worker-Secret':WORKER_SECRET},body:JSON.stringify({amount:MONTANT,currency:'XPF',orderId:'HCS-'+Date.now(),mode:MODE})});
-    if(!res.ok){const e=await res.json();throw new Error(e.error||'Erreur serveur');}
-    const{formToken,publicKey}=await res.json();
-    await new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.src='https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
-      s.setAttribute('kr-public-key',publicKey);
-      s.setAttribute('kr-language','fr-FR');
-      s.onload=()=>KR.setFormToken(formToken).then(()=>{
-        loadEl.style.display='none';formEl.style.display='block';
-        KR.onSubmit(d=>{if(d.clientAnswer.orderStatus==='PAID'){formEl.style.display='none';okEl.style.display='block';}return false;});
-        resolve();
-      });
-      s.onerror=()=>reject(new Error('SDK PayZen OSB non chargé'));
-      document.head.appendChild(s);
-    });
-  }catch(e){loadEl.style.display='none';errEl.style.display='block';errEl.textContent='Impossible de charger le paiement : '+e.message;}
-})();
-<\/script>` : '';
-
-  // Image de fond et overlay
-  const cv   = g('cv-'+id);
-  const cvBg = cv?.style.background || '';
+  const cv      = g('cv-'+id);
+  const cvBg    = cv?.style.background || '';
   const heroBg  = cvBg.includes('url(') ? cvBg : (cvBg || c.heroGrad);
   const ov      = g('ov-'+id);
   const ovColor = ov?.style.background || c.colors.overlay;
-
-  // Logo overlay
   const logoEl  = cv?.querySelector('.logo-overlay');
   const logoHtml = logoEl
     ? `<img src="${logoEl.src}" style="position:absolute;bottom:12px;right:12px;width:64px;height:64px;object-fit:contain;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.5);z-index:5">`
     : '';
 
-  // Images produits uploadées
   const prodImgs = c.products.map((_,i) => {
-    const cell = g('lpimg-'+id+'-'+i);
-    return cell?.querySelector('img')?.src || '';
+    const img = g('lpimg-'+id+'-'+i)?.querySelector('img');
+    return img ? img.src : '';
   });
 
+  const workerUrl    = g('pz-worker-'+id)?.value?.trim() || 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token';
+  const workerSecret = g('pz-secret-'+id)?.value?.trim() || 'richesse';
+  const workerMode   = g('pz-mode-'+id)?.value || 'TEST';
+  const primary      = c.colors.primary;
+  const badge2       = c.colors.badge;
+
+  const prodsJson = JSON.stringify(c.products.map((p,i)=>({
+    e:p.e, n:p.n, p:p.p,
+    price: parseInt(p.p.replace(/[^\d]/g,''))||0,
+    img: prodImgs[i]||''
+  })));
+
+  const ctaFbBtn = `<button class="fb-cta" onclick="document.getElementById('produits').scrollIntoView({behavior:'smooth'})">${cta}</button>`;
+
   const html = `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${headline} — Andromeda Ad</title>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${headline} — HCS Tahiti</title>
+<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css">
+<link rel="stylesheet" href="https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#1c1e21}
-/* === VIGNETTE FACEBOOK === */
-.fb-wrap{max-width:500px;margin:30px auto;background:#fff;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);overflow:hidden}
+/* FACEBOOK AD */
+.fb-wrap{max-width:500px;margin:30px auto;background:#fff;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);overflow:hidden}
 .fb-head{padding:12px 16px;display:flex;align-items:center;gap:10px}
-.fb-avatar{width:40px;height:40px;border-radius:50%;background:${c.colors.primary};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.85rem;flex-shrink:0}
-.fb-name{font-weight:700;font-size:0.9rem}
-.fb-spon{font-size:0.72rem;color:#65676b}
-.fb-txt{padding:0 16px 10px;font-size:0.92rem;color:#1c1e21;line-height:1.4}
+.fb-avatar{width:40px;height:40px;border-radius:50%;background:${primary};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:.85rem;flex-shrink:0}
+.fb-name{font-weight:700;font-size:.9rem}
+.fb-spon{font-size:.72rem;color:#65676b}
+.fb-txt{padding:0 16px 10px;font-size:.92rem;color:#1c1e21;line-height:1.4}
 .ad-canvas{width:100%;aspect-ratio:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:${heroBg};background-size:cover;background-position:center}
 .ad-ov{position:absolute;inset:0;background:${ovColor}}
 .ad-text{position:relative;z-index:2;text-align:center;padding:20px;color:white}
-.ad-title{font-size:clamp(1.2rem,4vw,2rem);font-weight:900;margin-bottom:8px;line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,0.5)}
-.ad-sub{font-size:0.9rem;opacity:0.9;margin-bottom:14px;text-shadow:0 1px 4px rgba(0,0,0,0.5)}
-.ad-badge{display:inline-block;background:${c.colors.badge};color:white;padding:7px 18px;border-radius:20px;font-weight:700;font-size:0.85rem}
+.ad-title{font-size:clamp(1.2rem,4vw,2rem);font-weight:900;margin-bottom:8px;line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.ad-sub{font-size:.9rem;opacity:.9;margin-bottom:14px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.ad-badge{display:inline-block;background:${badge2};color:white;padding:7px 18px;border-radius:20px;font-weight:700;font-size:.85rem}
 .fb-foot{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e4e6eb}
-.fb-domain{font-size:0.68rem;text-transform:uppercase;color:#65676b;margin-bottom:2px}
-.fb-linktitle{font-weight:700;font-size:0.92rem}
-.fb-cta{background:${c.colors.primary};color:white;border:none;padding:8px 18px;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.85rem}
-.fb-react{padding:8px 16px;border-top:1px solid #e4e6eb;color:#65676b;font-size:0.82rem;display:flex;gap:20px}
-/* === LANDING PAGE === */
+.fb-domain{font-size:.68rem;text-transform:uppercase;color:#65676b;margin-bottom:2px}
+.fb-linktitle{font-weight:700;font-size:.92rem}
+.fb-cta{background:${primary};color:white;border:none;padding:8px 18px;border-radius:6px;font-weight:700;cursor:pointer;font-size:.85rem}
+.fb-react{padding:8px 16px;border-top:1px solid #e4e6eb;color:#65676b;font-size:.82rem;display:flex;gap:20px}
+/* LANDING PAGE */
 .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:${heroBg};background-size:cover;background-position:center;position:relative;overflow:hidden}
 .hero-overlay{position:absolute;inset:0;background:${ovColor}}
 .hero-content{max-width:600px;position:relative;z-index:2}
 h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;margin-bottom:14px;line-height:1.1;color:white}
-.sub{font-size:1rem;opacity:0.9;margin-bottom:20px;color:rgba(255,255,255,0.85)}
-.badge-hp{display:inline-block;background:${c.colors.badge};color:white;padding:8px 24px;border-radius:24px;font-weight:700;margin-bottom:20px}
-.cta-btn{display:inline-block;background:white;color:${c.colors.primary};padding:14px 36px;border-radius:30px;font-weight:700;font-size:1rem;cursor:pointer;border:none;box-shadow:0 8px 30px rgba(0,0,0,0.3);text-decoration:none}
-.section{padding:40px 20px;max-width:900px;margin:0 auto;background:#0f0f1a}
-.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-.prod{background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)}
-.prod-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:48px;background:rgba(255,255,255,0.05)}
+.sub{font-size:1rem;opacity:.9;margin-bottom:20px;color:rgba(255,255,255,.85)}
+.badge-hp{display:inline-block;background:${badge2};color:white;padding:8px 24px;border-radius:24px;font-weight:700;margin-bottom:20px}
+.cta-hero{display:inline-block;background:white;color:${primary};padding:14px 36px;border-radius:30px;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,.3);cursor:pointer;border:none;transition:transform .15s}
+.cta-hero:hover{transform:translateY(-2px)}
+/* SECTION */
+.section{padding:40px 20px;max-width:960px;margin:0 auto;background:#0f0f1a;color:#e8e8f0}
+.section-title{font-size:1.1rem;font-weight:800;margin-bottom:20px;text-align:center}
+/* PRODUITS */
+.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:12px}
+.prod{background:rgba(255,255,255,.05);border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.1);cursor:pointer;transition:all .2s;position:relative}
+.prod:hover{border-color:${primary};transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.prod.selected{border-color:${primary};background:rgba(108,99,255,.1);box-shadow:0 0 0 4px ${primary}33}
+.prod-check{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:${primary};display:none;align-items:center;justify-content:center;font-size:.7rem;color:white;font-weight:900}
+.prod.selected .prod-check{display:flex}
+.prod-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:48px;background:rgba(255,255,255,.04)}
 .prod-img img{width:100%;height:100%;object-fit:cover}
-.prod-info{padding:14px;background:#0f0f1a;color:#e8e8f0}
-.prod-name{font-weight:600;margin-bottom:6px}
-.prod-price{color:${c.colors.primary};font-weight:700;font-size:1.1rem}
-.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:24px}
-.feat{background:rgba(255,255,255,0.05);border-radius:10px;padding:18px;text-align:center;border:1px solid rgba(255,255,255,0.1);color:#e8e8f0}
-.feat-icon{font-size:30px;margin-bottom:8px}
-.feat-txt{font-size:0.82rem;color:rgba(255,255,255,0.7)}
-footer{background:#0f0f1a;text-align:center;padding:28px;color:rgba(255,255,255,0.4);font-size:0.82rem;border-top:1px solid rgba(255,255,255,0.1)}
+.prod-info{padding:14px}
+.prod-name{font-weight:600;margin-bottom:6px;font-size:.9rem}
+.prod-price{color:${primary};font-weight:800;font-size:1.1rem}
+/* CTA BAR */
+.cta-bar{margin-top:14px;display:none;animation:slideUp .25s ease}
+.cta-bar.show{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.cta-recap{background:rgba(255,255,255,.05);border:1px solid ${primary}55;border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.cta-recap-name{font-size:.85rem;font-weight:700}
+.cta-recap-price{font-size:1.1rem;font-weight:900;color:${primary}}
+.btn-order{width:100%;padding:16px;background:linear-gradient(135deg,${primary},#ff6584);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.5px;box-shadow:0 6px 20px ${primary}66;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-order:hover{transform:translateY(-2px);box-shadow:0 10px 30px ${primary}88}
+/* FEATURES */
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:28px}
+.feat{background:rgba(255,255,255,.05);border-radius:10px;padding:18px;text-align:center;border:1px solid rgba(255,255,255,.1)}
+.feat-icon{font-size:28px;margin-bottom:8px}
+.feat-txt{font-size:.82rem;color:rgba(255,255,255,.7)}
+footer{background:#0f0f1a;text-align:center;padding:28px;color:rgba(255,255,255,.4);font-size:.82rem;border-top:1px solid rgba(255,255,255,.1)}
+/* CHECKOUT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:900;display:none;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:600px){.modal-overlay.open{align-items:center}}
+.checkout-modal{background:#1a1a2e;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 48px rgba(0,0,0,.6)}
+@media(min-width:600px){.checkout-modal{border-radius:20px;max-height:88vh}}
+.modal-head{padding:16px 20px;border-bottom:1px solid #2a2a4a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:.95rem;font-weight:800}
+.modal-close{background:none;border:none;color:#9090b0;font-size:1.3rem;cursor:pointer;padding:4px 8px;border-radius:6px}
+.modal-close:hover{color:#e8e8f0;background:#16213e}
+.ck-steps{display:flex;padding:12px 20px;border-bottom:1px solid #2a2a4a;flex-shrink:0}
+.ck-step{flex:1;text-align:center;position:relative}
+.ck-step::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:2px;background:#2a2a4a;z-index:0}
+.ck-step:last-child::after{display:none}
+.ck-dot{width:26px;height:26px;border-radius:50%;border:2px solid #2a2a4a;background:#1e1e3a;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;margin:0 auto 4px;position:relative;z-index:1;transition:all .2s;color:#9090b0}
+.ck-step.done .ck-dot{background:#43e97b;border-color:#43e97b;color:#0f0f1a}
+.ck-step.done::after{background:#43e97b}
+.ck-step.active .ck-dot{background:${primary};border-color:${primary};color:white;box-shadow:0 0 12px ${primary}66}
+.ck-lbl{font-size:.58rem;color:#9090b0;font-weight:600}
+.ck-step.active .ck-lbl{color:${primary}}
+.ck-step.done .ck-lbl{color:#43e97b}
+.modal-body{flex:1;overflow-y:auto;padding:20px}
+.modal-foot{padding:14px 20px;border-top:1px solid #2a2a4a;display:flex;gap:8px;flex-shrink:0}
+.ck-section{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9090b0;margin-bottom:10px}
+.ck-field{margin-bottom:12px}
+.ck-field label{display:block;font-size:.7rem;color:#9090b0;margin-bottom:4px}
+.ck-input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #2a2a4a;background:#1e1e3a;color:#e8e8f0;font-size:.85rem;outline:none;font-family:inherit;transition:border-color .2s}
+.ck-input:focus{border-color:${primary}}
+.ck-input::placeholder{color:#9090b0}
+.ck-textarea{resize:vertical;min-height:72px}
+.dlv-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.dlv-opt{padding:14px 10px;border-radius:10px;border:2px solid #2a2a4a;background:#1e1e3a;cursor:pointer;text-align:center;transition:all .2s}
+.dlv-opt:hover{border-color:${primary}}
+.dlv-opt.sel{border-color:${primary};background:${primary}1a}
+.dlv-icon{font-size:24px;margin-bottom:6px}
+.dlv-label{font-size:.78rem;font-weight:700}
+.dlv-sub{font-size:.62rem;color:#9090b0;margin-top:2px}
+.recap-box{background:#16213e;border:1px solid #2a2a4a;border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.recap-row{display:flex;justify-content:space-between;font-size:.78rem;padding:4px 0;border-bottom:1px solid #2a2a4a22}
+.recap-row:last-child{border:none;padding-top:8px;margin-top:4px;border-top:1px solid #2a2a4a}
+.recap-row span:first-child{color:#9090b0}
+.recap-row span:last-child{font-weight:600}
+.btn-next{flex:1;padding:12px;background:linear-gradient(135deg,${primary},#ff6584);color:white;border:none;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .2s}
+.btn-next:hover{opacity:.9}
+.btn-prev{padding:12px 16px;background:#1e1e3a;border:1px solid #2a2a4a;color:#9090b0;border-radius:8px;font-size:.85rem;cursor:pointer}
+.btn-prev:hover{border-color:${primary};color:${primary}}
+.pz-loading{text-align:center;color:#9090b0;font-size:.85rem;padding:24px}
+.pz-error{background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.3);border-radius:8px;padding:12px;color:#ff6b6b;font-size:.8rem;margin-top:10px;display:none}
+.pz-ok{background:rgba(67,233,123,.12);border:1px solid rgba(67,233,123,.3);border-radius:12px;padding:28px;text-align:center;color:#43e97b;display:none}
+.pz-ok h3{font-size:1.2rem;margin-bottom:8px}
+.pz-ok p{font-size:.82rem;color:#9090b0;line-height:1.6}
+/* ── Formulaire paiement OSB ── */
+.kr-embedded{background:#fff!important;border-radius:14px!important;padding:16px 14px!important;margin-top:4px!important;box-shadow:0 2px 16px rgba(0,0,0,.18)!important}
+.kr-embedded .kr-field{margin-bottom:12px!important}
+.kr-embedded .kr-label{color:#333!important;font-size:.75rem!important;font-weight:600!important;margin-bottom:4px!important;display:block!important}
+.kr-embedded .kr-field-element{background:#f8f9fa!important;border:1.5px solid #dee2e6!important;border-radius:8px!important;padding:10px 12px!important;color:#1a1a1a!important;font-size:.9rem!important;width:100%!important;box-sizing:border-box!important}
+.kr-embedded .kr-field-element:focus,.kr-embedded .kr-field-element.kr-focus{border-color:${primary}!important;box-shadow:0 0 0 3px ${primary}22!important;outline:none!important}
+.kr-embedded .kr-field-element.kr-error{border-color:#dc3545!important}
+.kr-embedded .kr-error-message{color:#dc3545!important;font-size:.72rem!important;margin-top:3px!important}
+.kr-embedded .kr-payment-button{background:linear-gradient(135deg,${primary},#ff6584)!important;border-radius:10px!important;font-weight:800!important;font-size:.9rem!important;padding:13px!important;width:100%!important;border:none!important;color:#fff!important;cursor:pointer!important;margin-top:4px!important;letter-spacing:.5px!important;box-shadow:0 4px 16px ${primary}55!important}
+.kr-embedded .kr-payment-button:hover{opacity:.92!important;transform:translateY(-1px)!important}
+.kr-embedded .kr-form-error{background:#fff5f5!important;border:1px solid #ffc9c9!important;border-radius:8px!important;padding:10px 12px!important;color:#c92a2a!important;font-size:.78rem!important;margin-top:8px!important}
 </style></head>
 <body>
 
@@ -1159,7 +1881,7 @@ footer{background:#0f0f1a;text-align:center;padding:28px;color:rgba(255,255,255,
   <div class="fb-react"><span>👍 J'aime</span><span>💬 Commenter</span><span>↗️ Partager</span></div>
 </div>
 
-<!-- LANDING PAGE -->
+<!-- HERO -->
 <div class="hero">
   <div class="hero-overlay"></div>
   ${logoHtml}
@@ -1167,129 +1889,442 @@ footer{background:#0f0f1a;text-align:center;padding:28px;color:rgba(255,255,255,
     <div class="badge-hp">${badge}</div>
     <h1>${headline}</h1>
     <p class="sub">${subline}</p>
-    ${ctaTag}
-    ${orderBtnTag}
+    <a href="#produits" class="cta-hero">${cta}</a>
   </div>
 </div>
+
+<!-- PRODUITS -->
 <div class="section" id="produits">
-  <div class="prods">
-    ${c.products.map((p,i)=>`<div class="prod"><div class="prod-img">${prodImgs[i]?`<img src="${prodImgs[i]}">`:(p.e||'')}</div><div class="prod-info"><div class="prod-name">${p.n}</div><div class="prod-price">${p.p}</div></div></div>`).join('')}
+  <div class="section-title">Choisissez votre produit</div>
+  <div class="prods" id="prods-grid">
+    ${c.products.map((p,i)=>`
+    <div class="prod" id="prod-${i}" onclick="selectProd(${i})">
+      <div class="prod-check">✓</div>
+      <div class="prod-img">${prodImgs[i]?`<img src="${prodImgs[i]}">`:(p.e||'')}</div>
+      <div class="prod-info">
+        <div class="prod-name">${p.n}</div>
+        <div class="prod-price">${p.p}</div>
+      </div>
+    </div>`).join('')}
   </div>
+
+  <div class="cta-bar" id="cta-bar">
+    <div class="cta-recap">
+      <div>
+        <div style="font-size:.7rem;color:#9090b0;margin-bottom:3px">Produit sélectionné</div>
+        <div class="cta-recap-name" id="sel-name"></div>
+      </div>
+      <div class="cta-recap-price" id="sel-price"></div>
+    </div>
+    <button class="btn-order" onclick="openCheckout()">
+      🛒 Commander &amp; Payer par carte
+    </button>
+  </div>
+
   <div class="feats">
     ${c.features.map(f=>`<div class="feat"><div class="feat-icon">${f.i}</div><div class="feat-txt">${f.t}</div></div>`).join('')}
   </div>
 </div>
-${pzBlock}
+
 <footer>© 2026 HCS Tahiti — ${domain} | ${linktitle}</footer>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="checkout-modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-title">🛒 Commande</span>
+      <button class="modal-close" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="ck-steps">
+      <div class="ck-step active" id="s1"><div class="ck-dot">1</div><div class="ck-lbl">Panier</div></div>
+      <div class="ck-step" id="s2"><div class="ck-dot">2</div><div class="ck-lbl">Contact</div></div>
+      <div class="ck-step" id="s3"><div class="ck-dot">3</div><div class="ck-lbl">Livraison</div></div>
+      <div class="ck-step" id="s4"><div class="ck-dot">4</div><div class="ck-lbl">Paiement</div></div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS = ${prodsJson};
+const WORKER_URL    = '${workerUrl}';
+const WORKER_SECRET = '${workerSecret}';
+const WORKER_MODE   = '${workerMode}';
+const ACCENT        = '${primary}';
+
+let selProdIdx = null;
+let ckStep     = 1;
+let ckContact  = {};
+let ckDelivery = { type:'pickup' };
+
+function selectProd(idx) {
+  document.querySelectorAll('.prod').forEach(el => el.classList.remove('selected'));
+  document.getElementById('prod-'+idx)?.classList.add('selected');
+  selProdIdx = idx;
+  const p = PRODUCTS[idx];
+  document.getElementById('sel-name').textContent  = p.n;
+  document.getElementById('sel-price').textContent = p.p;
+  const bar = document.getElementById('cta-bar');
+  bar.classList.add('show');
+  bar.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function openCheckout() {
+  if (selProdIdx === null) return;
+  ckStep = 1;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderCkStep();
+}
+
+function closeCheckout() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function setStepUI(n) {
+  const titles = {1:'🛒 Mon panier', 2:'👤 Vos coordonnées', 3:'🚚 Livraison', 4:'💳 Paiement sécurisé'};
+  document.getElementById('modal-title').textContent = titles[n];
+  for (let i=1;i<=4;i++){
+    const el=document.getElementById('s'+i);
+    el.className='ck-step'+(i<n?' done':(i===n?' active':''));
+  }
+}
+
+function renderCkStep() {
+  setStepUI(ckStep);
+  if (ckStep===1) renderStep1();
+  else if (ckStep===2) renderStep2();
+  else if (ckStep===3) renderStep3();
+  else renderStep4();
+}
+
+function renderStep1() {
+  const p = PRODUCTS[selProdIdx];
+  document.getElementById('modal-body').innerHTML = \`
+    <div style="background:#16213e;border:2px solid \${ACCENT}44;border-radius:12px;overflow:hidden;margin-bottom:16px">
+      <div style="aspect-ratio:2/1;background:#0f0f1a;display:flex;align-items:center;justify-content:center;font-size:48px">
+        \${p.img ? \`<img src="\${p.img}" style="width:100%;height:100%;object-fit:cover">\` : p.e}
+      </div>
+      <div style="padding:16px">
+        <div style="font-size:1rem;font-weight:700;margin-bottom:6px">\${p.n}</div>
+        <div style="font-size:1.4rem;font-weight:900;color:\${ACCENT}">\${p.p}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:#1e1e3a;border:1px solid #2a2a4a;border-radius:10px;padding:12px 16px">
+      <span style="font-size:.8rem;color:#9090b0;flex:1">Quantité</span>
+      <button onclick="changeQ(-1)" style="width:32px;height:32px;border-radius:6px;border:1px solid #2a2a4a;background:#16213e;color:#e8e8f0;font-size:1rem;cursor:pointer">−</button>
+      <span id="qty-val" style="font-size:.9rem;font-weight:700;min-width:20px;text-align:center">1</span>
+      <button onclick="changeQ(1)" style="width:32px;height:32px;border-radius:6px;border:1px solid #2a2a4a;background:#16213e;color:#e8e8f0;font-size:1rem;cursor:pointer">+</button>
+    </div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;font-size:.8rem">
+      <span style="color:#9090b0">Sous-total</span>
+      <span id="subtotal-val" style="font-weight:800;color:\${ACCENT}">\${p.price} XPF</span>
+    </div>\`;
+  window._qty = 1;
+  document.getElementById('modal-foot').innerHTML = \`
+    <button class="btn-next" onclick="ckStep=2;renderCkStep()">Continuer — Coordonnées →</button>\`;
+}
+
+function changeQ(d) {
+  window._qty = Math.max(1, (window._qty||1)+d);
+  document.getElementById('qty-val').textContent = window._qty;
+  const p = PRODUCTS[selProdIdx];
+  document.getElementById('subtotal-val').textContent = (p.price * window._qty).toLocaleString('fr-FR')+' XPF';
+}
+
+function renderStep2() {
+  document.getElementById('modal-body').innerHTML = \`
+    <div class="ck-section">Vos coordonnées</div>
+    <div class="ck-field"><label>Prénom &amp; Nom *</label>
+      <input class="ck-input" id="ck-name" placeholder="Jean Dupont" value="\${ckContact.name||''}"></div>
+    <div class="ck-field"><label>Email *</label>
+      <input class="ck-input" id="ck-email" type="email" placeholder="jean@mail.com" value="\${ckContact.email||''}"></div>
+    <div class="ck-field"><label>Téléphone</label>
+      <input class="ck-input" id="ck-phone" type="tel" placeholder="87 00 00 00" value="\${ckContact.phone||''}"></div>
+    <div class="ck-field"><label>Note / instructions</label>
+      <textarea class="ck-input ck-textarea" id="ck-note" placeholder="Taille, couleur, instructions…">\${ckContact.note||''}</textarea></div>\`;
+  document.getElementById('modal-foot').innerHTML = \`
+    <button class="btn-prev" onclick="ckStep=1;renderCkStep()">← Retour</button>
+    <button class="btn-next" onclick="saveContact()">Continuer — Livraison →</button>\`;
+}
+
+function saveContact() {
+  const name  = document.getElementById('ck-name')?.value.trim();
+  const email = document.getElementById('ck-email')?.value.trim();
+  if (!name)  { alert('Veuillez saisir votre nom.'); return; }
+  if (!email || !email.includes('@')) { alert('Email invalide.'); return; }
+  ckContact = { name, email, phone:document.getElementById('ck-phone')?.value.trim(), note:document.getElementById('ck-note')?.value.trim() };
+  ckStep=3; renderCkStep();
+}
+
+function renderStep3() {
+  const d = ckDelivery;
+  document.getElementById('modal-body').innerHTML = \`
+    <div class="ck-section">Mode de réception</div>
+    <div class="dlv-opts">
+      <div class="dlv-opt \${d.type==='pickup'?'sel':''}" id="opt-pickup" onclick="switchDlv('pickup')">
+        <div class="dlv-icon">🏪</div><div class="dlv-label">Retrait boutique</div><div class="dlv-sub">HCS — Papeete</div>
+      </div>
+      <div class="dlv-opt \${d.type==='delivery'?'sel':''}" id="opt-delivery" onclick="switchDlv('delivery')">
+        <div class="dlv-icon">🚚</div><div class="dlv-label">Livraison</div><div class="dlv-sub">3–5 jours ouvrés</div>
+      </div>
+    </div>
+    <div id="fields-pickup" style="\${d.type==='pickup'?'':'display:none'}">
+      <div class="ck-field"><label>Date de retrait souhaitée</label>
+        <input class="ck-input" id="ck-date" type="date" value="\${d.pickupDate||''}" min="\${new Date().toISOString().slice(0,10)}"></div>
+      <div class="ck-field"><label>Créneau</label>
+        <select class="ck-input" id="ck-slot">
+          <option value="08-12" \${d.slot==='08-12'?'selected':''}>08h00 – 12h00</option>
+          <option value="13-17" \${d.slot==='13-17'?'selected':''}>13h00 – 17h00</option>
+        </select></div>
+    </div>
+    <div id="fields-delivery" style="\${d.type==='delivery'?'':'display:none'}">
+      <div class="ck-field"><label>Adresse *</label>
+        <input class="ck-input" id="ck-addr" placeholder="Rue, quartier, commune" value="\${d.address||''}"></div>
+      <div class="ck-field"><label>Île / Commune</label>
+        <select class="ck-input" id="ck-island">
+          <option value="tahiti" \${d.island==='tahiti'?'selected':''}>Tahiti</option>
+          <option value="moorea" \${d.island==='moorea'?'selected':''}>Moorea</option>
+          <option value="autre"  \${d.island==='autre'?'selected':''}>Autre île</option>
+        </select></div>
+    </div>\`;
+  document.getElementById('modal-foot').innerHTML = \`
+    <button class="btn-prev" onclick="ckStep=2;renderCkStep()">← Retour</button>
+    <button class="btn-next" onclick="saveDelivery()">Continuer — Paiement →</button>\`;
+}
+
+function switchDlv(type) {
+  document.getElementById('opt-pickup').classList.toggle('sel', type==='pickup');
+  document.getElementById('opt-delivery').classList.toggle('sel', type==='delivery');
+  document.getElementById('fields-pickup').style.display   = type==='pickup'?'':'none';
+  document.getElementById('fields-delivery').style.display = type==='delivery'?'':'none';
+}
+
+function saveDelivery() {
+  const isPick = document.getElementById('opt-pickup').classList.contains('sel');
+  if (!isPick) {
+    const addr = document.getElementById('ck-addr')?.value.trim();
+    if (!addr) { alert('Saisissez votre adresse.'); return; }
+    ckDelivery = { type:'delivery', address:addr, island:document.getElementById('ck-island')?.value };
+  } else {
+    ckDelivery = { type:'pickup', pickupDate:document.getElementById('ck-date')?.value, slot:document.getElementById('ck-slot')?.value };
+  }
+  ckStep=4; renderCkStep();
+}
+
+async function renderStep4() {
+  const p       = PRODUCTS[selProdIdx];
+  const qty     = window._qty || 1;
+  const total   = p.price * qty;
+  const orderId = 'HCS-' + Date.now();
+
+  document.getElementById('modal-body').innerHTML = \`
+    <div class="recap-box">
+      <div class="recap-row"><span>Produit</span><span>\${p.n}</span></div>
+      <div class="recap-row"><span>Quantité</span><span>\${qty}</span></div>
+      <div class="recap-row"><span>Client</span><span>\${ckContact.name}</span></div>
+      <div class="recap-row"><span>Email</span><span>\${ckContact.email}</span></div>
+      <div class="recap-row"><span>Livraison</span><span>\${ckDelivery.type==='pickup'?'🏪 Retrait boutique':'🚚 Domicile'}</span></div>
+      \${ckDelivery.pickupDate ? \`<div class="recap-row"><span>Date retrait</span><span>\${ckDelivery.pickupDate}</span></div>\` : ''}
+      \${ckDelivery.address   ? \`<div class="recap-row"><span>Adresse</span><span>\${ckDelivery.address}</span></div>\` : ''}
+      <div class="recap-row"><span style="font-weight:700">Total</span><span style="font-weight:900;color:\${ACCENT};font-size:1.1rem">\${total.toLocaleString('fr-FR')} XPF</span></div>
+    </div>
+    \${location.protocol==='file:' ? \`
+    <div style="background:rgba(246,211,101,.12);border:2px solid #f6d365;border-radius:12px;padding:20px 16px;text-align:center;margin-top:8px">
+      <div style="font-size:1.8rem;margin-bottom:8px">⚠️</div>
+      <div style="font-weight:800;font-size:.9rem;color:#f6d365;margin-bottom:10px">Fichier ouvert en local</div>
+      <div style="font-size:.8rem;color:rgba(255,255,255,.85);line-height:1.8">Le formulaire de paiement OSB nécessite<br>une URL <strong style="color:#fff">https://</strong> ou <strong style="color:#fff">http://</strong>.<br><br>
+      Publie cette LP via le bouton<br><strong style="color:#43e97b">🌐 Publier</strong> dans Andromeda.</div>
+    </div>\` : \`
+    <div id="pz-loading" class="pz-loading">🔒 Connexion sécurisée à OSB Polynésie…</div>
+    <div class="kr-embedded" id="pz-kr-form" style="display:none"></div>
+    <div class="pz-error" id="pz-error"></div>
+    <div class="pz-ok" id="pz-ok" style="display:none">
+      <h3>✅ Paiement accepté !</h3>
+      <p>Merci <strong>\${ckContact.name}</strong>.<br>Votre commande <strong>\${orderId}</strong> est confirmée.<br>Un email de confirmation sera envoyé à <strong>\${ckContact.email}</strong>.</p>
+    </div>\`}\`;
+
+  document.getElementById('modal-foot').innerHTML = \`
+    <button class="btn-prev" id="pz-back" onclick="ckStep=3;renderCkStep()">← Retour</button>\`;
+
+  const oldSdk = document.getElementById('pz-sdk');
+  if (oldSdk) oldSdk.remove();
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Worker-Secret':WORKER_SECRET},
+      body:JSON.stringify({ amount:total, currency:'XPF', orderId, mode:WORKER_MODE, customerEmail:ckContact.email })
+    });
+    if (!res.ok) { const e=await res.json(); throw new Error(e.error||'Erreur serveur'); }
+    const { formToken, publicKey } = await res.json();
+
+    await new Promise((resolve,reject) => {
+      const s = document.createElement('script'); s.id='pz-sdk';
+      s.src='https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
+      s.setAttribute('kr-public-key', publicKey);
+      s.setAttribute('kr-language','fr-FR');
+      s.onload = () => KR.setFormToken(formToken).then(resolve);
+      s.onerror = () => reject(new Error('SDK OSB indisponible'));
+      document.head.appendChild(s);
+    });
+
+    document.getElementById('pz-loading').style.display = 'none';
+    document.getElementById('pz-kr-form').style.display = 'block';
+
+    function showPzSuccess() {
+      document.getElementById('pz-kr-form').style.display = 'none';
+      const okEl = document.getElementById('pz-ok');
+      if (okEl) { okEl.removeAttribute('style'); okEl.style.cssText = 'display:block!important'; }
+      const backEl = document.getElementById('pz-back');
+      if (backEl) backEl.style.display = 'none';
+      fetch(WORKER_URL.replace('/payzen-token','/order/save'), {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Worker-Secret':WORKER_SECRET},
+        body:JSON.stringify({
+          orderId, status:'paid', amount:total, currency:'XPF',
+          campaignName:'${c.name}', product:p.n,
+          client:{ name:ckContact.name, email:ckContact.email, phone:ckContact.phone||'' },
+          delivery:{ type:ckDelivery.type, address:ckDelivery.address||'', pickupDate:ckDelivery.pickupDate||'', deliveryDelay:3 },
+          note:ckContact.note||''
+        })
+      }).catch(e => console.warn('Ordre non sauvegardé:',e));
+    }
+
+    // Méthode 1 : callback SDK
+    KR.onSubmit(d => {
+      if (['PAID','RUNNING','AUTHORISED'].includes(d?.clientAnswer?.orderStatus)) showPzSuccess();
+      return false;
+    });
+
+    // Méthode 2 : MutationObserver sur le formulaire SDK (fallback)
+    const krForm = document.querySelector('.kr-embedded');
+    if (krForm) {
+      let pzDone = false;
+      new MutationObserver(() => {
+        if (pzDone) return;
+        if (document.querySelector('.kr-payment-success') || krForm.classList.contains('kr-payment-success')) {
+          pzDone = true;
+          showPzSuccess();
+        }
+      }).observe(document.body, { subtree:true, childList:true, attributes:true, attributeFilter:['class'] });
+    }
+
+  } catch(e) {
+    document.getElementById('pz-loading').style.display = 'none';
+    const err = document.getElementById('pz-error');
+    err.style.display = 'block'; err.textContent = '❌ ' + e.message;
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeCheckout(); });
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target===e.currentTarget) closeCheckout(); });
+<\/script>
 </body></html>`;
 
   dl(`andromeda-ad-${c.id}-${c.name.replace(/[^\w]/g,'-').toLowerCase()}.html`, html);
-}
-
-async function publishLP(id) {
-  const c = CAMPS[id];
-
-  // Récupérer ou demander le secret admin
-  let adminSecret = localStorage.getItem('hcs_admin_secret') || '';
-  if (!adminSecret) {
-    adminSecret = prompt('Clé admin Cloudflare (ADMIN_SECRET) :');
-    if (!adminSecret) return;
-    localStorage.setItem('hcs_admin_secret', adminSecret);
-  }
-
-  const workerBase = (document.getElementById('pz-worker-'+id)?.value || PZ_DEFAULTS.worker)
-    .replace(/\/payzen-token$/, '').replace(/\/m\/token$/, '');
-
-  // Générer le HTML de la LP (copie de exportLP sans le download)
-  const g = el => document.getElementById(el);
-  const headline  = g('hl-'+id)?.textContent || c.headline;
-  const subline   = g('sl-'+id)?.textContent || c.subline;
-  const badge     = g('bd-'+id)?.textContent || c.badge;
-  const cta       = g('ct-'+id)?.textContent || c.cta;
-  const cv = g('cv-'+id);
-  const cvBg = cv?.style.background || '';
-  const heroBg = cvBg.includes('url(') ? cvBg : (cvBg || c.heroGrad);
-  const ov = g('ov-'+id);
-  const ovColor = ov?.style.background || c.colors.overlay;
-  const logoEl = cv?.querySelector('.logo-overlay');
-  const logoHtml = logoEl ? `<img src="${logoEl.src}" style="position:absolute;bottom:24px;right:24px;width:80px;height:80px;object-fit:contain;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.6);z-index:5">` : '';
-  const prodImgs = c.products.map((_,i) => { const cell=g('lpimg-'+id+'-'+i); const img=cell?.querySelector('img'); return img?img.src:''; });
-
-  // Générer slug depuis le nom de la campagne
-  const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-
-  // Construire le HTML minimal de la LP
-  const prodRows = c.products.map((p,i) => `
-    <div style="background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)">
-      ${prodImgs[i] ? `<img src="${prodImgs[i]}" style="width:100%;aspect-ratio:1;object-fit:cover">` : `<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:3rem;background:rgba(255,255,255,0.05)">${p.e||'📦'}</div>`}
-      <div style="padding:14px"><div style="font-weight:700;margin-bottom:4px">${p.n}</div><div style="font-size:1.1rem;font-weight:900;color:${c.colors.primary}">${p.p}</div></div>
-    </div>`).join('');
-
-  const html = `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${headline} — HCS Tahiti</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f1a;color:#e8e8f0}
-.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:${heroBg};background-size:cover;background-position:center;position:relative;overflow:hidden}
-.hero-overlay{position:absolute;inset:0;background:${ovColor}}.hero-content{max-width:600px;position:relative;z-index:2}
-h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;margin-bottom:14px;line-height:1.1;color:white}
-.sub{font-size:1rem;opacity:.9;margin-bottom:20px;color:rgba(255,255,255,.85)}
-.badge-hp{display:inline-block;background:${c.colors.badge};color:white;padding:8px 24px;border-radius:24px;font-weight:700;margin-bottom:20px}
-.cta-btn{display:inline-block;background:white;color:${c.colors.primary};padding:14px 36px;border-radius:30px;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,.3)}
-.section{padding:40px 20px;max-width:900px;margin:0 auto}
-.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-</style></head><body>
-<div class="hero"><div class="hero-overlay"></div>${logoHtml}
-<div class="hero-content"><span class="badge-hp">${badge}</span><h1>${headline}</h1><p class="sub">${subline}</p><a href="#produits" class="cta-btn">${cta}</a></div></div>
-<div class="section" id="produits"><h2 style="text-align:center;margin-bottom:24px;font-size:1.5rem">Nos produits</h2><div class="prods">${prodRows}</div></div>
-<div style="text-align:center;padding:40px 20px">
-  <p style="margin-bottom:16px;opacity:.7">HCS Tahiti — Paiement sécurisé OSB Polynésie</p>
-</div>
-</body></html>`;
-
-  // Afficher la modal de publication
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
-  modal.innerHTML = `<div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:14px;padding:32px;max-width:420px;width:90%;text-align:center">
-    <div style="font-size:2rem;margin-bottom:12px">🌐</div>
-    <div style="font-weight:800;font-size:1.1rem;margin-bottom:8px">Publication en cours…</div>
-    <div style="color:#9090b0;font-size:0.82rem" id="pub-status">Envoi vers Cloudflare…</div>
-    <button onclick="this.closest('[style]').remove()" style="margin-top:20px;padding:8px 24px;background:#2a2a4a;border:none;border-radius:8px;color:#e8e8f0;cursor:pointer;font-size:0.82rem">Fermer</button>
-  </div>`;
-  document.body.appendChild(modal);
-
-  try {
-    const res = await fetch(`${workerBase}/lp/publish`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
-      body: JSON.stringify({ slug, html, campaignName: c.name })
-    });
-    const data = await res.json();
-    if (data.success) {
-      modal.querySelector('#pub-status').innerHTML = `
-        <div style="color:#43e97b;font-weight:700;font-size:1rem;margin-bottom:12px">✅ Publiée avec succès !</div>
-        <div style="background:#0a0a14;border-radius:8px;padding:12px;margin-bottom:12px;word-break:break-all">
-          <a href="${data.url}" target="_blank" style="color:#6c63ff;text-decoration:none;font-size:0.82rem">${data.url}</a>
-        </div>
-        <button onclick="navigator.clipboard.writeText('${data.url}');this.textContent='✅ Copié !'" style="padding:7px 18px;background:#6c63ff;border:none;border-radius:8px;color:white;cursor:pointer;font-size:0.78rem;font-weight:700">📋 Copier l'URL</button>`;
-    } else {
-      modal.querySelector('#pub-status').innerHTML = `<span style="color:#ff6584">Erreur : ${data.error || 'Échec publication'}</span>`;
-      if (res.status === 401) {
-        localStorage.removeItem('hcs_admin_secret');
-        modal.querySelector('#pub-status').innerHTML += '<br><span style="font-size:0.75rem;color:#9090b0">Clé admin effacée — réessaie</span>';
-      }
-    }
-  } catch(e) {
-    modal.querySelector('#pub-status').innerHTML = `<span style="color:#ff6584">Erreur réseau : ${e.message}</span>`;
-  }
 }
 
 function exportAll() {
   CAMPS.forEach((c,i) => setTimeout(()=>exportLP(c.id), i*400));
 }
 
-function dl(name, content) {
+async function testPayzen(id) {
+  const g = el => document.getElementById(el);
+  const amount = parseInt(g('pz-amount-'+id)?.value) || 0;
+  const workerUrl = g('pz-worker-'+id)?.value?.trim() || 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token';
+  const secret = g('pz-secret-'+id)?.value?.trim() || 'richesse';
+  const mode = g('pz-mode-'+id)?.value || 'TEST';
+
+  if (!amount || amount <= 0) { alert('Saisissez un montant.'); return; }
+  if (!workerUrl) { alert('Saisissez l\'URL du Worker.'); return; }
+  if (!secret) { alert('Saisissez le secret Worker.'); return; }
+
+  const liveEl    = g('pz-live-'+id);
+  const inlineErr = g('pz-live-error-'+id);
+  const inlineLoad = g('pz-live-loading-'+id);
+
+  // Afficher la modal
+  const modal    = document.getElementById('pz-modal');
+  const loadingEl = document.getElementById('pz-modal-loading');
+  const errorEl   = document.getElementById('pz-modal-error');
+  const formEl    = document.getElementById('pz-modal-form');
+  const okEl      = document.getElementById('pz-modal-ok');
+
+  modal.style.display = 'flex';
+  loadingEl.style.display = 'block';
+  errorEl.style.display = 'none';
+  formEl.style.display = 'none';
+  okEl.style.display = 'none';
+  formEl.innerHTML = '';
+
+  liveEl.style.display = 'block';
+  if (inlineLoad) inlineLoad.style.display = 'none';
+  if (inlineErr) inlineErr.style.display = 'none';
+
+  // Nettoyer l'ancien SDK s'il existe
+  const oldSdk = document.getElementById('pz-sdk-live');
+  if (oldSdk) oldSdk.remove();
+  if (!document.getElementById('pz-css1')) {
+    const c1 = document.createElement('link'); c1.id='pz-css1'; c1.rel='stylesheet';
+    c1.href='https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css';
+    document.head.appendChild(c1);
+    const c2 = document.createElement('link'); c2.id='pz-css2'; c2.rel='stylesheet';
+    c2.href='https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css';
+    document.head.appendChild(c2);
+  }
+
+  try {
+    const res = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Worker-Secret': secret },
+      body: JSON.stringify({ amount, currency: 'XPF', orderId: 'HCS-LIVE-'+Date.now(), mode })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Erreur serveur'); }
+    const { formToken, publicKey } = await res.json();
+
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.id = 'pz-sdk-live';
+      s.src = 'https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
+      s.setAttribute('kr-public-key', publicKey);
+      s.setAttribute('kr-language', 'fr-FR');
+      s.onload = () => KR.setFormToken(formToken).then(resolve);
+      s.onerror = () => reject(new Error('Impossible de charger le SDK OSB'));
+      document.head.appendChild(s);
+    });
+
+    loadingEl.style.display = 'none';
+    formEl.style.display = 'block';
+    KR.onSubmit(d => {
+      if (['PAID','RUNNING','AUTHORISED'].includes(d?.clientAnswer?.orderStatus)) {
+        formEl.style.display = 'none';
+        okEl.style.display = 'block';
+      }
+      return false;
+    });
+  } catch(e) {
+    loadingEl.style.display = 'none';
+    errorEl.style.display = 'block';
+    errorEl.textContent = '❌ ' + e.message;
+  }
+}
+
+function closePzModal() {
+  document.getElementById('pz-modal').style.display = 'none';
+  const oldSdk = document.getElementById('pz-sdk-live');
+  if (oldSdk) oldSdk.remove();
+}
+
+function dl(name, content, type='text/html') {
+  if (type === 'text/html' && typeof window._dl_override === 'function') {
+    window._dl_override(name, content);
+    return;
+  }
   const a = document.createElement('a');
-  a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(content);
+  a.href = 'data:'+type+';charset=utf-8,' + encodeURIComponent(content);
   a.download = name;
   document.body.appendChild(a);
   a.click();
@@ -1297,9 +2332,1073 @@ function dl(name, content) {
 }
 
 
+// ═══════════════════════════════════════════════════════
+// SÉLECTION PRODUIT
+// ═══════════════════════════════════════════════════════
+const _selectedProd = {}; // { campId: prodIdx }
+let _ckCampId = 0; // campId actif pour le paiement
+
+function selectProd(campId, prodIdx) {
+  const c = CAMPS[campId];
+  const p = c.products[prodIdx];
+
+  // Désélectionner l'ancien dans cette grille
+  document.querySelectorAll(`#prods-grid-${campId} .lp-prod`).forEach(el => el.classList.remove('selected'));
+
+  // Sélectionner le nouveau
+  const card = document.getElementById(`lprod-${campId}-${prodIdx}`);
+  if (card) card.classList.add('selected');
+  _selectedProd[campId] = prodIdx;
+
+  // Afficher le récap + bouton CTA
+  const ctaBar  = document.getElementById(`prod-cta-${campId}`);
+  const selName = document.getElementById(`prod-sel-name-${campId}`);
+  const selPrice= document.getElementById(`prod-sel-price-${campId}`);
+  if (ctaBar)  { ctaBar.classList.add('visible'); }
+  if (selName)  selName.textContent = p.n;
+  if (selPrice) selPrice.textContent = p.p;
+
+  // Scroll vers le bouton
+  ctaBar?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function goToCheckout(campId) {
+  const prodIdx = _selectedProd[campId];
+  if (prodIdx === undefined) { alert('Sélectionnez un produit.'); return; }
+  _ckCampId = campId; // mémoriser pour l'étape paiement
+  CART = [];
+  addToCart(campId, prodIdx);
+}
+
+// ═══════════════════════════════════════════════════════
+// CHECKOUT — PANIER 4 ÉTAPES
+// ═══════════════════════════════════════════════════════
+let CART = [];
+let CK_STEP = 1;
+const WORKER_URL = 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token';
+const WORKER_SECRET_VAL = 'richesse';
+const WORKER_MODE = 'TEST';
+
+// ── Panier ──────────────────────────────────────────────
+function addToCart(campId, prodIdx) {
+  const c = CAMPS[campId];
+  const p = c.products[prodIdx];
+  const priceNum = parseInt(p.p.replace(/[^\d]/g,'')) || 0;
+  const existing = CART.find(x => x.campId===campId && x.prodIdx===prodIdx);
+  if (existing) { existing.qty++; }
+  else { CART.push({ campId, prodIdx, icon:p.e, name:p.n, camp:c.name, price:priceNum, priceStr:p.p, qty:1 }); }
+  CK_STEP = 1;
+  updateBadge();
+  openCart();
+  renderStep();
+}
+
+function removeFromCart(idx) { CART.splice(idx,1); updateBadge(); renderStep(); }
+function changeQty(idx, delta) { CART[idx].qty = Math.max(1, CART[idx].qty+delta); updateBadge(); renderStep(); }
+function cartTotal() { return CART.reduce((s,x)=>s+x.price*x.qty,0); }
+
+function updateBadge() {
+  const badge = document.getElementById('cart-badge');
+  const n = CART.reduce((s,x)=>s+x.qty,0);
+  badge.textContent = n; badge.style.display = n>0?'flex':'none';
+}
+
+function openCart() {
+  document.getElementById('cart-drawer').classList.add('open');
+  document.getElementById('cart-overlay').classList.add('open');
+}
+function closeCart() {
+  document.getElementById('cart-drawer').classList.remove('open');
+  document.getElementById('cart-overlay').classList.remove('open');
+}
+
+// ── Étapes ──────────────────────────────────────────────
+function goStep(n) { CK_STEP = n; renderStep(); }
+
+function setStepUI(active) {
+  const titles = {1:'🛒 Mon panier', 2:'👤 Coordonnées', 3:'🚚 Livraison', 4:'💳 Paiement'};
+  document.getElementById('ck-head-title').textContent = titles[active];
+  for (let i=1; i<=4; i++) {
+    const el = document.getElementById('ck-s'+i);
+    el.className = 'ck-step' + (i<active?' done':(i===active?' active':''));
+  }
+}
+
+function renderStep() {
+  setStepUI(CK_STEP);
+  if (CK_STEP===1) renderStep1();
+  else if (CK_STEP===2) renderStep2();
+  else if (CK_STEP===3) renderStep3();
+  else if (CK_STEP===4) renderStep4();
+}
+
+// ── Étape 1 : Panier ────────────────────────────────────
+function renderStep1() {
+  const body = document.getElementById('cart-body');
+  const foot = document.getElementById('cart-foot');
+  const total = cartTotal();
+
+  if (CART.length===0) {
+    body.innerHTML = '<div class="cart-empty">🛒 Votre panier est vide.<br><small>Ajoutez des produits avec le bouton + dans chaque campagne.</small></div>';
+    foot.innerHTML = '';
+    return;
+  }
+
+  body.innerHTML = CART.map((x,idx)=>`
+    <div class="cart-item">
+      <div class="cart-item-icon">${x.icon}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${x.name}</div>
+        <div class="cart-item-camp">${x.camp}</div>
+      </div>
+      <div class="cart-item-qty">
+        <button class="qty-btn" onclick="changeQty(${idx},-1)">−</button>
+        <span class="qty-val">${x.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${idx},1)">+</button>
+      </div>
+      <span class="cart-item-price">${(x.price*x.qty).toLocaleString('fr-FR')} XPF</span>
+      <button class="cart-rm" onclick="removeFromCart(${idx})" title="Retirer">🗑</button>
+    </div>
+  `).join('') + `
+    <div class="cart-total-bar">
+      <span class="cart-total-label">Total panier</span>
+      <span class="cart-total-val">${total.toLocaleString('fr-FR')} XPF</span>
+    </div>`;
+
+  foot.innerHTML = `<button class="btn-checkout" onclick="goStep(2)">Continuer — Coordonnées →</button>`;
+}
+
+// ── Étape 2 : Contact ────────────────────────────────────
+function renderStep2() {
+  const saved = window._ckContact || {};
+  const body = document.getElementById('cart-body');
+  const foot = document.getElementById('cart-foot');
+
+  body.innerHTML = `
+    <div class="ck-section-title">Vos coordonnées</div>
+    <div class="ck-field"><label>Prénom & Nom *</label>
+      <input class="ck-finput" id="ck-name" placeholder="Jean Dupont" value="${saved.name||''}"></div>
+    <div class="ck-field"><label>Email *</label>
+      <input class="ck-finput" id="ck-email" type="email" placeholder="jean@mail.com" value="${saved.email||''}"></div>
+    <div class="ck-field"><label>Téléphone</label>
+      <input class="ck-finput" id="ck-phone" type="tel" placeholder="87 00 00 00" value="${saved.phone||''}"></div>
+    <div class="ck-field"><label>Note / instructions</label>
+      <textarea class="ck-finput ck-textarea" id="ck-note" placeholder="Instructions spéciales, taille, couleur…">${saved.note||''}</textarea></div>`;
+
+  foot.innerHTML = `
+    <button class="btn-back" onclick="goStep(1)">← Retour</button>
+    <button class="btn-checkout" onclick="saveContact()">Continuer — Livraison →</button>`;
+}
+
+function saveContact() {
+  const name  = document.getElementById('ck-name')?.value.trim();
+  const email = document.getElementById('ck-email')?.value.trim();
+  if (!name) { alert('Veuillez saisir votre nom.'); return; }
+  if (!email || !email.includes('@')) { alert('Email invalide.'); return; }
+  window._ckContact = {
+    name, email,
+    phone: document.getElementById('ck-phone')?.value.trim(),
+    note:  document.getElementById('ck-note')?.value.trim()
+  };
+  goStep(3);
+}
+
+// ── Étape 3 : Livraison ──────────────────────────────────
+function renderStep3() {
+  const saved = window._ckDelivery || { type:'pickup' };
+  const body = document.getElementById('cart-body');
+  const foot = document.getElementById('cart-foot');
+
+  body.innerHTML = `
+    <div class="ck-section-title">Mode de réception</div>
+    <div class="delivery-toggle">
+      <div class="dlv-opt ${saved.type==='pickup'?'selected':''}" id="dlv-pickup" onclick="selectDlv('pickup')">
+        <div class="dlv-icon">🏪</div>
+        <div class="dlv-label">Retrait boutique</div>
+        <div class="dlv-sub">HCS — Papeete</div>
+      </div>
+      <div class="dlv-opt ${saved.type==='delivery'?'selected':''}" id="dlv-delivery" onclick="selectDlv('delivery')">
+        <div class="dlv-icon">🚚</div>
+        <div class="dlv-label">Livraison</div>
+        <div class="dlv-sub">Sous 3–5 jours ouvrés</div>
+      </div>
+    </div>
+    <div id="dlv-pickup-fields" style="${saved.type==='pickup'?'':'display:none'}">
+      <div class="ck-field"><label>Date de retrait souhaitée</label>
+        <input class="ck-finput" id="ck-pickup-date" type="date" value="${saved.pickupDate||''}" min="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="ck-field"><label>Créneau</label>
+        <select class="ck-finput" id="ck-pickup-slot">
+          <option ${saved.slot==='08-12'?'selected':''} value="08-12">08h00 – 12h00</option>
+          <option ${saved.slot==='13-17'?'selected':''} value="13-17">13h00 – 17h00</option>
+        </select></div>
+    </div>
+    <div id="dlv-delivery-fields" style="${saved.type==='delivery'?'':'display:none'}">
+      <div class="ck-field"><label>Adresse de livraison *</label>
+        <input class="ck-finput" id="ck-address" placeholder="Rue, quartier, commune" value="${saved.address||''}"></div>
+      <div class="ck-field"><label>Île / Commune</label>
+        <select class="ck-finput" id="ck-island">
+          <option ${saved.island==='tahiti'?'selected':''} value="tahiti">Tahiti</option>
+          <option ${saved.island==='moorea'?'selected':''} value="moorea">Moorea</option>
+          <option ${saved.island==='autre'?'selected':''} value="autre">Autre île</option>
+        </select></div>
+    </div>`;
+
+  foot.innerHTML = `
+    <button class="btn-back" onclick="goStep(2)">← Retour</button>
+    <button class="btn-checkout" onclick="saveDelivery()">Continuer — Paiement →</button>`;
+}
+
+function selectDlv(type) {
+  document.getElementById('dlv-pickup').classList.toggle('selected', type==='pickup');
+  document.getElementById('dlv-delivery').classList.toggle('selected', type==='delivery');
+  document.getElementById('dlv-pickup-fields').style.display = type==='pickup'?'':'none';
+  document.getElementById('dlv-delivery-fields').style.display = type==='delivery'?'':'none';
+}
+
+function saveDelivery() {
+  const type = document.getElementById('dlv-delivery').classList.contains('selected') ? 'delivery' : 'pickup';
+  if (type==='delivery') {
+    const addr = document.getElementById('ck-address')?.value.trim();
+    if (!addr) { alert('Saisissez votre adresse de livraison.'); return; }
+    window._ckDelivery = { type, address:addr, island:document.getElementById('ck-island')?.value };
+  } else {
+    window._ckDelivery = {
+      type, pickupDate:document.getElementById('ck-pickup-date')?.value,
+      slot:document.getElementById('ck-pickup-slot')?.value
+    };
+  }
+  goStep(4);
+}
+
+// ── Étape 4 : Paiement ──────────────────────────────────
+async function renderStep4() {
+  const contact  = window._ckContact  || {};
+  const delivery = window._ckDelivery || {};
+  const total    = cartTotal();
+  const items    = CART.map(x=>`${x.qty}× ${x.name}`).join(', ');
+  const orderId  = 'HCS-' + Date.now();
+
+  const body = document.getElementById('cart-body');
+  const foot = document.getElementById('cart-foot');
+
+  body.innerHTML = `
+    <div class="order-recap">
+      <div class="order-recap-row"><span>Client</span><span>${contact.name||'—'}</span></div>
+      <div class="order-recap-row"><span>Email</span><span>${contact.email||'—'}</span></div>
+      ${contact.phone?`<div class="order-recap-row"><span>Tél.</span><span>${contact.phone}</span></div>`:''}
+      <div class="order-recap-row"><span>Livraison</span><span>${delivery.type==='pickup'?'🏪 Retrait boutique':'🚚 Domicile'}</span></div>
+      ${delivery.pickupDate?`<div class="order-recap-row"><span>Date retrait</span><span>${delivery.pickupDate} · ${delivery.slot||''}</span></div>`:''}
+      ${delivery.address?`<div class="order-recap-row"><span>Adresse</span><span>${delivery.address}</span></div>`:''}
+      <div class="order-recap-row" style="padding-top:8px;margin-top:4px;border-top:1px solid var(--border)">
+        <span style="font-weight:700">Total</span>
+        <span style="font-weight:900;color:var(--accent-3)">${total.toLocaleString('fr-FR')} XPF</span>
+      </div>
+    </div>
+    <div id="pz-loading" class="pz-loading">🔒 Connexion sécurisée à OSB Polynésie…</div>
+    <div class="kr-embedded" id="pz-kr-form" style="display:none"></div>
+    <div class="pz-error" id="pz-error"></div>
+    <div class="pz-ok" id="pz-ok" style="display:none">
+      <h3>✅ Paiement accepté !</h3>
+      <p>Merci ${contact.name||''}. Votre commande <strong>${orderId}</strong> est confirmée.<br>Un email de confirmation sera envoyé à ${contact.email||''}.</p>
+    </div>`;
+
+  foot.innerHTML = `<button class="btn-back" id="pz-back-btn" onclick="goStep(3)">← Retour</button>`;
+
+  // Lire config PayZen de la campagne active
+  const _g = el => document.getElementById(el);
+  const _wUrl    = _g('pz-worker-'+_ckCampId)?.value?.trim() || WORKER_URL;
+  const _wSecret = _g('pz-secret-'+_ckCampId)?.value?.trim() || WORKER_SECRET_VAL;
+  const _wMode   = _g('pz-mode-'+_ckCampId)?.value || WORKER_MODE;
+
+  // Charger SDK OSB
+  if (!document.getElementById('pz-css1')) {
+    ['https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css',
+     'https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic.min.css']
+    .forEach((href,i)=>{ const l=document.createElement('link'); l.id='pz-css'+(i+1); l.rel='stylesheet'; l.href=href; document.head.appendChild(l); });
+  }
+
+  const oldSdk = document.getElementById('pz-sdk-cart');
+  if (oldSdk) oldSdk.remove();
+
+  try {
+    const res = await fetch(_wUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Worker-Secret':_wSecret},
+      body:JSON.stringify({ amount:total, currency:'XPF', orderId, mode:_wMode, customerEmail:contact.email })
+    });
+    if (!res.ok) { const e=await res.json(); throw new Error(e.error||'Erreur serveur'); }
+    const { formToken, publicKey } = await res.json();
+
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script'); s.id='pz-sdk-cart';
+      s.src='https://static.osb.pf/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
+      s.setAttribute('kr-public-key',publicKey); s.setAttribute('kr-language','fr-FR');
+      s.onload=()=>KR.setFormToken(formToken).then(resolve);
+      s.onerror=()=>reject(new Error('SDK OSB indisponible'));
+      document.head.appendChild(s);
+    });
+
+    document.getElementById('pz-loading').style.display='none';
+    document.getElementById('pz-kr-form').style.display='block';
+
+    KR.onSubmit(async d => {
+      if (['PAID','RUNNING','AUTHORISED'].includes(d.clientAnswer.orderStatus)) {
+        document.getElementById('pz-kr-form').style.display='none';
+        document.getElementById('pz-ok').style.display='block';
+        document.getElementById('pz-back-btn').style.display='none';
+        // Sauvegarder commande
+        try {
+          await fetch(_wUrl.replace('/payzen-token','/order/save'), {
+            method:'POST', headers:{'Content-Type':'application/json','X-Worker-Secret':_wSecret},
+            body:JSON.stringify({
+              orderId, status:'paid', amount:total, currency:'XPF',
+              campaignName:CART.map(x=>x.camp).join(', '), product:items,
+              client:{ name:contact.name, email:contact.email, phone:contact.phone||'' },
+              delivery:{ type:delivery.type, address:delivery.address||'', pickupDate:delivery.pickupDate||'', deliveryDelay:3 },
+              note:contact.note||''
+            })
+          });
+        } catch(e){ console.warn('Ordre non sauvegardé:',e); }
+        CART=[]; updateBadge();
+      }
+      return false;
+    });
+  } catch(e) {
+    document.getElementById('pz-loading').style.display='none';
+    const errEl=document.getElementById('pz-error');
+    errEl.style.display='block'; errEl.textContent='❌ '+e.message;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// GESTION COMMANDES
+// ═══════════════════════════════════════════════════════
+const WORKER_BASE = 'https://payzen-hcs.highcoffeeshirt.workers.dev';
+let adminSecret = sessionStorage.getItem('hcs_admin_secret') || '';
+let ordersFilter = 'all';
+let ordersData = [];
+
+function setNavActive(id) {
+  document.querySelectorAll('.camp-item,.sidebar-action').forEach(el=>el.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function showOrders() {
+  setNavActive('nav-orders');
+  const ws = document.getElementById('workspace');
+  if (!adminSecret) {
+    ws.innerHTML = `
+      <div class="orders-login">
+        <h3>🔐 Espace Admin</h3>
+        <p>Entrez votre secret administrateur pour accéder aux commandes.</p>
+        <input class="finput" id="admin-secret-input" type="password" placeholder="Secret admin" style="margin-bottom:10px">
+        <button class="btn btn-primary" style="width:100%" onclick="loginAdmin()">Se connecter</button>
+        <div id="admin-login-err" style="color:#ff6b6b;font-size:0.75rem;margin-top:8px;display:none"></div>
+      </div>`;
+    return;
+  }
+  loadOrders(false);
+}
+
+async function loginAdmin() {
+  const val = document.getElementById('admin-secret-input')?.value.trim();
+  if (!val) return;
+  const res = await fetch(`${WORKER_BASE}/admin/db/orders?archived=0`, {
+    headers: { 'X-Admin-Secret': val }
+  });
+  if (res.ok) {
+    adminSecret = val;
+    sessionStorage.setItem('hcs_admin_secret', val);
+    requestNotifPermission();
+    startOrderPolling();
+    loadOrders(false);
+  } else {
+    document.getElementById('admin-login-err').style.display = 'block';
+    document.getElementById('admin-login-err').textContent = '❌ Secret incorrect.';
+  }
+}
+
+async function loadOrders(archived=false) {
+  const ws = document.getElementById('workspace');
+  ws.innerHTML = `<div class="orders-view"><div style="color:var(--text-secondary);font-size:0.85rem;padding:40px;text-align:center">Chargement…</div></div>`;
+  try {
+    const archParam = archived ? '1' : '0';
+    const res = await fetch(`${WORKER_BASE}/admin/db/orders?archived=${archParam}`, {
+      headers: { 'X-Admin-Secret': adminSecret }
+    });
+    if (!res.ok) { adminSecret=''; sessionStorage.removeItem('hcs_admin_secret'); showOrders(); return; }
+    const data = await res.json();
+    ordersData = data.orders || [];
+    renderOrdersView(ordersData, archived);
+  } catch(e) {
+    ws.innerHTML = `<div class="orders-view"><div style="color:#ff6b6b;padding:40px;text-align:center">Erreur réseau : ${e.message}</div></div>`;
+  }
+}
+
+function renderOrdersView(orders, archived=false) {
+  const ws = document.getElementById('workspace');
+  const statuses = ['all','pending','paid','processing','delivered','cancelled'];
+  const statusLabels = {all:'Toutes',pending:'En attente',paid:'Payées',processing:'En cours',delivered:'Livrées',cancelled:'Annulées'};
+  const statusIcons = {pending:'⏳',paid:'✅',processing:'🔄',delivered:'📦',cancelled:'❌',archived:'🗃️'};
+
+  const visible = ordersFilter==='all' ? orders : orders.filter(o=>o.status===ordersFilter);
+
+  ws.innerHTML = `
+    <div class="orders-view">
+      <div class="orders-head">
+        <div>
+          <div class="orders-title">${archived?'🗃️ Commandes archivées':'📦 Gestion des commandes'}</div>
+          <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px">${orders.length} commande${orders.length>1?'s':''} · Worker HCS</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${!archived?`<button class="btn btn-outline" style="font-size:0.72rem" onclick="showArchive()">🗃️ Archives</button>`:''}
+          <button class="btn btn-outline" style="font-size:0.72rem" onclick="loadOrders(${archived})">🔄 Rafraîchir</button>
+          <button class="btn btn-outline" style="font-size:0.72rem;color:#ff6b6b" onclick="adminSecret='';sessionStorage.removeItem('hcs_admin_secret');showOrders()">Déconnexion</button>
+          <button class="btn btn-primary" style="font-size:0.72rem" onclick="exportOrdersCSV()">⬇️ CSV</button>
+        </div>
+      </div>
+      ${!archived?`<div class="orders-filters">
+        ${statuses.map(s=>`<button class="filter-btn ${ordersFilter===s?'active':''}" onclick="ordersFilter='${s}';renderOrdersView(ordersData.filter(o=>o.status!=='archived'),false)">${statusLabels[s]}</button>`).join('')}
+      </div>`:''}
+      ${visible.length===0
+        ? `<div style="text-align:center;color:var(--text-secondary);padding:60px;font-size:0.85rem">Aucune commande${ordersFilter!=='all'?' pour ce filtre':''}.</div>`
+        : `<table class="order-table">
+          <thead><tr>
+            <th>Référence</th><th>Date</th><th>Campagne</th><th>Produit</th><th>Montant</th><th>Statut</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+            ${visible.map(o=>`
+              <tr>
+                <td><code style="font-size:0.68rem;color:var(--accent)">${o.orderId}</code></td>
+                <td style="color:var(--text-secondary)">${new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
+                <td>${o.campaignName||'—'}</td>
+                <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.product||''}">${o.product||'—'}</td>
+                <td style="font-weight:700;color:var(--accent-3)">${(o.amount||0).toLocaleString('fr-FR')} ${o.currency||'XPF'}</td>
+                <td><span class="status-badge s-${o.status||'pending'}">${statusIcons[o.status]||''} ${o.status||'pending'}</span></td>
+                <td>
+                  <select class="status-select" onchange="updateOrderStatus('${o.orderId}',this.value)">
+                    <option value="">— Statut</option>
+                    <option value="pending">⏳ En attente</option>
+                    <option value="paid">✅ Payée</option>
+                    <option value="processing">🔄 En cours</option>
+                    <option value="delivered">📦 Livrée</option>
+                    <option value="cancelled">❌ Annulée</option>
+                    <option value="archived">🗃️ Archiver</option>
+                  </select>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`}
+    </div>`;
+}
+
+async function updateOrderStatus(orderId, status) {
+  if (!status) return;
+  try {
+    if (status === 'archived') {
+      const res = await fetch(`${WORKER_BASE}/admin/db/archive`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json','X-Admin-Secret':adminSecret },
+        body: JSON.stringify({ orderId })
+      });
+      if (!res.ok) throw new Error('Erreur archivage');
+    } else {
+      const res = await fetch(`${WORKER_BASE}/admin/db/order`, {
+        method: 'PATCH',
+        headers: { 'Content-Type':'application/json','X-Admin-Secret':adminSecret },
+        body: JSON.stringify({ orderId, status })
+      });
+      if (!res.ok) throw new Error('Erreur mise à jour');
+    }
+    await loadOrders(status==='archived');
+  } catch(e) { alert('Erreur : ' + e.message); }
+}
+
+function showArchive() {
+  setNavActive('nav-archive');
+  if (!adminSecret) { showOrders(); return; }
+  loadOrders(true);
+}
+
+function showLPs() {
+  setNavActive('nav-lps');
+  if (!adminSecret) { showOrders(); return; }
+  loadLPs();
+}
+
+async function loadLPs() {
+  const ws = document.getElementById('workspace');
+  ws.innerHTML = `<div class="orders-view"><div style="color:var(--text-secondary);padding:40px;text-align:center">Chargement des LPs…</div></div>`;
+  try {
+    const res = await fetch(`${WORKER_BASE}/lp`, { headers: { 'X-Admin-Secret': adminSecret } });
+    if (!res.ok) throw new Error('Erreur');
+    const { pages } = await res.json();
+    renderLPs(pages || []);
+  } catch(e) {
+    ws.innerHTML = `<div class="orders-view"><div style="color:#ff6b6b;padding:40px;text-align:center">Erreur : ${e.message}</div></div>`;
+  }
+}
+
+function renderLPs(pages) {
+  const ws = document.getElementById('workspace');
+  const cards = pages.map(p => {
+    const thumbUrl = `${WORKER_BASE}/thumb/${p.slug}?t=${Date.now()}`;
+    const date = p.publishedAt ? new Date(p.publishedAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+    return `<div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="position:relative;height:160px;background:#0f0f1a;overflow:hidden">
+        <img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div style="display:none;align-items:center;justify-content:center;height:100%;font-size:2rem">🌐</div>
+      </div>
+      <div style="padding:14px;flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="font-weight:700;font-size:0.88rem">${p.campaignName || p.slug}</div>
+        <div style="font-size:0.68rem;color:var(--text-secondary)">Publié : ${date}</div>
+        <code style="font-size:0.6rem;color:#43e97b;word-break:break-all">${p.url || ''}</code>
+        <div style="display:flex;gap:6px;margin-top:auto">
+          <a href="${p.url}" target="_blank" style="flex:1;text-align:center;padding:6px;background:#6c63ff;color:white;border-radius:6px;font-size:0.7rem;font-weight:700;text-decoration:none">🌐 Ouvrir</a>
+          <button onclick="navigator.clipboard.writeText('${p.url}');showToast('✅ Copié !')" style="flex:1;padding:6px;background:#1e1e3a;border:1px solid #2a2a4a;color:#ccc;border-radius:6px;font-size:0.7rem;cursor:pointer">📋 Copier</button>
+          <button onclick="deleteLP('${p.slug}')" style="padding:6px 10px;background:rgba(255,107,107,.15);border:1px solid #ff6b6b;color:#ff6b6b;border-radius:6px;font-size:0.7rem;cursor:pointer">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  ws.innerHTML = `<div class="orders-view">
+    <div class="orders-head">
+      <div>
+        <div class="orders-title">🌐 LPs publiées</div>
+        <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px">${pages.length} page${pages.length>1?'s':''} en ligne · Worker HCS</div>
+      </div>
+      <button class="btn btn-outline" style="font-size:0.72rem" onclick="loadLPs()">🔄 Rafraîchir</button>
+    </div>
+    ${pages.length === 0
+      ? `<div style="text-align:center;color:var(--text-secondary);padding:60px">Aucune LP publiée. Utilise 🚀 Publier sur une campagne.</div>`
+      : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;padding:4px 0">${cards}</div>`}
+  </div>`;
+}
+
+async function deleteLP(slug) {
+  if (!confirm(`Supprimer la LP "${slug}" ?`)) return;
+  try {
+    await fetch(`${WORKER_BASE}/lp/${slug}`, { method:'DELETE', headers:{'X-Admin-Secret':adminSecret} });
+    showToast(`🗑️ LP "${slug}" supprimée`);
+    loadLPs();
+  } catch(e) { showToast('❌ ' + e.message, true); }
+}
+
+function exportOrdersCSV() {
+  const headers = 'Référence,Date,Campagne,Produit,Montant,Devise,Statut,Client,Email,Livraison';
+  const rows = ordersData.map(o => [
+    o.orderId,
+    new Date(o.createdAt).toLocaleDateString('fr-FR'),
+    o.campaignName||'',
+    (o.product||'').replace(/,/g,';'),
+    o.amount||0,
+    o.currency||'XPF',
+    o.status||'',
+    (o.client?.name||'').replace(/,/g,';'),
+    o.client?.email||'',
+    o.delivery?.type||''
+  ].join(',')).join('\n');
+  dl('hcs-commandes-'+new Date().toISOString().slice(0,10)+'.csv', headers+'\n'+rows, 'text/csv');
+}
+
+// ═══════════════════════════════════════════════════════
+// SUIVI COMMANDE (Espace client)
+// ═══════════════════════════════════════════════════════
+function showTracking() {
+  setNavActive('nav-track');
+  const statusLabels = {pending:'⏳ En attente',paid:'✅ Payée',processing:'🔄 En cours de traitement',delivered:'📦 Livrée',cancelled:'❌ Annulée'};
+  const ws = document.getElementById('workspace');
+  ws.innerHTML = `
+    <div class="tracking-view">
+      <div class="tracking-card">
+        <h3>🔍 Suivi de commande</h3>
+        <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px">Entrez votre numéro de commande pour suivre son avancement.</p>
+        <div style="display:flex;gap:8px">
+          <input class="finput" id="track-input" placeholder="ex: HCS-1742563200000" style="flex:1">
+          <button class="btn btn-primary" onclick="trackOrder()">Rechercher</button>
+        </div>
+        <div class="track-result" id="track-result"></div>
+      </div>
+    </div>`;
+}
+
+async function trackOrder() {
+  const id = document.getElementById('track-input')?.value.trim();
+  const resultEl = document.getElementById('track-result');
+  if (!id) return;
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:14px;font-size:0.8rem">Recherche…</div>';
+  try {
+    const res = await fetch(`${WORKER_BASE}/order/status?id=${encodeURIComponent(id)}`);
+    if (!res.ok) { resultEl.innerHTML='<div style="color:#ff6b6b;padding:14px;text-align:center;font-size:0.8rem">❌ Commande introuvable.</div>'; return; }
+    const o = await res.json();
+    const statusIcons = {pending:'⏳',paid:'✅',processing:'🔄',delivered:'📦',cancelled:'❌'};
+    const statusLabels = {pending:'En attente',paid:'Payée',processing:'En cours',delivered:'Livrée',cancelled:'Annulée'};
+    resultEl.innerHTML = `
+      <div class="track-row"><span class="track-label">Référence</span><span class="track-val" style="color:var(--accent)">${o.orderId}</span></div>
+      <div class="track-row"><span class="track-label">Date</span><span class="track-val">${new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}</span></div>
+      <div class="track-row"><span class="track-label">Produit</span><span class="track-val">${o.product||'—'}</span></div>
+      <div class="track-row"><span class="track-label">Montant</span><span class="track-val" style="color:var(--accent-3)">${(o.amount||0).toLocaleString('fr-FR')} ${o.currency||'XPF'}</span></div>
+      <div class="track-row"><span class="track-label">Statut</span><span class="track-val"><span class="status-badge s-${o.status}">${statusIcons[o.status]||''} ${statusLabels[o.status]||o.status}</span></span></div>
+      <div class="track-row"><span class="track-label">Livraison</span><span class="track-val">${o.delivery?.type==='pickup'?'Retrait en boutique':'Livraison'}${o.delivery?.pickupDate?' · '+o.delivery.pickupDate:''}</span></div>`;
+  } catch(e) { resultEl.innerHTML=`<div style="color:#ff6b6b;padding:14px;text-align:center;font-size:0.8rem">Erreur : ${e.message}</div>`; }
+}
+
+// ═══════════════════════════════════════════════════════
+// PLANNING
+// ═══════════════════════════════════════════════════════
+function showPlanning() {
+  setNavActive('nav-planning');
+  if (!adminSecret) { showOrders(); return; }
+  loadPlanning();
+}
+
+async function loadPlanning() {
+  const ws = document.getElementById('workspace');
+  ws.innerHTML = `<div class="planning-view"><div style="color:var(--text-secondary);font-size:0.85rem;padding:40px;text-align:center">Chargement du planning…</div></div>`;
+  try {
+    const res = await fetch(`${WORKER_BASE}/admin/db/orders?archived=0`, { headers:{'X-Admin-Secret':adminSecret} });
+    if (!res.ok) { adminSecret=''; sessionStorage.removeItem('hcs_admin_secret'); showOrders(); return; }
+    const { orders } = await res.json();
+    renderPlanning(orders);
+  } catch(e) {
+    ws.innerHTML = `<div class="planning-view"><div style="color:#ff6b6b;padding:40px;text-align:center">Erreur : ${e.message}</div></div>`;
+  }
+}
+
+function renderPlanning(orders) {
+  const ws = document.getElementById('workspace');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
+
+  // Stats globales
+  const total = orders.length;
+  const totalAmt = orders.reduce((s,o) => s+(o.amount||0), 0);
+  const todayOrders = orders.filter(o => {
+    const d = o.delivery?.pickupDate || o.createdAt?.slice(0,10);
+    return d === todayStr;
+  });
+  const pending = orders.filter(o => ['paid','pending','processing'].includes(o.status));
+
+  // Grouper par date (pickupDate ou date de commande)
+  const byDate = {};
+  orders.forEach(o => {
+    const key = o.delivery?.pickupDate || o.createdAt?.slice(0,10) || 'Sans date';
+    if (!byDate[key]) byDate[key] = [];
+    byDate[key].push(o);
+  });
+
+  // Trier les dates
+  const sortedDates = Object.keys(byDate).sort((a,b) => {
+    if (a === 'Sans date') return 1;
+    if (b === 'Sans date') return -1;
+    return new Date(a) - new Date(b);
+  });
+
+  const statusIcons = {pending:'⏳',paid:'✅',processing:'🔄',delivered:'📦',cancelled:'❌'};
+  const statusLabels = {pending:'En attente',paid:'Payée',processing:'En cours',delivered:'Livrée',cancelled:'Annulée'};
+
+  const daysHtml = sortedDates.map(dateKey => {
+    const dayOrders = byDate[dateKey];
+    let dateLabel = dateKey;
+    let dateClass = '';
+    if (dateKey !== 'Sans date') {
+      const d = new Date(dateKey + 'T00:00:00');
+      if (dateKey === todayStr) { dateLabel = "Aujourd'hui · " + d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}); dateClass = 'today'; }
+      else if (d < today) { dateLabel = '⚠️ ' + d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); dateClass = 'overdue'; }
+      else dateLabel = d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    }
+    const dayTotal = dayOrders.reduce((s,o) => s+(o.amount||0), 0);
+    const doneCount = dayOrders.filter(o => o.status==='delivered').length;
+
+    return `<div class="planning-day">
+      <div class="planning-day-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div class="planning-day-date ${dateClass}">${dateLabel}</div>
+        <div class="planning-day-meta">
+          <span>${dayOrders.length} commande${dayOrders.length>1?'s':''}</span>
+          <span style="color:var(--accent-3)">${dayTotal.toLocaleString('fr-FR')} XPF</span>
+          <span>${doneCount}/${dayOrders.length} livrées</span>
+          <span style="color:var(--text-secondary);font-size:0.7rem">▼</span>
+        </div>
+      </div>
+      <div class="planning-day-body">
+        ${dayOrders.map(o => `
+          <div class="planning-order-row">
+            <span class="po-ref">${o.orderId}</span>
+            <span class="po-client">${o.client?.name||'—'}</span>
+            <span class="po-product">${o.product||'—'}</span>
+            <span class="status-badge s-${o.status||'pending'}">${statusIcons[o.status]||''} ${statusLabels[o.status]||o.status}</span>
+            <span class="po-amount">${(o.amount||0).toLocaleString('fr-FR')} XPF</span>
+            <select class="status-select" style="font-size:0.68rem" onchange="updateOrderStatusPlanning('${o.orderId}',this.value)">
+              <option value="">Changer</option>
+              <option value="processing">🔄 En cours</option>
+              <option value="delivered">📦 Livré/Remis</option>
+              <option value="cancelled">❌ Annuler</option>
+              <option value="archived">🗃️ Archiver</option>
+            </select>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  ws.innerHTML = `
+    <div class="planning-view">
+      <div class="orders-head">
+        <div>
+          <div class="orders-title">📅 Planning des commandes</div>
+          <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px">Organisé par date de retrait / livraison</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" style="font-size:0.72rem" onclick="loadPlanning()">🔄 Rafraîchir</button>
+          <button class="btn btn-outline" style="font-size:0.72rem" onclick="showOrders()">📋 Vue tableau</button>
+        </div>
+      </div>
+      <div class="planning-stats">
+        <div class="pstat"><div class="pstat-val" style="color:var(--accent)">${total}</div><div class="pstat-label">Commandes actives</div></div>
+        <div class="pstat"><div class="pstat-val" style="color:var(--accent-3)">${totalAmt.toLocaleString('fr-FR')} <span style="font-size:0.8rem">XPF</span></div><div class="pstat-label">CA total</div></div>
+        <div class="pstat"><div class="pstat-val" style="color:#f6d365">${pending.length}</div><div class="pstat-label">À traiter</div></div>
+        <div class="pstat"><div class="pstat-val" style="color:#4facfe">${todayOrders.length}</div><div class="pstat-label">Aujourd'hui</div></div>
+      </div>
+      ${sortedDates.length === 0
+        ? `<div style="text-align:center;color:var(--text-secondary);padding:60px;font-size:0.85rem">Aucune commande active.</div>`
+        : daysHtml}
+    </div>`;
+}
+
+async function updateOrderStatusPlanning(orderId, status) {
+  if (!status) return;
+  try {
+    if (status === 'archived') {
+      await fetch(`${WORKER_BASE}/admin/db/archive`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Secret':adminSecret},
+        body:JSON.stringify({ orderId })
+      });
+    } else {
+      await fetch(`${WORKER_BASE}/admin/db/order`, {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json','X-Admin-Secret':adminSecret},
+        body:JSON.stringify({ orderId, status })
+      });
+    }
+    showToast(`✅ Commande ${orderId} → ${status}`);
+    await loadPlanning();
+  } catch(e) { showToast('❌ ' + e.message, true); }
+}
+
+// ═══════════════════════════════════════════════════════
+// TOASTS & ALERTES
+// ═══════════════════════════════════════════════════════
+function showToast(msg, isAlert=false) {
+  const container = document.getElementById('hcs-toast-container');
+  const t = document.createElement('div');
+  t.className = 'hcs-toast' + (isAlert ? ' alert' : '');
+  t.textContent = msg;
+  container.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function sendBrowserNotif(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: 'https://hcstahiti.app/favicon.ico' });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// POLLING — nouvelles commandes
+// ═══════════════════════════════════════════════════════
+let _pollKnownIds = null;
+let _pollInterval = null;
+
+function startOrderPolling() {
+  if (_pollInterval) return;
+  requestNotifPermission();
+  _pollInterval = setInterval(async () => {
+    if (!adminSecret) return;
+    try {
+      const res = await fetch(`${WORKER_BASE}/admin/db/orders?archived=0`, { headers:{'X-Admin-Secret':adminSecret} });
+      if (!res.ok) return;
+      const { orders } = await res.json();
+      const active = orders;
+      const ids = new Set(active.map(o => o.orderId));
+      if (_pollKnownIds === null) { _pollKnownIds = ids; return; }
+      const newOnes = [...ids].filter(id => !_pollKnownIds.has(id));
+      if (newOnes.length > 0) {
+        const n = newOnes.length;
+        showToast(`🛎️ ${n} nouvelle${n>1?'s':''} commande${n>1?'s':''} reçue${n>1?'s':''}!`, true);
+        sendBrowserNotif('HCS — Nouvelle commande 🛍️', `${n} nouvelle${n>1?'s':''} commande${n>1?'s':''}. Ouvrez le dashboard.`);
+        // Badge nav
+        const badge = document.getElementById('orders-badge');
+        if (badge) { badge.textContent = newOnes.length; badge.style.display = 'inline'; }
+        _pollKnownIds = ids;
+        // Refresh si vue active
+        const ws = document.getElementById('workspace');
+        if (ws.querySelector('.orders-view')) loadOrders(false);
+        if (ws.querySelector('.planning-view')) loadPlanning();
+      }
+    } catch(e) { /* silencieux */ }
+  }, 90000); // toutes les 90s
+}
+
+// ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+// PERSISTANCE IMAGES (localStorage)
+// ═══════════════════════════════════════════════════════
+const IMG_STORE = 'hcs_img_v1';
+const _memState = {}; // état en mémoire (switching rapide, pas de quota)
+
+function saveState(id) {
+  const cv = document.getElementById('cv-' + id);
+  if (!cv) return; // DOM pas encore rendu
+
+  // 1. Sauvegarder en mémoire (rapide, pas de quota)
+  const bgStyle = cv.style.background || '';
+  const logo = cv.querySelector('.logo-overlay');
+  const c = CAMPS[id];
+  _memState[id] = {
+    bgUrl:  bgStyle.includes('url(') ? bgStyle : null,
+    logo:   logo?.src || null,
+    logoLeft: logo?.style.left || null,
+    logoTop:  logo?.style.top  || null,
+    prods: c.products.map((_, i) => {
+      const el = document.getElementById(`lpimg-${id}-${i}`)?.querySelector('img');
+      return el?.src || _memState[id]?.prods?.[i] || '';
+    }),
+    pzAmount: document.getElementById(`pz-amount-${id}`)?.value || '',
+    pzWorker: document.getElementById(`pz-worker-${id}`)?.value || '',
+    pzSecret: document.getElementById(`pz-secret-${id}`)?.value || '',
+    pzMode:   document.getElementById(`pz-mode-${id}`)?.value   || 'TEST',
+  };
+
+  // 2. Persister dans localStorage (pour rechargement page)
+  try {
+    const all = JSON.parse(localStorage.getItem(IMG_STORE) || '{}');
+    if (!all[id]) all[id] = {};
+    if (logo?.src) all[id].logo = logo.src;
+    all[id].prods = _memState[id].prods;
+    localStorage.setItem(IMG_STORE, JSON.stringify(all));
+  } catch(e) {
+    console.warn('⚠️ localStorage plein — images non sauvegardées:', e.message);
+  }
+}
+
+function saveBg(id, dataUrl) {
+  // Le fond (bg) n'est pas persisté dans localStorage (trop lourd → quota dépassé).
+  // Il est conservé en mémoire dans _memState[id].bgUrl pour le switching.
+  if (!_memState[id]) _memState[id] = {};
+  _memState[id].bgDataUrl = dataUrl;
+}
+
+function _attachLogoDrag(img) {
+  let dx=0,dy=0,x=0,y=0;
+  img.addEventListener('mousedown', ev2 => {
+    ev2.stopPropagation(); x=ev2.clientX; y=ev2.clientY;
+    document.onmousemove = em => { dx=x-em.clientX; dy=y-em.clientY; x=em.clientX; y=em.clientY; img.style.left=(img.offsetLeft-dx)+'px'; img.style.top=(img.offsetTop-dy)+'px'; img.style.bottom='auto'; img.style.right='auto'; };
+    document.onmouseup = () => { document.onmousemove=null; document.onmouseup=null; };
+  });
+}
+
+function restoreState(onlyId = null) {
+  try {
+    const lsAll = JSON.parse(localStorage.getItem(IMG_STORE) || '{}');
+    const targets = onlyId !== null ? [CAMPS[onlyId]] : CAMPS;
+    targets.forEach(c => {
+      const id = c.id;
+      // Mémoire vive en priorité (switching), puis localStorage (après rechargement)
+      const mem  = _memState[id] || {};
+      const saved = lsAll[id]   || {};
+
+      const cv = document.getElementById('cv-' + id);
+      if (!cv) return;
+
+      // ── Fond vignette ──────────────────────────────────
+      // Priorité : mémoire (bgUrl complet) → mémoire (bgDataUrl)
+      const bgUrl = mem.bgUrl || (mem.bgDataUrl ? `url(${mem.bgDataUrl}) center/cover no-repeat` : null);
+      if (bgUrl) {
+        cv.style.background = bgUrl;
+        const hint = cv.querySelector('.upload-hint');
+        if (hint) hint.style.opacity = '0';
+        const match = bgUrl.match(/url\(["']?([^"')]+)["']?\)/);
+        const dataUrl = match ? match[1] : null;
+        if (dataUrl) {
+          const thumb   = document.getElementById('bg-thumb-' + id);
+          const preview = document.getElementById('bg-preview-' + id);
+          if (thumb)   thumb.src = dataUrl;
+          if (preview) preview.style.display = 'block';
+        }
+        const lpHero = document.getElementById('lp-hero-' + id);
+        if (lpHero) lpHero.style.background = bgUrl;
+      }
+
+      // ── Logo ───────────────────────────────────────────
+      const logoSrc = mem.logo || saved.logo;
+      if (logoSrc) {
+        const old = cv.querySelector('.logo-overlay'); if (old) old.remove();
+        const img = document.createElement('img');
+        img.src = logoSrc; img.className = 'logo-overlay';
+        img.style.cssText = 'position:absolute;bottom:10px;right:10px;width:64px;height:64px;object-fit:contain;z-index:5;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.5);cursor:move;';
+        if (mem.logoLeft) { img.style.left = mem.logoLeft; img.style.right = 'auto'; }
+        if (mem.logoTop)  { img.style.top  = mem.logoTop;  img.style.bottom = 'auto'; }
+        cv.appendChild(img);
+        _attachLogoDrag(img);
+        const lpHero = document.getElementById('lp-hero-' + id);
+        if (lpHero) {
+          const oldLp = lpHero.querySelector('.lp-logo-overlay'); if (oldLp) oldLp.remove();
+          const lpLogo = document.createElement('img');
+          lpLogo.src = logoSrc; lpLogo.className = 'lp-logo-overlay';
+          lpLogo.style.cssText = 'position:absolute;bottom:12px;right:12px;width:72px;height:72px;object-fit:contain;z-index:5;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.6);';
+          lpHero.appendChild(lpLogo);
+        }
+      }
+
+      // ── Images produits ────────────────────────────────
+      const prods = mem.prods?.length ? mem.prods : (saved.prods || []);
+      prods.forEach((src, i) => {
+        if (!src) return;
+        const lpImg = document.getElementById(`lpimg-${id}-${i}`);
+        if (lpImg) lpImg.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover">`;
+        // Logo-cell dans le panneau éditeur
+        const cell = document.querySelector(`#pg-${id} .logo-cell:nth-child(${i+1})`);
+        if (cell) cell.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:contain"><input type="file" id="pi-${id}-${i}" accept="image/*" style="display:none" onchange="loadProdImg(event,${id},${i})">`;
+      });
+
+      // ── Champs PayZen ──────────────────────────────────
+      const amtEl  = document.getElementById(`pz-amount-${id}`);
+      const wrkEl  = document.getElementById(`pz-worker-${id}`);
+      const secEl  = document.getElementById(`pz-secret-${id}`);
+      const modEl  = document.getElementById(`pz-mode-${id}`);
+      if (amtEl && mem.pzAmount) amtEl.value  = mem.pzAmount;
+      if (wrkEl && mem.pzWorker) wrkEl.value  = mem.pzWorker;
+      if (secEl && mem.pzSecret) secEl.value  = mem.pzSecret;
+      if (modEl && mem.pzMode)   modEl.value  = mem.pzMode;
+    });
+  } catch(e) { console.warn('Restore error:', e); }
+}
+
+// ─────────────────────────────────────────────────────────
+// EXPORT PNG — Vignette Facebook
+// ─────────────────────────────────────────────────────────
+async function exportVignettePNG(id) {
+  const c = CAMPS[id];
+  const canvas = document.getElementById('cv-' + id);
+  if (!canvas) { showToast('❌ Vignette introuvable', true); return; }
+
+  const btn = document.getElementById('btn-png-' + id);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳…'; }
+  showToast('⏳ Export PNG vignette…');
+
+  if (!window.html2canvas) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('html2canvas indisponible'));
+      document.head.appendChild(s);
+    });
+  }
+
+  try {
+    // Masquer temporairement le hint upload
+    const hint = canvas.querySelector('.upload-hint');
+    if (hint) hint.style.display = 'none';
+
+    const snap = await html2canvas(canvas, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+      logging: false,
+      width: canvas.offsetWidth,
+      height: canvas.offsetHeight,
+    });
+
+    if (hint) hint.style.display = '';
+
+    snap.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vignette-fb-${id}-${c.name.replace(/[^\w]/g,'-').toLowerCase()}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('✅ Vignette PNG téléchargée !');
+    }, 'image/png');
+
+  } catch(e) {
+    showToast('❌ ' + e.message, true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🖼️ PNG'; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// EXPORT PNG — Landing Page
+// ─────────────────────────────────────────────────────────
+async function exportLPImage(id) {
+  const c = CAMPS[id];
+  const lpBody = document.querySelector('.lp-body');
+  if (!lpBody) { showToast('❌ LP introuvable', true); return; }
+
+  showToast('⏳ Génération PNG en cours…');
+  const btn = document.querySelector(`button[onclick="exportLPImage(${id})"]`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ PNG…'; }
+
+  // Charger html2canvas si pas déjà là
+  if (!window.html2canvas) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('html2canvas non disponible'));
+      document.head.appendChild(s);
+    });
+  }
+
+  try {
+    const canvas = await html2canvas(lpBody, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#0f0f1a',
+      logging: false,
+      width: lpBody.scrollWidth,
+      height: lpBody.scrollHeight,
+      windowWidth: lpBody.scrollWidth,
+    });
+
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `andromeda-lp-${id}-${c.name.replace(/[^\w]/g,'-').toLowerCase()}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('✅ PNG téléchargé !');
+    }, 'image/png');
+
+  } catch(e) {
+    showToast('❌ Erreur PNG : ' + e.message, true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🖼️ Exporter PNG'; }
+  }
+}
+
 // Init
 buildSidebar();
 render(0);
+restoreState(0);
+startOrderPolling();
 </script>
+<div id="hcs-toast-container"></div>
 </body>
 </html>
