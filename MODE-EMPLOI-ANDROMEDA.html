@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mode d'Emploi — Andromeda Campaign Builder</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --bg2: #1a1a2e;
+  --bg3: #16213e;
+  --accent: #6c63ff;
+  --accent2: #ff6584;
+  --accent3: #43e97b;
+  --text: #e8e8f0;
+  --muted: #9090b0;
+  --border: #2a2a4a;
+  --r: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+.header {
+  background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 48px;
+  display: flex; align-items: center; gap: 20px;
+}
+.logo { width: 52px; height: 52px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.header h1 { font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; }
+.header p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+.badge { background: linear-gradient(135deg, #43e97b, #00b4d8); padding: 4px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; color: #0f0f1a; margin-left: auto; }
+
+.toc {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 24px 28px; margin: 32px auto; max-width: 960px; margin-left: 24px; margin-right: 24px;
+}
+.toc h2 { font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 14px; }
+.toc ol { padding-left: 20px; }
+.toc li { padding: 3px 0; font-size: 0.85rem; }
+.toc a { color: var(--text); text-decoration: none; transition: color 0.2s; }
+.toc a:hover { color: var(--accent); }
+
+.container { max-width: 960px; margin: 0 auto; padding: 0 24px 48px; }
+
+.chapter {
+  margin-bottom: 48px; padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.chapter:first-child { border-top: none; }
+
+.chapter-num { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--accent2); margin-bottom: 6px; }
+.chapter-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 20px; }
+
+.card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 20px 24px; margin-bottom: 12px;
+}
+
+.step {
+  display: flex; gap: 16px; align-items: flex-start;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 18px 20px; margin-bottom: 10px;
+}
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.82rem; font-weight: 900; flex-shrink: 0; margin-top: 2px;
+}
+.step-body h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+.step-body p { font-size: 0.82rem; color: var(--muted); }
+.step-body ul { padding-left: 16px; font-size: 0.82rem; color: var(--muted); }
+.step-body li { padding: 2px 0; }
+
+.tip {
+  background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.25);
+  border-radius: 10px; padding: 14px 18px; margin-top: 8px; font-size: 0.82rem;
+}
+.tip strong { color: var(--accent); }
+
+.warn {
+  background: rgba(255,101,132,0.08); border: 1px solid rgba(255,101,132,0.25);
+  border-radius: 10px; padding: 14px 18px; margin-top: 8px; font-size: 0.82rem;
+}
+.warn strong { color: var(--accent2); }
+
+.ok {
+  background: rgba(67,233,123,0.08); border: 1px solid rgba(67,233,123,0.25);
+  border-radius: 10px; padding: 14px 18px; margin-top: 8px; font-size: 0.82rem;
+}
+.ok strong { color: var(--accent3); }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.code { background: #0a0a14; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.78rem; color: #a8b5d0; margin-top: 8px; overflow-x: auto; white-space: pre; }
+
+.ui-label {
+  display: inline-block; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600;
+  color: var(--text); margin: 0 2px;
+}
+.ui-btn {
+  display: inline-block; background: var(--accent); border-radius: 6px;
+  padding: 2px 10px; font-size: 0.78rem; font-weight: 600; color: white; margin: 0 2px;
+}
+.ui-btn-green {
+  display: inline-block; background: var(--accent3); border-radius: 6px;
+  padding: 2px 10px; font-size: 0.78rem; font-weight: 600; color: #0a0a14; margin: 0 2px;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th { background: var(--bg3); color: var(--accent); padding: 10px 14px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+
+.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.feature { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.feature-icon { font-size: 1.4rem; margin-bottom: 7px; }
+.feature-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
+.feature-desc { font-size: 0.72rem; color: var(--muted); }
+
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.68rem; font-weight: 700; }
+.tag-green { background: rgba(67,233,123,0.2); color: var(--accent3); border: 1px solid rgba(67,233,123,0.3); }
+.tag-red { background: rgba(255,101,132,0.2); color: var(--accent2); border: 1px solid rgba(255,101,132,0.3); }
+.tag-purple { background: rgba(108,99,255,0.2); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+
+footer { border-top: 1px solid var(--border); padding: 24px 48px; color: var(--muted); font-size: 0.72rem; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🌌</div>
+  <div>
+    <h1>MODE D'EMPLOI — ANDROMEDA</h1>
+    <p>Guide complet Campaign Builder — HCS Tahiti • Version 2026</p>
+  </div>
+  <div class="badge">MODE D'EMPLOI</div>
+</div>
+
+<!-- TABLE DES MATIÈRES -->
+<div class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li><a href="#lancer">Lancer l'application</a></li>
+    <li><a href="#interface">L'interface en un coup d'œil</a></li>
+    <li><a href="#campagne">Sélectionner et éditer une campagne</a></li>
+    <li><a href="#vignette">Personnaliser la vignette Facebook</a></li>
+    <li><a href="#lp">Personnaliser la landing page</a></li>
+    <li><a href="#export">Exporter les fichiers</a></li>
+    <li><a href="#paiement">Configurer le paiement</a></li>
+    <li><a href="#admin">Gérer les commandes (admin)</a></li>
+    <li><a href="#marchands">Gérer les marchands (multi-tenant)</a></li>
+    <li><a href="#problemes">Problèmes fréquents</a></li>
+  </ol>
+</div>
+
+<div class="container">
+
+  <!-- 1. LANCER -->
+  <div class="chapter" id="lancer">
+    <div class="chapter-num">Chapitre 1</div>
+    <div class="chapter-title">Lancer l'application</div>
+
+    <div class="step">
+      <div class="step-num">A</div>
+      <div class="step-body">
+        <h4>Option simple — Ouvrir directement</h4>
+        <p>Double-clic sur <strong>andromeda-campaign.html</strong> dans l'explorateur de fichiers. L'application s'ouvre dans ton navigateur. Toutes les fonctionnalités d'édition et d'export sont disponibles.</p>
+        <div class="warn"><strong>Limitation :</strong> En mode fichier local (file://), le paiement PayZen ne fonctionne pas à cause du CORS. Utilise le serveur Python pour tester le paiement.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">B</div>
+      <div class="step-body">
+        <h4>Option complète — Serveur Python local (recommandé)</h4>
+        <p>Ouvre un terminal dans le dossier <code>campaign/</code> et lance :</p>
+        <div class="code">python -m http.server 3000</div>
+        <p style="margin-top:10px">Puis ouvre dans ton navigateur :</p>
+        <div class="code">http://localhost:3000/andromeda-campaign.html</div>
+        <div class="ok"><strong>Recommandé</strong> pour tester le paiement PayZen, les exports et toutes les fonctionnalités.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. INTERFACE -->
+  <div class="chapter" id="interface">
+    <div class="chapter-num">Chapitre 2</div>
+    <div class="chapter-title">L'interface en un coup d'œil</div>
+
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div>
+          <div style="font-weight:700;color:var(--accent);margin-bottom:8px">🔵 En-tête</div>
+          <ul style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+            <li>Logo Andromeda</li>
+            <li>Bouton "Exporter tout"</li>
+            <li>Bouton "Lancer campagne"</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-weight:700;color:var(--accent2);margin-bottom:8px">🔴 Sidebar gauche</div>
+          <ul style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+            <li>Liste des 8 campagnes</li>
+            <li>Indicateur actif/inactif</li>
+            <li>Clic pour sélectionner</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-weight:700;color:var(--accent3);margin-bottom:8px">🟢 Zone centrale</div>
+          <ul style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+            <li>Prévisualisation annonce FB</li>
+            <li>Panneau d'édition</li>
+            <li>Prévisualisation landing page</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div style="font-weight:700;margin-bottom:12px">Zone de travail (workspace) — 3 blocs principaux</div>
+      <div class="grid2" style="gap:10px">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px">📣 Vignette Facebook</div>
+          <p style="font-size:0.78rem;color:var(--muted)">Aperçu en direct de l'annonce. Bascule entre les 3 formats (1:1, Paysage, Story). Clic sur l'image pour charger une photo de fond.</p>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px">✏️ Panneau d'édition</div>
+          <p style="font-size:0.78rem;color:var(--muted)">Tous les champs éditables : titre, sous-titre, badge, CTA, logo, produits, couleurs, URL Worker.</p>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px">🌐 Landing Page preview</div>
+          <p style="font-size:0.78rem;color:var(--muted)">Aperçu miniature de la page de vente. Se met à jour en temps réel lors des modifications.</p>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px">💾 Boutons d'export</div>
+          <p style="font-size:0.78rem;color:var(--muted)">Exporter LP (HTML seul) • Exporter tout (annonce + LP fusionnés).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CAMPAGNE -->
+  <div class="chapter" id="campagne">
+    <div class="chapter-num">Chapitre 3</div>
+    <div class="chapter-title">Sélectionner et éditer une campagne</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Sélectionner une campagne</h4>
+        <p>Dans la <strong>sidebar gauche</strong>, clique sur l'une des 8 campagnes. La zone de travail s'actualise avec les paramètres de cette campagne.</p>
+        <div class="tip"><strong>Le point vert</strong> = campagne marquée "active". Le point gris = inactive. C'est indicatif uniquement, ça n'affecte pas le fonctionnement.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Modifications automatiquement sauvegardées</h4>
+        <p>Chaque modification est sauvegardée automatiquement dans le <strong>localStorage du navigateur</strong>. Fermer l'onglet et rouvrir ne perd pas tes données.</p>
+        <div class="warn"><strong>Attention :</strong> Vider le cache / localStorage du navigateur efface les modifications. Pense à exporter régulièrement.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. VIGNETTE -->
+  <div class="chapter" id="vignette">
+    <div class="chapter-num">Chapitre 4</div>
+    <div class="chapter-title">Personnaliser la vignette Facebook</div>
+
+    <div class="feature-grid" style="margin-bottom:12px">
+      <div class="feature">
+        <div class="feature-icon">📝</div>
+        <div class="feature-name">Titre principal</div>
+        <div class="feature-desc">Le grand texte en haut de l'annonce. Court et accrocheur (max 40 caractères conseillé).</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📋</div>
+        <div class="feature-name">Sous-titre</div>
+        <div class="feature-desc">Description courte sous le titre. Détaille l'offre ou les caractéristiques.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🏷️</div>
+        <div class="feature-name">Badge promo</div>
+        <div class="feature-desc">Pastille colorée (ex: "PROMO LIMITÉE"). Attire l'attention. Modifiable en texte + couleur.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-name">Thème / Gradient</div>
+        <div class="feature-desc">3 swatches de couleur prédéfinis par campagne. Clic pour appliquer instantanément.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🖼️</div>
+        <div class="feature-name">Image de fond</div>
+        <div class="feature-desc">Charger une photo JPG/PNG. Compressée automatiquement (900px, 70% JPEG) avant stockage.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔲</div>
+        <div class="feature-name">Opacité overlay</div>
+        <div class="feature-desc">Curseur pour assombrir/éclaircir l'image de fond. Améliore la lisibilité du texte.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">!</div>
+      <div class="step-body">
+        <h4>Changer le format de la vignette</h4>
+        <p>En haut du bloc vignette, clique sur les onglets :</p>
+        <ul>
+          <li><span class="ui-label">1:1</span> → Carré — Feed Facebook / Instagram</li>
+          <li><span class="ui-label">Paysage</span> → 1.91:1 — Feed standard / Audience Network</li>
+          <li><span class="ui-label">Story</span> → 9:16 vertical — Stories et Reels</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">!</div>
+      <div class="step-body">
+        <h4>Logo draggable</h4>
+        <p>Dans la section <strong>Logo</strong>, charge une image. Elle apparaît en bas à droite de la vignette. Tu peux la <strong>glisser-déposer</strong> avec la souris pour la repositionner sur l'annonce.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. LANDING PAGE -->
+  <div class="chapter" id="lp">
+    <div class="chapter-num">Chapitre 5</div>
+    <div class="chapter-title">Personnaliser la landing page</div>
+
+    <div class="card">
+      <p style="margin-bottom:12px">La landing page est générée automatiquement à partir des données de la campagne. Le bloc d'aperçu en bas du workspace montre la LP en temps réel.</p>
+      <div style="font-weight:700;margin-bottom:10px">Les éléments synchronisés automatiquement :</div>
+      <div class="grid2">
+        <div>
+          <ul style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+            <li>Titre et sous-titre héro</li>
+            <li>Couleur principale (CTA, prix)</li>
+            <li>Image de fond du héro</li>
+            <li>Logo de la boutique</li>
+          </ul>
+        </div>
+        <div>
+          <ul style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+            <li>Noms et prix des produits</li>
+            <li>Photos des produits</li>
+            <li>Caractéristiques (3 icônes)</li>
+            <li>Plans / offres (Formation, Abonnements)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">!</div>
+      <div class="step-body">
+        <h4>Types de landing pages disponibles</h4>
+        <table style="margin-top:8px">
+          <tr><th>Type</th><th>Campagnes</th><th>Structure LP</th></tr>
+          <tr><td><span class="tag tag-purple">product</span></td><td>Sticker, T-Shirt, Casquette</td><td>Héro + Produits + Caractéristiques + Checkout</td></tr>
+          <tr><td><span class="tag tag-purple">logos</span></td><td>DTF Originals Sports</td><td>Héro + Grille logos 3×3 + Checkout</td></tr>
+          <tr><td><span class="tag tag-purple">grid</span></td><td>Grille DTF 3×3</td><td>Héro + Grille 9 logos + Checkout</td></tr>
+          <tr><td><span class="tag tag-purple">formation</span></td><td>Formation Textile</td><td>Héro + Plans tarifaires + Checkout</td></tr>
+          <tr><td><span class="tag tag-purple">subscription</span></td><td>Abonnements</td><td>Héro + Plans abonnements + Checkout</td></tr>
+          <tr><td><span class="tag tag-purple">service</span></td><td>Graphiques IA</td><td>Héro + Services + Caractéristiques + Checkout</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. EXPORT -->
+  <div class="chapter" id="export">
+    <div class="chapter-num">Chapitre 6</div>
+    <div class="chapter-title">Exporter les fichiers</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Exporter la Landing Page HTML</h4>
+        <p>Clic sur <span class="ui-btn">💾 Exporter LP</span> dans la barre de la campagne.</p>
+        <p style="margin-top:8px;color:var(--muted);font-size:0.82rem">Un fichier <code>andromeda-lp-{id}-{nom}.html</code> est téléchargé. Ce fichier est <strong>100% autonome</strong> : images intégrées en base64, CSS inline, widget PayZen inclus. Il peut être envoyé par email ou hébergé n'importe où.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Exporter Annonce + LP Fusionné</h4>
+        <p>Clic sur <span class="ui-btn">📤 Exporter tout</span>.</p>
+        <p style="margin-top:8px;color:var(--muted);font-size:0.82rem">Un fichier <code>andromeda-ad-{id}-{nom}.html</code> est téléchargé. Contient la vignette Facebook + la landing page dans un seul fichier.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Exporter toutes les campagnes</h4>
+        <p>Clic sur <span class="ui-label">⬇️ Exporter tout</span> en haut à droite dans l'en-tête.</p>
+        <p style="margin-top:8px;color:var(--muted);font-size:0.82rem">Génère un export groupé de toutes les campagnes actives.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Utiliser la landing page exportée</h4>
+        <ul>
+          <li>Ouvre le fichier HTML directement dans un navigateur pour voir le résultat</li>
+          <li>Met-le en ligne sur n'importe quel hébergement (Netlify, GitHub Pages, etc.)</li>
+          <li>Ou publie-le via le Worker (<code>/lp/publish</code>) pour une URL en ligne</li>
+          <li>Intègre l'URL dans ta campagne Facebook Ads comme lien de destination</li>
+        </ul>
+        <div class="tip"><strong>Conseil :</strong> Après l'export, ouvre le fichier dans Chrome et teste le paiement avec la carte de test <code>4970 1000 0000 0055</code> (exp: 12/26, CVV: 123).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. PAIEMENT -->
+  <div class="chapter" id="paiement">
+    <div class="chapter-num">Chapitre 7</div>
+    <div class="chapter-title">Configurer le paiement</div>
+
+    <div class="card">
+      <p style="margin-bottom:14px">Le paiement est géré par <strong>OSB Polynésie / PayZen</strong>. Le Worker Cloudflare fait l'intermédiaire entre la LP et l'API OSB.</p>
+      <div style="font-weight:700;margin-bottom:10px">Dans le panneau d'édition → section "Paiement PayZen" :</div>
+      <table>
+        <tr><th>Champ</th><th>Description</th></tr>
+        <tr><td>URL Worker</td><td>URL complète du Worker : <code>https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token</code></td></tr>
+        <tr><td>Secret Worker</td><td>Valeur de <code>WORKER_SECRET</code> configurée dans Cloudflare</td></tr>
+        <tr><td>Mode</td><td><span class="tag tag-red">PRODUCTION</span> ou <span class="tag tag-green">TEST</span></td></tr>
+      </table>
+    </div>
+
+    <div class="step">
+      <div class="step-num">!</div>
+      <div class="step-body">
+        <h4>Tester le paiement</h4>
+        <ol style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+          <li>Mode = <strong>TEST</strong> dans le panneau</li>
+          <li>Exporte la LP et ouvre-la depuis <code>http://localhost:3000</code></li>
+          <li>Clique "Commander" → remplis le formulaire client</li>
+          <li>Paiement : carte <code>4970 1000 0000 0055</code> — exp 12/26 — CVV 123</li>
+          <li>Le paiement doit s'afficher comme <span class="tag tag-green">Accepté</span></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">!</div>
+      <div class="step-body">
+        <h4>Passer en production</h4>
+        <ol style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+          <li>Dans le panneau → changer Mode sur <strong>PRODUCTION</strong></li>
+          <li>Vérifier que <code>PAYZEN_PROD_KEY</code> est configurée dans les secrets Cloudflare</li>
+          <li>Re-exporter la LP</li>
+        </ol>
+        <div class="warn"><strong>Important :</strong> Ne jamais mettre de vraies coordonnées bancaires avec le mode TEST.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. ADMIN -->
+  <div class="chapter" id="admin">
+    <div class="chapter-num">Chapitre 8</div>
+    <div class="chapter-title">Gérer les commandes (admin)</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Accéder au tableau de bord admin</h4>
+        <p>Lance le serveur Python puis ouvre :</p>
+        <div class="code">http://localhost:3000/admin.html</div>
+        <p style="margin-top:8px">Connecte-toi avec :</p>
+        <ul>
+          <li><strong>URL Worker :</strong> <code>https://payzen-hcs.highcoffeeshirt.workers.dev</code></li>
+          <li><strong>Clé admin :</strong> valeur de ton secret <code>ADMIN_SECRET</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Ce que tu peux faire dans l'admin</h4>
+        <div class="grid2">
+          <div>
+            <ul style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+              <li>Voir toutes les commandes</li>
+              <li>Changer le statut (En attente, Confirmée, Livrée)</li>
+              <li>Planning par date de livraison</li>
+            </ul>
+          </div>
+          <div>
+            <ul style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+              <li>Exporter en CSV</li>
+              <li>Archiver les commandes</li>
+              <li>Notifications navigateur nouvelles commandes (toutes les 90s)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. MARCHANDS -->
+  <div class="chapter" id="marchands">
+    <div class="chapter-num">Chapitre 9</div>
+    <div class="chapter-title">Gérer les marchands (multi-tenant)</div>
+
+    <div class="card">
+      <p>Le mode multi-marchand permet à d'autres boutiques d'utiliser le widget HCS Pay avec leurs propres identifiants OSB, sans connaître les clés secrètes (cryptées AES-256 côté serveur).</p>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Ouvrir le dashboard admin marchands</h4>
+        <div class="code">http://localhost:3000/widget/admin-dashboard.html</div>
+        <p style="margin-top:8px">Connecte-toi avec l'URL Worker + clé admin.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Première utilisation — Migration DB</h4>
+        <p>Si c'est la première fois, va dans <strong>Migration</strong> → clique <span class="ui-btn-green">Exécuter la migration</span>. Cela crée la table <code>merchants</code> dans D1.</p>
+        <div class="ok"><strong>Résultat attendu :</strong> "Migration OK"</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Créer un nouveau marchand (wizard 4 étapes)</h4>
+        <ol style="font-size:0.82rem;color:var(--muted);padding-left:16px">
+          <li><strong>Étape 1</strong> — Nom de la boutique</li>
+          <li><strong>Étape 2</strong> — Shop ID OSB (ex: 12345678)</li>
+          <li><strong>Étape 3</strong> — Clés REST test + prod (depuis portail OSB)</li>
+          <li><strong>Étape 4</strong> — Clés publiques test + prod</li>
+        </ol>
+        <p style="margin-top:8px;font-size:0.82rem;color:var(--muted)">Un identifiant marchand <code>mrc_xxx</code> est généré automatiquement. Les clés sont chiffrées AES-256 avant stockage.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Générateur de snippet</h4>
+        <p>Dans <strong>Snippet Generator</strong>, sélectionne un marchand → le code HTML d'intégration est généré automatiquement :</p>
+        <div class="code">&lt;div id="hcs-pay"
+  data-merchant-id="mrc_xxxxxxxxxxxx"
+  data-amount="2500"
+  data-product="Votre produit"
+  data-mode="PRODUCTION"&gt;
+&lt;/div&gt;
+&lt;script src="https://payzen-hcs.highcoffeeshirt.workers.dev/widget.js"&gt;&lt;/script&gt;</div>
+        <p style="margin-top:8px;font-size:0.78rem;color:var(--muted)">Copie ce code et envoie-le au marchand. Il n'a qu'à le coller dans son site.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. PROBLÈMES -->
+  <div class="chapter" id="problemes">
+    <div class="chapter-num">Chapitre 10</div>
+    <div class="chapter-title">Problèmes fréquents</div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-weight:700;color:var(--accent2);margin-bottom:8px">Le paiement ne se lance pas (erreur CORS)</div>
+      <p style="font-size:0.82rem;color:var(--muted)"><strong>Cause :</strong> Tu ouvres le fichier HTML en double-cliquant (file://) au lieu d'utiliser le serveur Python.</p>
+      <p style="font-size:0.82rem;margin-top:6px"><strong>Solution :</strong> Lance <code>python -m http.server 3000</code> et accède via <code>http://localhost:3000</code></p>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-weight:700;color:var(--accent2);margin-bottom:8px">Erreur 1101 dans le Worker</div>
+      <p style="font-size:0.82rem;color:var(--muted)"><strong>Cause :</strong> La table D1 n'existe pas (pas encore migrée).</p>
+      <p style="font-size:0.82rem;margin-top:6px"><strong>Solution :</strong> Dashboard admin → Migration → Exécuter la migration</p>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-weight:700;color:var(--accent2);margin-bottom:8px">La clé admin "ne fonctionne pas"</div>
+      <p style="font-size:0.82rem;color:var(--muted)"><strong>Cause :</strong> Le secret <code>ADMIN_SECRET</code> dans Cloudflare est différent de ce que tu saisis.</p>
+      <p style="font-size:0.82rem;margin-top:6px"><strong>Solution :</strong> Réinitialise le secret :<br><code>echo "nouveau_secret" | npx wrangler secret put ADMIN_SECRET</code></p>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-weight:700;color:var(--accent2);margin-bottom:8px">Mes modifications ont disparu</div>
+      <p style="font-size:0.82rem;color:var(--muted)"><strong>Cause :</strong> Le localStorage a été vidé (nettoyage cache navigateur ou autre navigateur).</p>
+      <p style="font-size:0.82rem;margin-top:6px"><strong>Solution :</strong> Toujours exporter les LP importantes immédiatement après modification. Les fichiers HTML exportés sont permanents.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-weight:700;color:var(--accent2);margin-bottom:8px">L'export PNG est flou</div>
+      <p style="font-size:0.82rem;color:var(--muted)"><strong>Cause :</strong> html2canvas est chargé depuis Internet — si hors ligne, ça échoue.</p>
+      <p style="font-size:0.82rem;margin-top:6px"><strong>Solution :</strong> Assure-toi d'être connecté à Internet lors de l'export PNG.</p>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700;color:var(--accent2);margin-bottom:8px">Le Worker ne répond pas</div>
+      <p style="font-size:0.82rem;color:var(--muted)"><strong>Diagnostic :</strong> Ouvre un terminal et tape :</p>
+      <div class="code">curl https://payzen-hcs.highcoffeeshirt.workers.dev/</div>
+      <p style="font-size:0.82rem;margin-top:8px"><strong>Si erreur :</strong> Redéploie avec <code>npx wrangler deploy</code></p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>Andromeda Campaign Builder — HCS Tahiti</span>
+  <span>Version 2026 • Mode d'emploi</span>
+</footer>
+
+</body>
+</html>

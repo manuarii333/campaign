@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche Technique — Andromeda Campaign Builder</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --bg2: #1a1a2e;
+  --bg3: #16213e;
+  --accent: #6c63ff;
+  --accent2: #ff6584;
+  --accent3: #43e97b;
+  --text: #e8e8f0;
+  --muted: #9090b0;
+  --border: #2a2a4a;
+  --r: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+.header {
+  background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 48px;
+  display: flex; align-items: center; gap: 20px;
+}
+.logo { width: 52px; height: 52px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.header h1 { font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; }
+.header p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+.badge { background: linear-gradient(135deg, var(--accent), var(--accent2)); padding: 4px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; margin-left: auto; }
+
+.container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+
+.section { margin-bottom: 40px; }
+.section-title {
+  font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--accent); border-left: 4px solid var(--accent); padding-left: 12px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 20px 24px; margin-bottom: 12px;
+}
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th { background: var(--bg3); color: var(--accent); padding: 10px 14px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(108,99,255,0.04); }
+
+.tag { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 0.68rem; font-weight: 700; margin-right: 4px; margin-bottom: 2px; }
+.tag-purple { background: rgba(108,99,255,0.2); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+.tag-green { background: rgba(67,233,123,0.2); color: var(--accent3); border: 1px solid rgba(67,233,123,0.3); }
+.tag-red { background: rgba(255,101,132,0.2); color: var(--accent2); border: 1px solid rgba(255,101,132,0.3); }
+.tag-gray { background: rgba(144,144,176,0.15); color: var(--muted); border: 1px solid var(--border); }
+
+.code { background: #0a0a14; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.78rem; color: #a8b5d0; margin-top: 8px; overflow-x: auto; }
+.code .c { color: #636d82; }
+.code .k { color: #c792ea; }
+.code .s { color: #c3e88d; }
+.code .v { color: #82aaff; }
+
+.stat-row { display: flex; gap: 12px; margin-bottom: 12px; }
+.stat { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+.stat-val { font-size: 1.6rem; font-weight: 900; color: var(--accent); }
+.stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+.camp-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; margin: 4px; font-size: 0.78rem; font-weight: 600;
+}
+
+.flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.flow-step { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 0.78rem; }
+.flow-arrow { color: var(--muted); font-size: 1.2rem; }
+
+.spec-row { display: flex; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center; }
+.spec-row:last-child { border-bottom: none; }
+.spec-key { width: 200px; flex-shrink: 0; color: var(--muted); font-size: 0.78rem; }
+.spec-val { font-size: 0.82rem; font-weight: 600; }
+
+.highlight { color: var(--accent); font-weight: 700; }
+.green { color: var(--accent3); }
+.red { color: var(--accent2); }
+
+footer { border-top: 1px solid var(--border); padding: 24px 48px; color: var(--muted); font-size: 0.72rem; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🌌</div>
+  <div>
+    <h1>ANDROMEDA CAMPAIGN BUILDER</h1>
+    <p>Fiche Technique — HCS Tahiti • Version 2026</p>
+  </div>
+  <div class="badge">FICHE TECHNIQUE</div>
+</div>
+
+<div class="container">
+
+  <!-- STATS -->
+  <div class="section">
+    <div class="stat-row">
+      <div class="stat"><div class="stat-val">1</div><div class="stat-label">Fichier HTML unique</div></div>
+      <div class="stat"><div class="stat-val">8</div><div class="stat-label">Campagnes intégrées</div></div>
+      <div class="stat"><div class="stat-val">~180KB</div><div class="stat-label">Taille application</div></div>
+      <div class="stat"><div class="stat-val">0</div><div class="stat-label">Dépendance externe</div></div>
+    </div>
+  </div>
+
+  <!-- PRÉSENTATION -->
+  <div class="section">
+    <div class="section-title">Présentation</div>
+    <div class="card">
+      <p style="margin-bottom:12px">Andromeda Campaign Builder est une <span class="highlight">application web autonome</span> développée par HCS Tahiti pour créer, éditer et exporter des campagnes publicitaires Facebook Ads avec paiement PayZen intégré.</p>
+      <p>L'application tient dans un <span class="highlight">seul fichier HTML</span> — aucune installation, aucun serveur requis pour l'usage basique. Elle peut être ouverte directement dans un navigateur ou déployée sur un serveur web.</p>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE TECHNIQUE -->
+  <div class="section">
+    <div class="section-title">Architecture Technique</div>
+    <div class="card">
+      <div class="spec-row"><div class="spec-key">Type</div><div class="spec-val">Single Page Application (SPA) — fichier HTML autonome</div></div>
+      <div class="spec-row"><div class="spec-key">Framework</div><div class="spec-val">Aucun — Vanilla JS ES6+</div></div>
+      <div class="spec-row"><div class="spec-key">CSS</div><div class="spec-val">Custom CSS — variables CSS, dark theme, responsive</div></div>
+      <div class="spec-row"><div class="spec-key">Dépendances runtime</div><div class="spec-val">html2canvas (chargé en ligne pour exports PNG)</div></div>
+      <div class="spec-row"><div class="spec-key">Persistance locale</div><div class="spec-val">localStorage (état campagnes + images base64)</div></div>
+      <div class="spec-row"><div class="spec-key">Backend paiement</div><div class="spec-val">Cloudflare Worker (payzen-worker.js)</div></div>
+      <div class="spec-row"><div class="spec-key">Base de données</div><div class="spec-val">Cloudflare D1 (SQLite) + KV Namespace</div></div>
+      <div class="spec-row"><div class="spec-key">API paiement</div><div class="spec-val">OSB Polynésie / PayZen — api.secure.osb.pf</div></div>
+      <div class="spec-row"><div class="spec-key">SDK paiement</div><div class="spec-val">Lyra Krypton V4.0 — static.osb.pf</div></div>
+      <div class="spec-row"><div class="spec-key">Monnaie</div><div class="spec-val">XPF — Franc Pacifique (pas de décimales)</div></div>
+      <div class="spec-row"><div class="spec-key">Navigateurs</div><div class="spec-val">Chrome, Edge, Firefox, Safari (dernières versions)</div></div>
+    </div>
+  </div>
+
+  <!-- STACK CLOUDFLARE -->
+  <div class="section">
+    <div class="section-title">Infrastructure Cloudflare</div>
+    <div class="grid2">
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:10px;color:var(--accent)">Worker</div>
+        <div class="spec-row" style="padding:6px 0"><div class="spec-key" style="width:140px">URL</div><div class="spec-val" style="font-size:0.72rem">payzen-hcs.highcoffeeshirt.workers.dev</div></div>
+        <div class="spec-row" style="padding:6px 0"><div class="spec-key" style="width:140px">Fichier source</div><div class="spec-val" style="font-size:0.72rem">payzen-worker.js</div></div>
+        <div class="spec-row" style="padding:6px 0"><div class="spec-key" style="width:140px">Déploiement</div><div class="spec-val" style="font-size:0.72rem">npx wrangler deploy</div></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:10px;color:var(--accent)">Stockage</div>
+        <div class="spec-row" style="padding:6px 0"><div class="spec-key" style="width:140px">KV Namespace</div><div class="spec-val" style="font-size:0.72rem">HCS_ORDERS (commandes JSON)</div></div>
+        <div class="spec-row" style="padding:6px 0"><div class="spec-key" style="width:140px">D1 Database</div><div class="spec-val" style="font-size:0.72rem">hcs-orders-db (orders, merchants)</div></div>
+        <div class="spec-row" style="padding:6px 0"><div class="spec-key" style="width:140px">Assets</div><div class="spec-val" style="font-size:0.72rem">./public/ → widget.js, index.html, portal.html</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECRETS CLOUDFLARE -->
+  <div class="section">
+    <div class="section-title">Variables & Secrets Cloudflare</div>
+    <div class="card">
+      <table>
+        <tr><th>Variable</th><th>Type</th><th>Rôle</th></tr>
+        <tr><td><code>PAYZEN_SHOP_ID</code></td><td><span class="tag tag-gray">var</span></td><td>Identifiant boutique OSB (41545085)</td></tr>
+        <tr><td><code>PAYZEN_PUBLIC_TEST_KEY</code></td><td><span class="tag tag-gray">var</span></td><td>Clé publique mode TEST (affichée côté client)</td></tr>
+        <tr><td><code>PAYZEN_PUBLIC_PROD_KEY</code></td><td><span class="tag tag-gray">var</span></td><td>Clé publique mode PRODUCTION</td></tr>
+        <tr><td><code>PAYZEN_TEST_KEY</code></td><td><span class="tag tag-red">secret</span></td><td>Clé REST privée mode TEST (API OSB)</td></tr>
+        <tr><td><code>PAYZEN_PROD_KEY</code></td><td><span class="tag tag-red">secret</span></td><td>Clé REST privée mode PRODUCTION</td></tr>
+        <tr><td><code>WORKER_SECRET</code></td><td><span class="tag tag-red">secret</span></td><td>Authentification widget → Worker</td></tr>
+        <tr><td><code>ADMIN_SECRET</code></td><td><span class="tag tag-red">secret</span></td><td>Accès tableau de bord admin</td></tr>
+        <tr><td><code>MERCHANT_ENCRYPTION_KEY</code></td><td><span class="tag tag-red">secret</span></td><td>Clé AES-256 chiffrement credentials marchands</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ROUTES WORKER -->
+  <div class="section">
+    <div class="section-title">Routes API Worker</div>
+    <div class="card">
+      <table>
+        <tr><th>Méthode</th><th>Route</th><th>Auth</th><th>Rôle</th></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/</code></td><td>Public</td><td>Landing page HCS Pay</td></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/portal</code></td><td>Public</td><td>Portail marchand</td></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/widget.js</code></td><td>Public</td><td>Script widget CDN</td></tr>
+        <tr><td><span class="tag tag-purple">POST</span></td><td><code>/payzen-token</code></td><td>X-Worker-Secret</td><td>Génère formToken PayZen (mode legacy)</td></tr>
+        <tr><td><span class="tag tag-purple">POST</span></td><td><code>/order/save</code></td><td>X-Worker-Secret</td><td>Sauvegarde commande (mode legacy)</td></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/order/status?id=X</code></td><td>Public</td><td>Statut commande client</td></tr>
+        <tr><td><span class="tag tag-purple">POST</span></td><td><code>/m/token</code></td><td>merchant_id</td><td>Génère formToken (mode multi-marchand)</td></tr>
+        <tr><td><span class="tag tag-purple">POST</span></td><td><code>/m/order/save</code></td><td>merchant_id</td><td>Sauvegarde commande (mode multi-marchand)</td></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/m/orders</code></td><td>merchant_id</td><td>Liste commandes d'un marchand</td></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/m/me</code></td><td>merchant_id</td><td>Info marchand</td></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/admin/orders</code></td><td>X-Admin-Secret</td><td>Toutes les commandes</td></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/admin/merchants</code></td><td>X-Admin-Secret</td><td>Liste des marchands</td></tr>
+        <tr><td><span class="tag tag-purple">POST</span></td><td><code>/admin/merchants</code></td><td>X-Admin-Secret</td><td>Créer un marchand</td></tr>
+        <tr><td><span class="tag tag-red">DELETE</span></td><td><code>/admin/merchants/:id</code></td><td>X-Admin-Secret</td><td>Supprimer un marchand</td></tr>
+        <tr><td><span class="tag tag-purple">POST</span></td><td><code>/admin/merchants/migrate</code></td><td>X-Admin-Secret</td><td>Créer la table merchants en D1</td></tr>
+        <tr><td><span class="tag tag-purple">POST</span></td><td><code>/lp/publish</code></td><td>X-Admin-Secret</td><td>Publier une landing page en ligne</td></tr>
+        <tr><td><span class="tag tag-green">GET</span></td><td><code>/lp/:slug</code></td><td>Public</td><td>Afficher une LP publiée</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- CAMPAGNES -->
+  <div class="section">
+    <div class="section-title">8 Campagnes Intégrées</div>
+    <div class="card">
+      <table>
+        <tr><th>#</th><th>Nom</th><th>Type LP</th><th>Couleur</th><th>Produits</th></tr>
+        <tr><td>0</td><td>🚗 Sticker Auto</td><td><span class="tag tag-gray">product</span></td><td style="color:#ff6584">Rouge / Orange</td><td>S, M, Custom</td></tr>
+        <tr><td>1</td><td>👕 T-Shirt Classic Mars</td><td><span class="tag tag-gray">product</span></td><td style="color:#4facfe">Bleu</td><td>Blanc, Noir, Tie-Dye</td></tr>
+        <tr><td>2</td><td>🧢 Casquette Mars</td><td><span class="tag tag-gray">product</span></td><td style="color:#43e97b">Vert</td><td>Dad Hat, Snapback, Brodée</td></tr>
+        <tr><td>3</td><td>🏄 DTF Originals Sports</td><td><span class="tag tag-gray">logos</span></td><td style="color:#fa709a">Rose / Jaune</td><td>Surf, Va'a, Rugby</td></tr>
+        <tr><td>4</td><td>📋 Grille DTF 3×3 Collector</td><td><span class="tag tag-gray">grid</span></td><td style="color:#a18cd1">Violet</td><td>9 logos DTF</td></tr>
+        <tr><td>5</td><td>🎓 Formation Textile</td><td><span class="tag tag-gray">formation</span></td><td style="color:#f953c6">Fuchsia</td><td>Plans Débutant, Pro, Expert</td></tr>
+        <tr><td>6</td><td>🌊 Abonnements New Year</td><td><span class="tag tag-gray">subscription</span></td><td style="color:#00b4d8">Cyan</td><td>Starter, Business, Premium</td></tr>
+        <tr><td>7</td><td>🤖 Graphiques / Vecto IA</td><td><span class="tag tag-gray">service</span></td><td style="color:#f7971e">Or / Orange</td><td>Logo, Pack, Sur mesure</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- FLUX D'EXPORT -->
+  <div class="section">
+    <div class="section-title">Flux d'Export</div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-weight:700;margin-bottom:12px">Export Landing Page HTML</div>
+      <div class="flow">
+        <div class="flow-step">Éditer campagne</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Clic "Exporter LP"</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">HTML autonome généré</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Téléchargement automatique</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Ouvrir dans navigateur</div>
+      </div>
+      <p style="margin-top:12px;font-size:0.78rem;color:var(--muted)">Le fichier exporté contient : images en base64 inline, CSS intégré, widget PayZen, checkout 4 étapes complet. Aucun serveur requis pour l'afficher.</p>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-weight:700;margin-bottom:12px">Export Annonce + LP Fusionné</div>
+      <div class="flow">
+        <div class="flow-step">Clic "Exporter tout"</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Vignette FB + LP combinées</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Fichier HTML unique</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Importable FB Ads Manager</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:12px">Export PNG Vignette Facebook</div>
+      <div class="flow">
+        <div class="flow-step">html2canvas @3x</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Rendu haute résolution</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">PNG téléchargé</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Prêt pour Facebook Ads</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STOCKAGE LOCAL -->
+  <div class="section">
+    <div class="section-title">Persistance des Données</div>
+    <div class="grid2">
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:10px;color:var(--accent)">localStorage</div>
+        <table>
+          <tr><th>Clé</th><th>Contenu</th></tr>
+          <tr><td><code>hcs_camp_{id}</code></td><td>État JSON de chaque campagne</td></tr>
+          <tr><td><code>hcs_img_v1</code></td><td>Images en base64 (fond + logo)</td></tr>
+        </table>
+        <p style="margin-top:10px;font-size:0.72rem;color:var(--muted)">Les données persistent entre les sessions navigateur sur le même appareil.</p>
+      </div>
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:10px;color:var(--accent)">Cloudflare D1 (SQLite)</div>
+        <table>
+          <tr><th>Table</th><th>Contenu</th></tr>
+          <tr><td><code>orders</code></td><td>Commandes clients</td></tr>
+          <tr><td><code>merchants</code></td><td>Marchands multi-tenant</td></tr>
+        </table>
+        <p style="margin-top:10px;font-size:0.72rem;color:var(--muted)">Données serveur persistantes — accessibles via admin dashboard.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAIEMENT OSB -->
+  <div class="section">
+    <div class="section-title">Intégration Paiement OSB / PayZen</div>
+    <div class="card">
+      <div class="spec-row"><div class="spec-key">Prestataire</div><div class="spec-val">OSB Polynésie (Office des Systèmes Bancaires)</div></div>
+      <div class="spec-row"><div class="spec-key">API</div><div class="spec-val">api.secure.osb.pf/api-payment/V4/Charge/CreatePayment</div></div>
+      <div class="spec-row"><div class="spec-key">SDK client</div><div class="spec-val">Lyra Krypton V4.0 — static.osb.pf</div></div>
+      <div class="spec-row"><div class="spec-key">Monnaie</div><div class="spec-val">XPF — Franc Pacifique (code ISO : 953, 0 décimale)</div></div>
+      <div class="spec-row"><div class="spec-key">Flux</div><div class="spec-val">Client → Worker → OSB API → formToken → SDK → paiement sécurisé</div></div>
+      <div class="spec-row"><div class="spec-key">Détection succès</div><div class="spec-val">KR.onSubmit + MutationObserver (double fallback)</div></div>
+      <div class="spec-row"><div class="spec-key">3DS</div><div class="spec-val">Supporté nativement via SDK Lyra</div></div>
+      <div style="margin-top:16px;font-weight:700;font-size:0.82rem;margin-bottom:8px">Cartes de test OSB</div>
+      <table>
+        <tr><th>Scénario</th><th>Numéro</th><th>Expiration</th><th>CVV</th></tr>
+        <tr><td><span class="green">Accepté</span></td><td><code>4970 1000 0000 0055</code></td><td>12/26</td><td>123</td></tr>
+        <tr><td><span class="red">Refusé</span></td><td><code>4970 1000 0000 0015</code></td><td>12/26</td><td>123</td></tr>
+        <tr><td><span style="color:#f7971e">3DS</span></td><td><code>4970 1000 0000 0063</code></td><td>12/26</td><td>123</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- FORMATS PUBLICITAIRES -->
+  <div class="section">
+    <div class="section-title">Formats Publicitaires Facebook</div>
+    <div class="grid3">
+      <div class="card" style="text-align:center">
+        <div style="font-size:2rem;margin-bottom:8px">▪️</div>
+        <div style="font-weight:700">1:1 Carré</div>
+        <div style="color:var(--muted);font-size:0.78rem;margin-top:4px">Feed Facebook / Instagram<br>1080 × 1080 px</div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div style="font-size:2rem;margin-bottom:8px">▬</div>
+        <div style="font-weight:700">1.91:1 Paysage</div>
+        <div style="color:var(--muted);font-size:0.78rem;margin-top:4px">Feed / Audience Network<br>1200 × 628 px</div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div style="font-size:2rem;margin-bottom:8px">▮</div>
+        <div style="font-weight:700">9:16 Story</div>
+        <div style="color:var(--muted);font-size:0.78rem;margin-top:4px">Stories / Reels<br>1080 × 1920 px</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRUCTURE FICHIERS -->
+  <div class="section">
+    <div class="section-title">Structure des Fichiers du Projet</div>
+    <div class="card">
+      <div class="code">
+<span class="c">campaign/</span><br>
+├── <span class="v">andromeda-campaign.html</span>    <span class="c"># Application principale (~180KB)</span><br>
+├── <span class="v">payzen-worker.js</span>            <span class="c"># Cloudflare Worker backend</span><br>
+├── <span class="v">wrangler.toml</span>               <span class="c"># Config Cloudflare</span><br>
+├── <span class="v">landing-widget.html</span>         <span class="c"># Landing page HCS Pay (source)</span><br>
+├── <span class="v">FICHE-TECHNIQUE-ANDROMEDA.html</span>  <span class="c"># Ce fichier</span><br>
+├── <span class="v">MODE-EMPLOI-ANDROMEDA.html</span>  <span class="c"># Guide utilisateur</span><br>
+├── public/                      <span class="c"># Assets Cloudflare (servis en ligne)</span><br>
+│   ├── <span class="v">index.html</span>              <span class="c"># Landing page en ligne</span><br>
+│   ├── <span class="v">portal.html</span>             <span class="c"># Portail marchand</span><br>
+│   └── <span class="v">widget.js</span>               <span class="c"># Widget CDN public</span><br>
+├── widget/                      <span class="c"># Sources widget + documentation</span><br>
+│   ├── <span class="v">hcs-payment-widget.js</span>   <span class="c"># Source widget</span><br>
+│   ├── <span class="v">admin-dashboard.html</span>    <span class="c"># Dashboard admin marchands</span><br>
+│   ├── <span class="v">merchant-portal.html</span>    <span class="c"># Portail marchand (source)</span><br>
+│   ├── <span class="v">widget-test.html</span>        <span class="c"># App de test (6 scénarios)</span><br>
+│   ├── <span class="v">GUIDE-ADMIN.html</span>        <span class="c"># Guide administrateur</span><br>
+│   ├── <span class="v">INSTALLATION.html</span>       <span class="c"># Guide installation marchands</span><br>
+│   └── <span class="v">MODE-EMPLOI.html</span>        <span class="c"># Référence technique widget</span><br>
+└── migrations/                  <span class="c"># Scripts SQL D1</span><br>
+    ├── <span class="v">001_orders.sql</span>          <span class="c"># Table orders</span><br>
+    └── <span class="v">002_merchants.sql</span>       <span class="c"># Table merchants</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DÉPLOIEMENT -->
+  <div class="section">
+    <div class="section-title">Commandes de Déploiement</div>
+    <div class="card">
+      <table>
+        <tr><th>Action</th><th>Commande</th></tr>
+        <tr><td>Déployer le Worker</td><td><code>npx wrangler deploy</code></td></tr>
+        <tr><td>Serveur local</td><td><code>python -m http.server 3000</code></td></tr>
+        <tr><td>Ajouter un secret</td><td><code>echo "valeur" | npx wrangler secret put NOM_SECRET</code></td></tr>
+        <tr><td>Migration D1</td><td><code>POST /admin/merchants/migrate</code> via admin dashboard</td></tr>
+        <tr><td>Voir les logs Worker</td><td><code>npx wrangler tail</code></td></tr>
+        <tr><td>Vérifier D1</td><td><code>npx wrangler d1 execute hcs-orders-db --command "SELECT * FROM orders"</code></td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>Andromeda Campaign Builder — HCS Tahiti</span>
+  <span>Version 2026 • Fiche Technique</span>
+</footer>
+
+</body>
+</html>
