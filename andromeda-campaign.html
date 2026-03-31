@@ -1601,6 +1601,7 @@ async function renderStep4() {
 
   const oldSdk = document.getElementById('pz-sdk');
   if (oldSdk) oldSdk.remove();
+  if (window.KR) { try { KR.removeForms(); } catch(_) {} }
 
   try {
     const res = await fetch(WORKER_URL, {
@@ -2151,6 +2152,7 @@ async function renderStep4() {
 
   const oldSdk = document.getElementById('pz-sdk');
   if (oldSdk) oldSdk.remove();
+  if (window.KR) { try { KR.removeForms(); } catch(_) {} }
 
   try {
     const res = await fetch(WORKER_URL, {
@@ -2267,6 +2269,7 @@ async function testPayzen(id) {
   // Nettoyer l'ancien SDK s'il existe
   const oldSdk = document.getElementById('pz-sdk-live');
   if (oldSdk) oldSdk.remove();
+  if (window.KR) { try { KR.removeForms(); } catch(_) {} }
   if (!document.getElementById('pz-css1')) {
     const c1 = document.createElement('link'); c1.id='pz-css1'; c1.rel='stylesheet';
     c1.href='https://static.osb.pf/static/js/krypton-client/V4.0/stable/classic-reset.min.css';
@@ -2316,6 +2319,7 @@ function closePzModal() {
   document.getElementById('pz-modal').style.display = 'none';
   const oldSdk = document.getElementById('pz-sdk-live');
   if (oldSdk) oldSdk.remove();
+  if (window.KR) { try { KR.removeForms(); } catch(_) {} }
 }
 
 function dl(name, content, type='text/html') {
@@ -2619,6 +2623,7 @@ async function renderStep4() {
 
   const oldSdk = document.getElementById('pz-sdk-cart');
   if (oldSdk) oldSdk.remove();
+  if (window.KR) { try { KR.removeForms(); } catch(_) {} }
 
   try {
     const res = await fetch(_wUrl, {
