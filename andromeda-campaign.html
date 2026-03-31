@@ -714,7 +714,7 @@ function render(id) {
           <div class="frow"><label class="flabel">URL Worker PayZen</label>
             <input class="finput" placeholder="https://worker.workers.dev/payzen-token" value="https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token" id="pz-worker-${id}"></div>
           <div class="frow"><label class="flabel">Secret Worker</label>
-            <input class="finput" type="password" placeholder="votre_secret" value="richesse" id="pz-secret-${id}"></div>
+            <input class="finput" type="password" placeholder="votre_secret" value="hcs-payzen-2026" id="pz-secret-${id}"></div>
           <div class="frow"><label class="flabel">Mode</label>
             <select class="finput" id="pz-mode-${id}" style="background:var(--bg-panel);color:var(--text)">
               <option value="TEST">TEST</option>
@@ -1160,7 +1160,7 @@ function exportLP(id) {
   });
 
   const workerUrl = g('pz-worker-'+id)?.value?.trim() || 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token';
-  const workerSecret = g('pz-secret-'+id)?.value?.trim() || 'richesse';
+  const workerSecret = g('pz-secret-'+id)?.value?.trim() || 'hcs-payzen-2026';
   const workerMode   = g('pz-mode-'+id)?.value || 'TEST';
   const primary  = c.colors.primary;
   const badge2   = c.colors.badge;
@@ -1714,7 +1714,7 @@ function exportAd(id) {
   });
 
   const workerUrl    = g('pz-worker-'+id)?.value?.trim() || 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token';
-  const workerSecret = g('pz-secret-'+id)?.value?.trim() || 'richesse';
+  const workerSecret = g('pz-secret-'+id)?.value?.trim() || 'hcs-payzen-2026';
   const workerMode   = g('pz-mode-'+id)?.value || 'TEST';
   const primary      = c.colors.primary;
   const badge2       = c.colors.badge;
@@ -2235,7 +2235,7 @@ async function testPayzen(id) {
   const g = el => document.getElementById(el);
   const amount = parseInt(g('pz-amount-'+id)?.value) || 0;
   const workerUrl = g('pz-worker-'+id)?.value?.trim() || 'https://payzen-hcs.highcoffeeshirt.workers.dev/payzen-token';
-  const secret = g('pz-secret-'+id)?.value?.trim() || 'richesse';
+  const secret = g('pz-secret-'+id)?.value?.trim() || 'hcs-payzen-2026';
   const mode = g('pz-mode-'+id)?.value || 'TEST';
 
   if (!amount || amount <= 0) { alert('Saisissez un montant.'); return; }
